@@ -1,11 +1,232 @@
 ---
-layout: default
 title: Just Another Code Monkey
 permalink: /
 ---
 
-    		<div class="blurb">
-        		<h1>Hi there, I'm Isaac!</h1>
-				<p>I'm one of many and we're still working on that killer app. <a href="/about">Read more about my life...</a></p>
-    		</div><!-- /.blurb -->
+<!DOCTYPE html>
+	<head>
+		<title>{{ page.title }}</title>
+		<!-- link to main stylesheet -->
 		
+		
+
+	</head>
+<style type="text/css">
+body {
+	box-sizing: border-box;
+	margin: 0;
+
+
+}
+
+p {
+	font-family: Raleway;
+	margin-left: 1.66%;
+	font-size: 23px;
+	font-weight: 800;
+	text-transform: uppercase;
+	border-bottom: 2px solid #f1f1f1;
+	width: 30%;
+	padding-bottom: 20px;
+}
+
+
+
+
+.container {
+	margin: 0 auto;
+	max-width: 80%;
+	padding: 0 1rem;
+}
+
+
+.responsive-image{
+	max-width: 100%;
+	
+}
+
+
+cell img{
+	display: block;
+
+}
+
+
+@media screen and (min-width: 600px) {
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+  }
+  .cell {
+    width: 50%;
+  }
+}
+
+
+@media screen and (min-width: 1000px) {
+  .cell {
+    width: calc(100% / 3);
+  }
+}
+
+.cell {
+  padding: 1rem;
+}
+
+@media screen and (min-width: 600px) {
+  .cell {
+    width: calc(50% - 2rem);
+  }
+}
+
+@media screen and (min-width: 1000px) {
+  .cell {
+    width: calc(50% - 2rem);
+  }
+}
+
+
+nav ul, footer ul {
+    font-family:'Helvetica', 'Arial', 'Sans-Serif';
+    padding: 2em;
+    list-style: none;
+    font-weight: bold;
+    max-width: 80%;
+}
+nav ul li, footer ul li {
+    display: inline;
+    margin-right: 20px;
+}
+a {
+    text-decoration: none;
+    color: #999;
+}
+a:hover {
+    text-decoration: underline;
+}
+h1 {
+    font-size: 3em;
+    font-family:'Helvetica', 'Arial', 'Sans-Serif';
+}
+p {
+    font-size: 1.5em;
+    line-height: 1.4em;
+    color: #333;
+}
+
+#content-wrap {
+  padding-bottom: 5rem;    /* Footer height */
+}
+
+footer {
+    /*border-top: 1px solid #d5d5d5; 
+    font-size: .8em;
+    position: absolute;
+    bottom: 0px;
+    width: 70%;*/
+    position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 0.5rem;    
+}
+
+ul.posts { 
+    margin: 20px auto 40px; 
+    font-size: 1.5em;
+}
+
+ul.posts li {
+    list-style: none;
+}
+
+figcaption{
+	text-align: center;
+	color: #999;
+
+
+
+}
+
+</style>
+
+<body>
+
+
+
+	
+	<div class="container" id="content-wrap">
+
+		<nav>
+    		<ul>
+        		<li><a href="/">Home</a></li>
+	        	<li><a href="/about">About</a></li>
+        		<li><a href="/cv">Résumé</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/lda/index.html">MS 2040 Topic Modelling</a></li>
+                
+    		</ul>
+		</nav>
+
+
+		<p >MBUOTIDEM ISAAC - PORTFOLIO</p>
+		<div class="grid">
+			
+			<div class="cell">
+				
+					<figure>
+						<a href="/img_gallery">
+				<img src="./image_gallery.png" class="responsive-image">
+				</a>
+				<figcaption><h3>Simple Photo Gallery</h3></figcaption>	
+			</figure>
+				
+			</div>
+		
+
+		
+			<div class="cell">
+				
+					<figure>
+						<a href="/brokedate">
+				<img src="./BrokePeopleDate.png"" class="responsive-image">
+				</a>
+				<figcaption><h3>BrokePeopleDate</h3></figcaption>
+			</figure>
+			
+			</div>
+		
+			<div class="cell">
+				
+					<figure>
+						<a href="/chezasha">
+				<img src="./casa.png" class="responsive-image">
+				</a>
+				<figcaption><h3>La Casa de Asha</h3></figcaption>
+			</figure>
+			
+			</div>
+
+
+			<div class="cell">
+				
+					<figure>
+						<a href="https://perfrev20181128102738.azurewebsites.net/">
+				<img src="./perfrev.png" class="responsive-image">
+				</a>
+				<figcaption><h3>Performance Review Portal</h3></figcaption>
+			</figure>
+			
+			</div>
+	</div>
+
+	<footer>
+    		<ul>
+        		<li><a href="mailto:mail@misaac.me">email</a></li>
+        		<li><a href="https://github.com/mbuotidem">github.com/mbuotidem</a></li>
+			</ul>
+		</footer>
+</div>
+</body>
+<!-- /.blurb -->
+
