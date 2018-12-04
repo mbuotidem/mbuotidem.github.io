@@ -189,11 +189,12 @@ many of these.)
     Open your Android device applications menu and look for the zulip app with the name Zulip (debug). 
 
 16. Open a Windows `cmd` prompt and run the command below to setup the reverse proxy that will allow development if you are using a physical device. 
+
     `adb reverse tcp:8081 tcp:8081` 
 
 17. Navigate up one level back into the zulip-mobile folder. From here run
 
-    `react-native start`. 
+    `react-native start`
 
     When you see the message "Loading dependency graph, done." Open the Zulip app on your device and the final app setup will occur. When it has completed, you will see the Zulip login page. 
 
