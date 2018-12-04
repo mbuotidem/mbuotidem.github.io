@@ -113,12 +113,13 @@ many of these.)
 
     * Then move to the System variables section and add the `ANDROID_HOME` environment variable you added at the end of Step 3 to System variables. 
 
-    * Finally, scroll down in the System variables section until you find `Path`. Double-click on it, click New in the window that comes up and then add the lines below in separate lines. 
+    * Finally, scroll down in the System variables section until you find `Path`. Double-click on it, click New in the window that comes up and then add the lines below in separate lines. Be sure to replace `{User}` in the lines below with your Windows account username. 
 
         ```
         C:\Users\{User}\AppData\Local\Android\Sdk\platform-tools
         C:\Users\{User}\AppData\Local\Android\Sdk\emulator
         ```
+
 
 5. Go to the Windows Store and type the name of the linux distro you would like to use with WSL. These instructions have been tested to work on Ubuntu and DebianGNU/Linux. When the page for your selected distro opens. Click on 'Get' to install it. 
 
@@ -170,7 +171,7 @@ many of these.)
     sudo chown -R $USER:$GROUP ~/.npm
     sudo chown -R $USER:$GROUP ~/.config
     ```
-    
+
     You might see the message 'There appears to be trouble with your network connection. Retrying...'. This is normal. Just wait for it to keep retrying. If it fails, simply run `yarn install` again and again until it completes. 
 
     Alternatively, you can install Yarn on Windows, and navigate into the zulip-mobile folder using Windows cmd and run yarn install from the Windows side. 
@@ -187,7 +188,10 @@ many of these.)
 
     Open your Android device applications menu and look for the zulip app with the name Zulip (debug). 
 
-16. Navigate up one level back into the zulip-mobile folder. From here run
+16. Open a Windows `cmd` prompt and run the command below to setup the reverse proxy that will allow development if you are using a physical device. 
+    `adb reverse tcp:8081 tcp:8081` 
+
+17. Navigate up one level back into the zulip-mobile folder. From here run
 
     `react-native start`. 
 
