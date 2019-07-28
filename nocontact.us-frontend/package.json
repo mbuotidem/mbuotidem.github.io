@@ -6,7 +6,7 @@
   "author": "Imran Mondal",
   "license": "MIT",
   "dependencies": {
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^3.4.1",
     "browser-sync": "^2.18.8",
     "font-awesome": "^4.7.0",
     "gulp": "^3.9.1",
