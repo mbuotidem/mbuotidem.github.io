@@ -1,37 +1,20 @@
-
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>{{ page.title }}</title>
-		<!-- link to main stylesheet -->
-		<link rel="stylesheet" type="text/css" href="/css/main.css">
-		
+<html lang="{{ page.lang | default: site.lang | default: "en" }}">
 
-	</head>
-	<body>
-		
-		
-		
-		<div class="container">
-			<nav>
-    		<ul>
-        		<li><a href="/">Home</a></li>
-	        	<li><a href="/about">About</a></li>
-        		<li><a href="/cv">Résumé</a></li>
-                <li><a href="/blog">Blog</a></li>
-                <li><a href="/lda/index.html">MS 2040 Topic Modelling</a></li>
-                
-    		</ul>
-		</nav>
-    		{{ content }}
-		</div><!-- /.container -->
-		
-		<footer>
-    		<ul>
-        		<li><a href="mailto:mail@misaac.me">email</a></li>
-        		<li><a href="https://github.com/mbuotidem">github.com/mbuotidem</a></li>
-			</ul>
-		</footer>
-		
-	</body>
+  {%- include head.html -%}
+
+  <body>
+
+    {%- include header.html -%}
+
+    <div class="py-5">
+      <div class="container page-content">
+          {{ content }}
+      </div>
+    </div>
+
+    {%- include footer.html -%}
+
+  </body>
+
 </html>
