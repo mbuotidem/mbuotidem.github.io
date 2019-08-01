@@ -7,3 +7,25 @@
 @import "syntax-highlighting";
 @import "bootstrap-4-jekyll/bootstrap-4-jekyll";
 @import "bootstrap_customization";
+
+
+.about:after { /* this is the border */
+    content:"";
+    display:block;
+    width: 6em;
+    max-width:70%;
+    border-bottom: 0.1em solid black;
+    margin: 2px auto 0;
+  }
+
+.footer-link{
+    margin-right: 0.3em;
+}
+
+.sections{
+    padding-bottom: 48px;
+}
+
+.projects-section{
+    background-color: #f8f9fa;
+}
