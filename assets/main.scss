@@ -37,3 +37,17 @@
 
 
 }
+
+@media screen and (max-width: 480px) {
+    nav a {
+         font-size:80%;
+    }
+}
+
+.navbar-brand{
+    font-size: 1rem;
+}
+
+body {
+    padding-top: 100px;
+  }
