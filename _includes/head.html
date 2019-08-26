@@ -9,6 +9,10 @@
   <script src="{{ "/assets/javascript/bootstrap/bootstrap.bundle.min.js" | relative_url }}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/js/all.min.js"></script>
 
+  {% if site.google_analytics and jekyll.environment == 'production' %}
+  {% include analytics.html %}
+  {% endif %}
+
   <!-- Favicon head tag -->
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?">
 </head>

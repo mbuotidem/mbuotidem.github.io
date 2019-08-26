@@ -26,6 +26,9 @@ description: >- # this means to ignore newlines until "baseurl:"
 #repository: "/"
 url: "https://github.com/mbuotidem"
 
+# Google Analytics
+google_analytics: UA—44492820-1
+
 # Build settings
 plugins:
   - jekyll-feed
