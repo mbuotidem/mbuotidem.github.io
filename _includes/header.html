@@ -1,7 +1,7 @@
 <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
   <div class="container">
-    <a class="navbar-brand" rel="author" href="{{ '/ | relative_url }}">{{ site.title | escape }}</a>
-    
+    <a class="navbar-brand" rel="author" href="/index">{{ site.title | escape }}</a>
+
 
 
     {%- assign page_paths = site.header_pages -%}
@@ -28,15 +28,18 @@
         <li class="nav-item">
           <a class="nav-link" href="{{ site.url }}"><i class="fab fa-github" aria-hidden="true"></i></a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link lin" href="/blog">Blog</a>
+        </li>
 
         <li class="nav-item">
-          <a class="nav-link lin" href="#about-me">About Me</a>
+          <a class="nav-link lin" href="/index#about-me">About Me</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link lin" href="#projects">Projects</a>
+          <a class="nav-link lin" href="/index#projects">Projects</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link lin" href="./resume/">Resume</a>
+          <a class="nav-link lin" href="/resume/">Resume</a>
         </li>
       </ul>
     </div>
