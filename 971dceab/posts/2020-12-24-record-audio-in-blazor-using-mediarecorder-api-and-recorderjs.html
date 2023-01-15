@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.313">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Isaac Mbuotidem">
+<meta name="dcterms.date" content="2020-12-24">
+
+<title>Chasing DevOps Nirvana – record-audio-in-blazor-using-mediarecorder-api-and-recorderjs</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Chasing DevOps Nirvana</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../resume/resume.pdf"><i class="bi bi-file-text" role="img">
+</i> 
+ <span class="menu-text">Résumé</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/mbuotidem"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/mbuotidemisaac"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/miisaac/"><i class="bi bi-linkedin" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://stackoverflow.com/users/7179900/mbuotidem-isaac"><i class="bi bi-stack-overflow" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+<p>I recently started playing with Blazor and I decided to build an app that needed to get audio recorded from the users microphone via the browser. This post explains how I did that on Server Side Blazor.</p>
+<p>I decided to go with using the browser’s <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices">MediaDevices</a> interface in conjunction with Matt Diamond’s aptly named <a href="https://github.com/mattdiamond/Recorderjs">Recorder.js</a> library. Although Recorder.js is no longer actively maintained, it still works and more importantly, lets me record in <code>.wav</code> format which was part of my requirement.</p>
+<p>So how does all of this work in the context of a Blazor application? My approach boils down to the following: 1. Record the audio from the user’s browser using JavaScript 2. Post the recorded audio blob to an API endpoint on my Blazor Server App using <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest">XMLHttpRequest</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData">FormData</a>. 3. Save the audio blob to a file on disk.</p>
+<section id="record-the-audio-from-the-users-browser-using-javascript-and-recorder.js" class="level2">
+<h2 class="anchored" data-anchor-id="record-the-audio-from-the-users-browser-using-javascript-and-recorder.js">Record the audio from the user’s browser using JavaScript and Recorder.js</h2>
+<p>As mentioned earlier, I’ll be using the MediaDevices API along with Recorder.js to record the audio from the browser. The MediaDevices API has a method, <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia"><code>getUserMedia()</code></a> which enables recording of all sorts of media streams - audio, video, screen share etc. In our case, we will be using just the audio recording capability via Recorder.js. More on this in a second.</p>
+<section id="the-user-interface" class="level3">
+<h3 class="anchored" data-anchor-id="the-user-interface">The user interface</h3>
+<p>The UI for the audio recording is lifted straight from the <a href="https://mdn.github.io/web-dictaphone/">web dictaphone</a> sample.</p>
+<p><img src="./12_24_20.PNG" class="img-fluid" alt="Web dictaphone user interface for recording audio from browser">{:class=“img-responsive”}</p>
+<p>As the image above shows, we have a record and stop button along with an HTML5 canvas that visualizes the audio stream being heard by the microphone. Credit for the visualizer code goes to <a href="https://soledadpenades.com/">Soledad Penades</a>.</p>
+<p>Here is the Blazor component code for the UI above. I simply replaced the code that was in <code>Index.razor</code> but feel free to create and use a different component.</p>
+<pre><code>@page "/"
+@inject IJSRuntime jsRuntime
+
+&lt;div class="wrapper mt-5"&gt;
+    &lt;section class="main-controls"&gt;
+        &lt;canvas id="canvas" class="visualizer" height="60"&gt;&lt;/canvas&gt;
+        &lt;div id="buttons"&gt;
+            &lt;button class="@recordButton" disabled="@Recording" @onclick=Record&gt;Record&lt;/button&gt;
+            &lt;button class="stop" disabled="@NotRecording" @onclick=Stop&gt;Stop&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section class="sound-clips"&gt;
+    &lt;/section&gt;
+    &lt;audio controls autoplay&gt;
+    &lt;/audio&gt;
+&lt;/div&gt;
+
+
+@code{
+    string recordButton = "record";
+
+    bool recording = false;
+    bool notRecording = true;
+
+
+    private async Task Record()
+    {
+
+        recordButton = "recording";
+        recording = true;
+        notRecording = false;
+        await jsRuntime.InvokeVoidAsync("MyJSMethods.startRecording");
+    }
+
+    private async Task Stop()
+    {
+        recordButton = "record";
+        recording = false;
+        notRecording = true;
+        await jsRuntime.InvokeVoidAsync("MyJSMethods.stopRecording");
+    }
+
+}</code></pre>
+<p>The field <code>recordButton</code> toggles the class of the record button from ‘record’ to ‘recording’. We use this to change the record button’s color to red when a recording is in progress and back to blue when recording is stopped.</p>
+<p>The fields ‘recording’ and ‘notRecording’ are boolean, and are used to enable and disable clicking on the record and stop buttons depending on if a recording is in progress.</p>
+<p>The component’s methods are pretty simple. <code>Record</code> toggles our CSS property fields and then calls out to a JavaScript function <code>startRecording</code> via the <a href="https://blazor-university.com/javascript-interop/calling-javascript-from-dotnet/">IJSRuntime</a> service that enables Blazor’s JavaScript interoperability. <code>Stop</code> toggles back the CSS fields and then calls the JavaScript function <code>stopRecording</code> to, well, stop recording.</p>
+<p>Below is the CSS for the component which I placed in <code>site.css</code>.</p>
+<pre><code>#buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+    #buttons button {
+        font-size: 1rem;
+        padding: 1rem;
+        width: calc(50% - 0.25rem);
+    }
+
+
+.record {
+    background: #0088cc;
+    text-align: center;
+    color: white;
+}
+
+    .record:hover, .record:focus {
+        box-shadow: inset 0px 0px 10px rgba(255, 255, 255, 1);
+        background: #0ae;
+    }
+
+    .record:active {
+        box-shadow: inset 0px 0px 20px rgba(0,0,0,0.5);
+        transform: translateY(2px);
+    }
+
+.recording {
+    background: red;
+    text-align: center;
+    color: white;
+}
+
+.stop {
+    font-size: 1rem;
+    background: #0088cc;
+    text-align: center;
+    color: white;
+    border: none;
+    transition: all 0.2s;
+    padding: 0.5rem;
+}
+
+    .stop:hover, .stop:focus {
+        box-shadow: inset 0px 0px 10px rgba(255, 255, 255, 1);
+        background: #0ae;
+    }
+
+    .stop:active {
+        box-shadow: inset 0px 0px 20px rgba(0,0,0,0.5);
+        transform: translateY(2px);
+    }
+
+</code></pre>
+<p>Now that we understand how our Blazor component works, lets talk about the JavaScript part.</p>
+</section>
+<section id="the-javascript---getusermedia-and-recorder.js" class="level3">
+<h3 class="anchored" data-anchor-id="the-javascript---getusermedia-and-recorder.js">The JavaScript - <code>getUserMedia</code> and <code>Recorder.js</code></h3>
+<p>Our first step is to add a link to Recorder.js in our <code>_Host.cshtml</code> page, right below the link to the Blazor server framework script. We also include an empty <code>&lt;script&gt;</code> tag that will contain our JavaScript.</p>
+<pre><code>&lt;script src="_framework/blazor.server.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  
+&lt;/script&gt;
+</code></pre>
+<p>Next, we can start writing the JavaScript we need to record audio. Let’s start with the functions that are called from C#. Note that the rest of the JavaScript code in this post should be placed within the empty <code>&lt;script&gt;</code> tag above.</p>
+<pre><code>window.MyJSMethods = {
+
+    startRecording: function () {
+        navigator.getUserMedia({ audio: true }, onSuccess, onError);
+    },
+
+    stopRecording: function (element) {
+        stop.click();
+    },
+}
+</code></pre>
+<p><code>startRecording</code> above invokes the browser’s <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia"><code>getUserMedia</code></a> method which prompts the user to grant us access to their microphone in order to start recording audio. If that request succeeds, then we invoke the <code>onSuccess</code> method which is where the actual recording takes place. If the user refuses to grant us access, then we call <code>onError</code>. The nice thing about the way this works is that the user is prompted to grant access only once - the browser will remember that access was granted on subsequent visits to your page. Lets look at <code>onError</code>.</p>
+<pre><code>let onError = function (err) {
+    console.log('The following error occurred: ' + err);
+};
+</code></pre>
+<p><code>onError</code> simply logs the error to the console. This was fine by me during development but is not very useful for the end user. Consider improving this to issue an alert and tell the user “Hey, you need to grant us access to your microphone if you want us to record your audio!”. Next up, <a name="onSuccess"><code>onSuccess</code></a>, where the recording magic happens!</p>
+<pre><code>let stop = document.querySelector('.stop');
+
+let onSuccess = function (stream) {
+    let recorder;
+    let context;
+    let audio = document.querySelector('audio');
+    stop.disabled = false;
+
+    let mainSection = document.querySelector('.main-controls');
+    const canvas = document.querySelector('.visualizer');
+    canvas.width = mainSection.offsetWidth;
+
+    const canvasCtx = canvas.getContext("2d");
+
+    context = new AudioContext();
+    let mediaStreamSource = context.createMediaStreamSource(stream);
+    recorder = new Recorder(mediaStreamSource);
+    recorder.record();
+
+    //visualize(stream, canvas, canvasCtx);
+
+
+    stop.onclick = function () {
+        recorder.stop();
+        
+        recorder.exportWAV(function (s) {
+            wav = window.URL.createObjectURL(s);
+            audio.src = window.URL.createObjectURL(s);
+            let filename = new Date().toISOString().replaceAll(':', "");
+            let fd = new FormData();
+            fd.append("file", s, filename);
+            let xhr = new XMLHttpRequest();
+            xhr.addEventListener("load", transferComplete);
+            xhr.addEventListener("error", transferFailed)
+            xhr.addEventListener("abort", transferFailed)
+            xhr.open("POST", "api/SaveAudio/Save/", true);
+            xhr.send(fd);
+
+        });
+
+        stop.disabled = true;
+
+
+        function transferComplete(evt) {
+            console.log("The transfer is complete.");
+            //GLOBAL.DotNetReference.invokeMethodAsync('Recognize', filename);
+
+        }
+
+        function transferFailed(evt) {
+            console.log("An error occurred while transferring the file.");
+
+            console.log(evt.responseText);
+            console.log(evt.status);
+        }
+
+    }
+}
+</code></pre>
+<p><code>onSuccess</code> is called from <code>getUserMedia</code> which passes it a stream of the audio source. We then create the <code>recorder</code>, <code>context</code>, and <code>audio</code> variables. The API for Recorder.js is intuitive - to record, you call the <code>record</code> method on a <code>Recorder</code> object. A <code>Recorder</code> object takes a source and an optional config as parameters. In our case, we are using the browser’s <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioContext"><code>AudioContext</code></a> interface as our source. <code>AudioContext</code> processes the stream into an audio source that our <code>Recorder</code> instance can use when we invoke its <code>record</code> method. The <code>audio</code> variable just holds a reference to the HTML5 audio element through which we will play back the recorded audio to the user.</p>
+<p>We also created two canvas related variables, <code>canvas</code> and <code>canvasCtx</code>, which we pass into a commented out call to the <code>visualize</code> function. This function handles the visualization of the audio stream and is not required for the recording to work. Ignore it for now - we will <a href="#visualizer">circle back</a> to it.</p>
+<p>Next is our stopping mechanism. Outside <code>onSuccess</code>, we have a handle on the stop button. To stop recording, we attach a function to the stop button’s <code>onclick</code> event which does a couple of things. First, it stops the recording and then uses Recorder.js’s <code>exportWAV</code> method to export the audio blob as a <code>.wav</code> file. When the file is ready, we create a filename based on the timestamp. We set this file as the source for our HTML5 audio element to allow for immediate playback of the recorded audio. Then we post the audio file to our backend via <code>XMLHttpRequest</code>.</p>
+<p>Before we discuss how the file is posted to our backend, a quick word about the functions <code>transferComplete</code> and <code>transferFailed</code>. You can do whatever you want to based on the status of the transfer of the file via <code>XMLHttpRequest</code> by attaching event listeners to it. For example, in the actual application I was building, on a successful POST, I invoked a C# method, in the commented out line reproduced below:</p>
+<pre><code>//GLOBAL.DotNetReference.invokeMethodAsync('Recognize', filename);
+</code></pre>
+<p>This line triggered a method called Recognize in that version of my Blazor Component to perform speech recognition on the recorded audio file. To learn more about calling C# code from JavaScript via the Blazor JavaScript interop, see <a href="https://docs.microsoft.com/en-us/aspnet/core/blazor/call-dotnet-from-javascript?view=aspnetcore-3.1">here</a> and <a href="https://blazor-university.com/javascript-interop/calling-dotnet-from-javascript/">here</a>.</p>
+</section>
+</section>
+<section id="post-the-recorded-audio-blob-to-an-api-endpoint-on-my-blazor-server-app-using-xmlhttprequest-and-formdata" class="level2">
+<h2 class="anchored" data-anchor-id="post-the-recorded-audio-blob-to-an-api-endpoint-on-my-blazor-server-app-using-xmlhttprequest-and-formdata">Post the recorded audio blob to an API endpoint on my Blazor Server App using <code>XMLHttpRequest</code> and <code>FormData</code></h2>
+<p>Posting the audio blob is fairly straight forward. As mentioned earlier, we use the <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest">XMLHttpRequest</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData">FormData</a> objects. Here’s that portion of the <code>onSuccess</code> function again:</p>
+<pre><code>recorder.exportWAV(function (s) {
+    wav = window.URL.createObjectURL(s);
+    audio.src = window.URL.createObjectURL(s);
+    let filename = new Date().toISOString().replaceAll(':', "");
+    let fd = new FormData();
+    fd.append("file", s, filename);
+    let xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", transferComplete);
+    xhr.addEventListener("error", transferFailed)
+    xhr.addEventListener("abort", transferFailed)
+    xhr.open("POST", "api/SaveAudio/Save/", true);
+    xhr.send(fd);
+});
+</code></pre>
+<p>First we create the <code>FormData</code> object and then use its <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData/append"><code>append</code></a> method to add the filename we created as well as the recorded <code>.wav</code> file, here represented by <code>s</code>, to the form. Then we create the XMLHttpRequest object and attach event listeners for a successful transfer, as indicated by <code>load</code>, as well as for failures such as <code>error</code> and <code>abort</code>.</p>
+<p>Next, we initialize a <code>POST</code> request with XMLHttpRequest’s <code>open</code> method, indicating the API endpoint url <code>api/SaveAudio/Save</code> as the target. And then we invoke the <code>send</code> method, performing the actual POST request with the <code>FormData</code> object containing our audio blob file as its payload. Note that if your API is on a different domain, you might need to take steps to resolve <a href="https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-5.0">CORS</a> issues.</p>
+<section id="setup-required-to-create-the-.net-web-api-endpoint" class="level3">
+<h3 class="anchored" data-anchor-id="setup-required-to-create-the-.net-web-api-endpoint">Setup required to create the .NET Web API endpoint</h3>
+<p>To add an API endpoint to our Blazor Server application, we need to make some changes to the <code>Startup.cs</code> class. Add the using statement for .Net Core MVC to the list of using statements.</p>
+<pre><code>using Microsoft.AspNetCore.Mvc;
+</code></pre>
+<p>Then modify the <code>ConfigureServices</code> method, adding the Mvc service:</p>
+<pre><code>public void ConfigureServices(IServiceCollection services)
+{
+    services.AddMvc(options =&gt; options.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+    ...
+}</code></pre>
+<p>Next, add <code>app.UseMvcWithDefaultRoute();</code> to the <code>Configure</code> method. I placed it right after <code>app.UseRouting()</code> and before <code>app.UseEndpoints()</code>;</p>
+<pre><code>public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        ...
+        app.UseRouting();
+        
+        app.UseMvcWithDefaultRoute();
+
+
+        app.UseEndpoints(endpoints =&gt;
+        {
+            endpoints.MapControllers();
+            endpoints.MapBlazorHub();
+            endpoints.MapFallbackToPage("/_Host");
+        });
+    }</code></pre>
+<p>With this setup in place, we can now create our API controller class.</p>
+</section>
+</section>
+<section id="save-the-audio-blob-to-a-file-on-disk." class="level2">
+<h2 class="anchored" data-anchor-id="save-the-audio-blob-to-a-file-on-disk.">Save the audio blob to a file on disk.</h2>
+<p>To receive the audio, we will be creating an ASP.NET Core Controller with a method <code>Save</code>. The class itself is called <code>SaveAudio</code>. Together, these map to the the API endpoint <code>api/SaveAudio/Save</code> which we used earlier in the JavaScript code. To add this route to our controller, we use the <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/controllers/routing?view=aspnetcore-5.0">attribute route</a> <code>[Route("api/[controller]/Save")]</code>. Below is the code.</p>
+<pre><code>using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Threading.Tasks;
+
+
+namespace BlazorAudioRecorder
+{
+    public class SaveAudio: Controller
+    {
+        Microsoft.AspNetCore.Hosting.IWebHostEnvironment _hostingEnvironment;
+
+        public SaveAudio(Microsoft.AspNetCore.Hosting.IWebHostEnvironment hostingEnvironment)
+        {
+            _hostingEnvironment = hostingEnvironment;
+
+        }
+
+        [Route("api/[controller]/Save")]
+        [HttpPost]
+        public async Task&lt;IActionResult&gt; Save(IFormFile file)
+        {
+            if (file.ContentType != "audio/wav")
+            {
+                return BadRequest("Wrong file type");
+            }
+            var uploads = Path.Combine(_hostingEnvironment.WebRootPath, "uploads");
+            
+            var filePath = Path.Combine(uploads, file.FileName + ".wav");
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+            return Ok("File uploaded successfully");
+        }
+    }
+}
+</code></pre>
+<p>The <code>Save</code> method will be invoked when an <code>HttpPost</code> request is made to the endpoint <code>api/SaveAudio/Save</code>. Notice that the name of the <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.iformfile?view=aspnetcore-5.0"><code>IFormFile</code></a> parameter is <code>file</code> which corresponds to the name we gave the audio blob when creating our <code>FormData</code> object earlier. Here is that specific line of JavaScript code again:</p>
+<pre><code>fd.append("file", s, filename);
+</code></pre>
+<p>By doing this, we can rely on ASP.NET <a href="https://docs.microsoft.com/en-us/aspnet/core/mvc/models/model-binding?view=aspnetcore-5.0">model binding</a> magic to match everything up for us. The rest of the code is fairly simple, we check if the content type matches our expectation of <code>audio/wav</code>. If it doesn’t, we reject it, but if does, we go ahead and save the file to the <code>uploads</code> folder. You <strong>must create a folder named <code>uploads</code> in the <code>wwwroot</code> folder of your application</strong>, otherwise, your code will throw an exception since the destination you’re asking it to save to doesn’t exist.</p>
+<p>And there we have it! Compile, run, and record away! You can access the recorded files by visiting the <code>wwwroot/uploads</code> folder of your Blazor application.</p>
+<section id="visualizing-the-audio-stream" class="level3">
+<h3 class="anchored" data-anchor-id="visualizing-the-audio-stream"><a name="visualizer">Visualizing </a> the audio stream</h3>
+<p>Here is the code snippet for visualizing the audio stream. Add it to your <code>_Host.cshtml</code> file.</p>
+<pre><code>let audioCtx;
+
+// This function visualizes the audio stream coming out of the user's microphone.
+// Credit: Soledad Penades of https://soledadpenades.com/ via https://mdn.github.io/web-dictaphone/
+
+function visualize(stream, canvas, canvasCtx) {
+    if (!audioCtx) {
+        audioCtx = new AudioContext();
+    }
+
+    const source = audioCtx.createMediaStreamSource(stream);
+
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    source.connect(analyser);
+    //analyser.connect(audioCtx.destination);
+
+    draw()
+
+    function draw() {
+        const WIDTH = canvas.width
+        const HEIGHT = canvas.height;
+
+        requestAnimationFrame(draw);
+
+        analyser.getByteTimeDomainData(dataArray);
+
+        canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+        canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+
+        canvasCtx.beginPath();
+
+        let sliceWidth = WIDTH * 1.0 / bufferLength;
+        let x = 0;
+
+
+        for (let i = 0; i &lt; bufferLength; i++) {
+
+            let v = dataArray[i] / 128.0;
+            let y = v * HEIGHT / 2;
+
+            if (i === 0) {
+                canvasCtx.moveTo(x, y);
+            } else {
+                canvasCtx.lineTo(x, y);
+            }
+
+            x += sliceWidth;
+        }
+
+        canvasCtx.lineTo(canvas.width, canvas.height / 2);
+        canvasCtx.stroke();
+
+    }
+}
+</code></pre>
+<p>Then make sure to uncomment</p>
+<pre><code>//visualize(stream, canvas, canvasCtx);
+</code></pre>
+<p>in the <a href="#onSuccess"><code>onSuccess</code></a> method. When you click record, you should now see a visualization of the audio stream. <br> <br> <br> <br> ### Github Source <a href="https://github.com/mbuotidem/BlazorAudioRecorder">BlazorAudioRecorder</a> <br> <br> <br> <br> ### Further Reading</p>
+<p><a href="https://blog.addpipe.com/recording-audio-in-the-browser-using-pure-html5-and-minimal-javascript/">https://blog.addpipe.com/recording-audio-in-the-browser-using-pure-html5-and-minimal-javascript/</a></p>
+<p><a href="https://blog.addpipe.com/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/">https://blog.addpipe.com/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/</a></p>
+<p><a href="https://github.com/GersonRosales/Record-Audios-and-Videos-with-getUserMedia">https://github.com/GersonRosales/Record-Audios-and-Videos-with-getUserMedia</a></p>
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API/Using_the_MediaStream_Recording_API">https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API/Using_the_MediaStream_Recording_API</a></p>
+<p><a href="https://hacks.mozilla.org/2016/04/record-almost-everything-in-the-browser-with-mediarecorder/">https://hacks.mozilla.org/2016/04/record-almost-everything-in-the-browser-with-mediarecorder/</a></p>
+<p><a href="https://mdn.github.io/web-dictaphone/">https://mdn.github.io/web-dictaphone/</a></p>
+<p><a href="https://khalidabuhakmeh.com/upload-a-file-using-aspdotnet-core">https://khalidabuhakmeh.com/upload-a-file-using-aspdotnet-core</a></p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
