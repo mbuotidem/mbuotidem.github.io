@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.313">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Isaac Mbuotidem">
+<meta name="dcterms.date" content="2021-05-28">
+<meta name="keywords" content="aws, nginx, elastic beanstalk, 502 bad gateway, 111 connection refused">
+<meta name="description" content="How to resolve nginx 502 Bad Gateway / 111-connection-refused error due to .net web application start failure">
+
+<title>Chasing DevOps Nirvana - Elastic Beanstalk 502 Bad Gateway / 111 connection refused while connecting to upstream error on .net</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Chasing DevOps Nirvana</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html">
+ <span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../resume/resume.pdf"><i class="bi bi-file-text" role="img">
+</i> 
+ <span class="menu-text">Résumé</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/mbuotidem"><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/mbuotidemisaac"><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/miisaac/"><i class="bi bi-linkedin" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://stackoverflow.com/users/7179900/mbuotidem-isaac"><i class="bi bi-stack-overflow" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Elastic Beanstalk 502 Bad Gateway / 111 connection refused while connecting to upstream error on .net</h1>
+                  <div>
+        <div class="description">
+          How to resolve nginx 502 Bad Gateway / 111-connection-refused error due to .net web application start failure
+        </div>
+      </div>
+                </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Isaac Mbuotidem </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">May 28, 2021</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<p>I recently tried to host a .NET web application on Elastic Beanstalk. I was using the AWS Toolkit for Visual Studio to handle the deployment so I thought everything would just go swimmingly. Initially, it seemed I was right - the application deployed successfully and the Elastic Beanstalk info page told me that the Environment was healthy. Nice. And then I clicked the url and I saw this lovely page:</p>
+<p><img src="./5_28_21.PNG" class="img-fluid" alt="Nginx Error page with error: 502 Bad Gateway">{:class=“img-responsive”}</p>
+<p>So off to Google to figure out what’s wrong and sure enough, there were a couple of stackoverflow questions from users who had encountered this <code>502 Bad Gateway</code> error so things were looking hopeful. However, after trying a couple of suggestions from some of the stackoverflow results, it became clear that even though my error was the same, the root cause of the problem was definitely different from what was causing the issues for other users.</p>
+<p>So back to Google I went, this time, hoping for a blog post from some amazing developer who had encountered my problem before and could shed some light. I found this post by Martin Beebs <a href="https://thebeebs.net/2021/02/02/elastic-beanstalk-502-bad-gateway-error/">Elastic Beanstalk 502 Bad Gateway</a>. He was helping troubleshoot another dev’s issues with deploying a .net core application using the AWS Visual Studio Toolkit which was exactly what I was trying to do.</p>
+<p>The gist of Martin’s blog post was that when you deploy a .net core web application to Elastic Beanstalk, it saves the logs from your webserver to the file <code>web.stdout</code>. You can access these logs by using the Elastic Beanstalk Console to download the full logs for your environment which you will get as a zip file with a filename like <code>BundleLogs-123456789112</code>. Extract said zip and go to <code>/var/log/</code> and ideally, you should find the <code>web.stdout</code> file. Ideally, you should also find the error that your application’s webserver is experiencing that’s leading to the 502 Bad Gateway error in this file.</p>
+<p>Armed with that knowledge, I went and got my logs from the Elastic Beanstalk console and then went looking for my <code>web.stdout</code> file and <strong>there was no such log file</strong>. What I did have though in <code>/var/log/nginx/</code> was the logs from Nginx which showed me the error <code>111-connection-refused-while-connecting-to-upstream, client: 12.345.678.910, server: , request: "GET / HTTP/1.1", upstream: "http://127.0.0.1:5000/", host: "pt-dev.us-east-1.elasticbeanstalk.com"</code> Searching for that error indicated that it could happen if your webserver wasn’t even getting started. At this point, I knew that cowboy coding was not going to hack it anymore, I had to go consult the AWS documentation, and maybe even do a walkthrough.</p>
+<p>But first, I decided to eliminate my worry that perhaps my application just wasn’t working on Elastic Beanstalk because I developed it on a Windows machine and I was trying to deploy it to a .net core Amazon Linux container. .NET core is cross-platform so this shouldn’t be a valid concern, but hey, you never know, let’s just make sure. Fortunately, the code was already on GitHub and I had access to the <a href="https://github.com/features/codespaces">GitHub Codespaces</a> beta, so I launched a Codespace from the repo and ran the application and it worked there. So with that test, I knew that the application could run on a Linux box. So the problem likely was that there was some configuration I had to make in Elastic Beanstalk to tell it to run my application dll and where to find said dll. My assumption had been that the AWS Toolkit for Visual Studio would handle this for me but clearly, either it didn’t, or it had set it up wrong.</p>
+<p>So back to troubleshooting on Elastic Beanstalk. I went back to the AWS documentation and I started reading everything under the section <a href="https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-dotnet-core-linux.html">Working with .NET Core on Linux</a>. Eventually, I got to the page <a href="https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/dotnet-linux-%60Procfile%60.html">Using a <code>Procfile</code> to configure your .NET Core on Linux environment</a>. It turns out, this is exactly where I can tell Elastic Beanstalk which applications I want it to run. Below is an example <code>Procfile</code>:</p>
+<pre><code>web: dotnet ./dotnet-core-app1/dotnetcoreapp1.dll
+web2: dotnet ./dotnet-core-app2/dotnetcoreapp2.dll</code></pre>
+<p>Before going ahead to create my own <code>Procfile</code>, I decided to check if it was indeed true that the AWS Toolkit was not creating my <code>Procfile</code>. So I headed to the Elastic Beanstalk console and went to the <code>Application versions</code> page for my application. There I downloaded the .net core publish zip file that Elastic Beanstalk had created. And there was a <code>Procfile</code> in there. So what was the problem? Here is what I had in my <code>Procfile</code>:</p>
+<pre><code>web: dotnet exec ./PeerTutor.IntegrationTests.dll</code></pre>
+<p>This means that instead of trying to run my web application, Elastic Beanstalk was trying to run the tests I had written for my application. I had several dotnet projects in my solution - my application, my application’s unit tests, and my application’s integration tests and I had them all setup to build in Configuration Manager as you can see in the screenshot below:</p>
+<p><img src="./5_28_21_b.PNG" class="img-fluid" alt="Nginx Error page with error: 502 Bad Gateway">{:class=“img-responsive”}</p>
+<p>For some reason, the AWS Toolkit decided that the application dll that needed to be added to the <code>Procfile</code> was the integration test instead of the actual web application’s dll. So to solve this, all I had to do was uncheck the test projects in Configuration Manager, leaving only my web application. You can find Configuration Manager in Visual Studio 2019 by going to the Build menu item and it will be close to the bottom of the list - <code>Build&gt;Configuration Manager</code>.</p>
+<p><img src="./5_28_21_c.PNG" class="img-fluid" alt="Nginx Error page with error: 502 Bad Gateway">{:class=“img-responsive”}</p>
+<p>And with that change, I rebuilt my application. Then I ran the AWS Toolkit wizard again and this time, it correctly added the web application to the <code>Procfile</code>. My <code>Procfile</code> now looked like this :</p>
+<pre><code>web: dotnet exec ./PeerTutor.dll</code></pre>
+<p>And sure enough, when I visited my application url, this time around, it was live and running. And yes, I checked out my Full Logs again and yup, I now had a <code>web.stdout</code> file in there with all the log messages from the webserver.</p>
+<p>What’s the moral of the story? I remember reading something on the AWS sub-reddit to the effect of “AWS documentation should be read as a book (read everything), and not as a quick consultation guide (stackoverflow post)”. This is definitely the case. If I had spent the time upfront to read the documentation, I’d have known about the <code>Procfile</code> earlier and possibly been on the path to the solution sooner.</p>
+<p>Next up, I’m going to try running this application on Elastic Beanstalk via Docker, and then, I’ll check out AWS’ new competitor to Heroku, AWS AppRunner. But this time around, I’ll be sure to go read the documentation first if I encounter any issues :)</p>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
