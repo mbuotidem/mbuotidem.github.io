@@ -4,7 +4,7 @@ aliases:
 author: Isaac Mbuotidem
 date: '2021-01-20'
 layout: post
-
+title: How I studied for AZ-900 Microsoft Azure Fundamentals Exam
 ---
 
 I just passed the AZ-900: Microsoft Azure Fundamentals exam and I wanted to add some quick notes on the resources I used to prepare for it. Before I go on to do that, if you haven't already, check out my post on how to score a [free or discounted Azure certification exam.](https://mbuotidem.github.io/blog/2021/01/17/how-to-get-free-or-discounted-microsoft-azure-certifications.html)

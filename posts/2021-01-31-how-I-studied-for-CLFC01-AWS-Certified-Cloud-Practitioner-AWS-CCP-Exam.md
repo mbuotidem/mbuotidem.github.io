@@ -4,6 +4,7 @@ aliases:
 author: Isaac Mbuotidem
 date: '2021-01-31'
 layout: post
+title: How I Studied For Clfc01 Aws Certified Cloud Practitioner (AWS CCP)
 
 ---
 

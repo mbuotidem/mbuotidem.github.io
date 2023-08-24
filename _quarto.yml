@@ -6,9 +6,6 @@ website:
   navbar:
     right:
       - about.qmd
-      - icon: file-text
-        text: Résumé
-        href: /resume/resume.pdf
       - icon: github
         href: https://github.com/mbuotidem
       - icon: twitter

@@ -4,7 +4,7 @@ aliases:
 author: Isaac Mbuotidem
 date: '2021-01-17'
 layout: post
-
+title: How To Get Free Or Discounted Microsoft Azure Certifications
 ---
 
 The new year often brings with it resolutions. If you're in tech, that might take the form of get a professional certification. If this is you and you'd like to do so without breaking the bank, here are some ideas for getting free or discounted certifications. 

@@ -4,6 +4,7 @@ aliases:
 author: Isaac Mbuotidem
 date: '2020-10-09'
 layout: post
+title: Venv In Vscode Integrated Terminal
 
 ---
 

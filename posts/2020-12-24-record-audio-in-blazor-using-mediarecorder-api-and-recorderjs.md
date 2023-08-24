@@ -4,7 +4,7 @@ aliases:
 author: Isaac Mbuotidem
 date: '2020-12-24'
 layout: post
-
+title: Record Audio In Blazor Using Mediarecorder Api And Recorderjs
 ---
 
 I recently started playing with Blazor and I decided to build an app that needed to get  audio recorded from the users microphone via the browser. This post explains how I did that on Server Side Blazor.

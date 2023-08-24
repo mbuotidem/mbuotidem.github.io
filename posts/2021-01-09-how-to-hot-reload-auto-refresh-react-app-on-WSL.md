@@ -4,6 +4,7 @@ aliases:
 author: Isaac Mbuotidem
 date: '2021-01-09'
 layout: post
+title: How To Hot Reload Auto Refresh React App On Wsl
 
 ---
 
