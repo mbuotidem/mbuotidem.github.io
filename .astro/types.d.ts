@@ -185,13 +185,6 @@ declare module 'astro:content' {
 
 	type ContentEntryMap = {
 		"blog": {
-"astro copy 2.mdx": {
-	id: "astro copy 2.mdx";
-  slug: "astro-copy-2";
-  body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
-} & { render(): Render[".mdx"] };
 "astro copy 3.mdx": {
 	id: "astro copy 3.mdx";
   slug: "astro-copy-3";
@@ -216,6 +209,13 @@ declare module 'astro:content' {
 "create-astro-component.mdx": {
 	id: "create-astro-component.mdx";
   slug: "create-astro-component";
+  body: string;
+  collection: "blog";
+  data: InferEntrySchema<"blog">
+} & { render(): Render[".mdx"] };
+"github-docker-unauthorized.mdx": {
+	id: "github-docker-unauthorized.mdx";
+  slug: "github-docker-unauthorized";
   body: string;
   collection: "blog";
   data: InferEntrySchema<"blog">
