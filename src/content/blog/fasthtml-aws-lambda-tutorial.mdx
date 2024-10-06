@@ -1,0 +1,158 @@
+---
+title: 'Tutorial: Create a FastHTML app that runs on AWS Lambda'
+description: 'Learn how to run a FastHTML app on AWS Lambda.'
+pubDate: 'Oct 06 2024'
+heroImage: '../../assets/images/placeholder-hero.jpg'
+category: 'AWS'
+tags: ['python', 'aws', 'lambda', 'aws-lambda-web-adapter', 'terraform', 'fasthtml', 'htmx']
+---
+
+**If you know Python, and don't want to learn JavaScript, FastHTML might be for you.**
+
+FastHTML is a lightweight Python web framework that is designed to help you create web applications in pure Python. It builds upon the principles of [htmx](https://htmx.org/).
+
+## 5-Second Pitch
+
+Are you a backend dev, data scientist, or newbie programmer who knows Python and wants to build something for the web? FastHTML is here to help you build your dreams without having to learn Javascript. Knowledge of CSS and HTML are required though!
+FastHTML builds off htmx, which describes itself as "a library that allows you to access modern browser features directly from HTML, rather than using javascript." 
+
+### Okay, I'm interested, tell me a little more
+
+![Alt text](src/assets/images/fasthtml.png)
+
+This example cribbed from the FastHTML homepage shows a table implemented fully in Python. FastHTML maps various HTML elements to their equivalent component forms in Python, allowing you describe your application in Python. And then using the magic of htmx, it converts these into HTML and CSS that gets sent to the browser. 
+For the pedants in the room, yes, at the end of the day, there's Javascript involved, but that comes from the htmx library, and you don't have to worry about or interact with it. So basically, its just like serverless. And fear not, if you want to bring in javascript at some point, you can.
+
+So what does a minimal FastHTML app look like? After running `pip install python-fasthtml`, all you need is: 
+
+```python
+from fasthtml.common import *
+
+app, rt = fast_app()
+
+@rt("/")
+def get():
+    return Titled("FastHTML", P("Let's do this!"))
+
+serve()
+```
+
+### Let's put this on AWS Lambda
+
+We'll build the infrastructure for this using Terraform, specifically the [AWS Lambda module](https://github.com/terraform-aws-modules/terraform-aws-lambda) from [serverless.tf](https://serverless.tf/). We'll also leverage [AWS Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) to make our local development story smooth and purely Docker based. 
+This lets us migrate to ECS, EKS or even off AWS if we need to play the startup cloud credit arbitrage game. 
+You can find the repo [here](https://github.com/mbuotidem/cle). 
+
+
+#### Setup ECR where the lambda docker image will live 
+
+```hcl
+resource "random_pet" "this" {
+  length = 2
+}
+
+module "ecr" {
+  source = "terraform-aws-modules/ecr/aws"
+
+  repository_name         = "${random_pet.this.id}-ecr"
+  repository_force_delete = true
+
+  create_lifecycle_policy = false
+
+  repository_lambda_read_access_arns = [module.lambda_function_with_docker_build_from_ecr.lambda_function_arn]
+}
+
+```
+
+Here we setup the ECR repository that the lambda container image will be stored in. We used random here because I didn't particularly care about naming this, but you don't have to. You can name it something that makes sense for the project you're working on.
+Notice how we use `repository_lambda_read_access_arns` to ensure the lambda can pull the image during setup. 
+
+
+#### The local docker build
+```hcl
+
+locals {
+  source_path   = "../"
+  path_include  = ["**"]
+  path_exclude  = ["**/__pycache__/**"]
+  files_include = setunion([for f in local.path_include : fileset(local.source_path, f)]...)
+  files_exclude = setunion([for f in local.path_exclude : fileset(local.source_path, f)]...)
+  files         = sort(setsubtract(local.files_include, local.files_exclude))
+
+  dir_sha = sha1(join("", [for f in local.files : filesha1("${local.source_path}/${f}")]))
+}
+
+module "docker_build_from_ecr" {
+  source = "terraform-aws-modules/lambda/aws//modules/docker-build"
+
+  ecr_repo = module.ecr.repository_name
+
+  
+  use_image_tag = true
+  image_tag   = local.dir_sha
+
+  source_path = local.source_path # "../"
+  platform    = "linux/amd64"
+  build_args = {
+    FOO = "bar"
+  }
+
+  triggers = {
+    dir_sha = local.dir_sha
+  }
+  
+}
+
+```
+
+The key thing here is to enable `use_image_tag` and set the `image_tag` to the sha of the changed files. 
+
+#### The lambda
+
+```hcl
+
+resource "random_password" "session_secret" {
+  length  = 20
+  special = false 
+}
+module "lambda_function_with_docker_build_from_ecr" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "${random_pet.this.id}-lambda-with-docker-build-from-ecr"
+  description   = "My FastHTML lambda function"
+
+  create_package = false # This would be true if you wanted to use Zip Package
+  package_type  = "Image"
+  architectures = ["x86_64"]
+
+  image_uri = module.docker_build_from_ecr.image_uri
+  create_lambda_function_url = true # This is where we will access our app. Use with caution. See note below. 
+  environment_variables = {
+    "LIVE" = "False"
+    "SESSION_SECRET" = random_password.session_secret.result
+  }
+  reserved_concurrent_executions = 1 # This is a toy project we don't want to go broke over
+}
+
+
+```
+
+We build our lambda with a lambda function url. Lambda function urls are a feature that let you expose your AWS Lambda function via a simple dedicated endpoint. 
+While super convenient, please understand that they are [security implications](https://www.wiz.io/blog/securing-aws-lambda-function-urls) when using these and so 
+they may not be appropriate for your use case. If nothing else, set a [reserved concurrency](https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html) you are comfortable with. 
+
+#### The local development story
+Talk about .vscode/tasks.json and launch.json
+
+### If you like the ideas of FastHTML, you might also like :
+[htpy](https://htpy.dev/)
+[pyscript](https://pyscript.net/)
+[puepy](https://puepy.dev/)
+[pyodide](https://pyodide.org/en/stable/)
+[skulpt](https://skulpt.org/)
+[flet](https://flet.dev/)
+[nicegui](https://nicegui.io/)
+[django-unicorn](https://www.django-unicorn.com/)
+
+And if you want options with paid tiers,
+[anvil](https://anvil.works/), [reflex](https://reflex.dev/) and [solara](https://solara.dev/) might interest you
