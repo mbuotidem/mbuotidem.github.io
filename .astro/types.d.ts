@@ -192,13 +192,6 @@ declare module 'astro:content' {
   collection: "blog";
   data: InferEntrySchema<"blog">
 } & { render(): Render[".mdx"] };
-"astro copy 4.mdx": {
-	id: "astro copy 4.mdx";
-  slug: "astro-copy-4";
-  body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
-} & { render(): Render[".mdx"] };
 "astro.mdx": {
 	id: "astro.mdx";
   slug: "astro";
@@ -209,6 +202,13 @@ declare module 'astro:content' {
 "fasthtml-aws-lambda-tutorial.mdx": {
 	id: "fasthtml-aws-lambda-tutorial.mdx";
   slug: "fasthtml-aws-lambda-tutorial";
+  body: string;
+  collection: "blog";
+  data: InferEntrySchema<"blog">
+} & { render(): Render[".mdx"] };
+"free-svgs-for-presentations.mdx": {
+	id: "free-svgs-for-presentations.mdx";
+  slug: "free-svgs-for-presentations";
   body: string;
   collection: "blog";
   data: InferEntrySchema<"blog">
