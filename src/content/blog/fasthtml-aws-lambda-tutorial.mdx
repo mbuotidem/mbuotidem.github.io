@@ -4,7 +4,7 @@ description: 'Learn how to run a FastHTML app on AWS Lambda.'
 pubDate: 'Oct 06 2024'
 heroImage: '../../assets/images/placeholder-hero.jpg'
 category: 'AWS'
-tags: ['python', 'aws', 'lambda', 'aws-lambda-web-adapter', 'terraform', 'fasthtml', 'htmx']
+tags: ['python', 'aws', 'lambda', 'aws-lambda-web-adapter', 'terraform', 'fasthtml', 'htmx', 'docker']
 ---
 
 **If you know Python, and don't want to learn JavaScript, FastHTML might be for you.**
@@ -231,6 +231,12 @@ debugging definitions below allow you to use either approach.
                 "LIVE": "True"            
             },
             "console": "integratedTerminal",
+            "serverReadyAction":{
+                "action": "openExternally",
+                "killOnServerStop": false,
+                "pattern": "Application startup complete.",
+                "uriFormat": "http://localhost:5001"
+            }
         },
         {
             "name": "Docker: Python - FastHTML",
@@ -241,7 +247,7 @@ debugging definitions below allow you to use either approach.
                 "pathMappings": [
                     {
                         "localRoot": "${workspaceFolder}/src",
-                        "remoteRoot": "/src"
+                        "remoteRoot": "./"
                     }
                 ],
                 "projectType": "fastapi",
@@ -249,7 +255,7 @@ debugging definitions below allow you to use either approach.
             "dockerServerReadyAction": {
                 "action": "openExternally",
                 "pattern": "Application startup complete.",
-                "uriFormat": "http://localhost:8000"
+                "uriFormat": "http://localhost:5001"
             }
         }
     ],
@@ -293,14 +299,14 @@ And the supporting vscode task for the docker debug option ("Docker: Python - Fa
 				},
 				"volumes": [
 					{
-						"containerPath": "/var/task/src",
+						"containerPath": "/src",
 						"localPath": "${workspaceFolder}/src",
 					}
 				],
 				"ports": [
 					{
-						"containerPort": 8000,
-						"hostPort": 8000
+						"containerPort": 5001,
+						"hostPort": 5001
 					}
 				]
 			},
@@ -310,9 +316,9 @@ And the supporting vscode task for the docker debug option ("Docker: Python - Fa
 					"--host",
 					"0.0.0.0",
 					"--port",
-					"8000"
+					"5001"
 				],
-			"file": "src/main.py"
+			"file": "main.py"
 			}
 		}
 	]
@@ -321,9 +327,7 @@ And the supporting vscode task for the docker debug option ("Docker: Python - Fa
 
 The most important part of this `task.json` is where we define the volumes and map our local source 
 code path to the path in the container, which, combined with our `LIVE=True` env var enables hot 
-reloading. One other thing, we symlink the `requirements.txt` in our `src` folder to the root of our
-repo so that when vscode tries to build the container for debugging, it can find a `requirements.txt`
-as defined in our Dockerfile. 
+reloading. 
 
 To run locally, hit F5 and it will run the application without Docker. If you'd like to run it under 
 Docker, change the target on the debug extension to Docker: Python - FastHTML and hit F5. Make any changes
@@ -335,11 +339,16 @@ you like in `main.py` and see them reflected instantly.
 So back to our original goal, after testing locally, once you're ready to deploy, run `terraform plan`, review your plan, and then `terraform apply`.
 You should get back your newly deployed lambda function's url. Enjoy your new FastHTML app!
 
+![Image of the FastHTML app running in Firefox browser](src/assets/images/fasthtmllambda.png)
+
 #### Does serving a FastHTML app on AWS Lambda work beyond a HelloWorld app? 
 I don't know, I haven't got that far. I do plan to build something more interesting on FastHTML to see
 how it feels and form an actual opinion. If I do get around to doing so, I'll post a follow up. Curious
 to hear from you as well if you keep working in FastHTML, whether your deployment target ends up being
 Lambda or not!
+
+Oh, one more thing, here's an [example](https://github.com/awslabs/aws-lambda-web-adapter/tree/main/examples/fasthtml-response-streaming) that shows FastHTML running on AWS Lambda with Bedrock and [response streaming](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/)!
+
 
 
 ### If you like the ideas of FastHTML, you might also like :
