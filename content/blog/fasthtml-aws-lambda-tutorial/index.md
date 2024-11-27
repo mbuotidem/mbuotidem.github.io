@@ -1,3 +1,4 @@
+
 +++
 title = 'Tutorial: Create a FastHTML app that runs on AWS Lambda'
 slug= "fasthtml-aws-lambda-tutorial"
@@ -20,7 +21,7 @@ FastHTML is here to help you build your dreams without having to learn Javascrip
 
 ### Okay, I'm interested, tell me a little more
 
-![Sample Code showing how to create a Table in FastHTML](src/assets/images/fasthtml.png)
+![Sample Code showing how to create a Table in FastHTML](./fasthtml.png)
 
 This example cribbed from the FastHTML homepage shows a table implemented fully in Python. FastHTML maps various HTML elements to their equivalent component forms in Python, allowing you describe your application in Python. And then using the magic of htmx, it converts these into HTML and CSS that gets sent to the browser. 
 For the pedants in the room, yes, at the end of the day, there's Javascript involved, but that comes from the htmx library, and you don't have to worry about or interact with it. And fear not, if you want to bring in javascript at some point, you can.
@@ -333,13 +334,13 @@ To run locally, hit F5 and it will run the application without Docker. If you'd 
 Docker, change the target on the debug extension to Docker: Python - FastHTML and hit F5. Make any changes
 you like in `main.py` and see them reflected instantly.
 
-![Image of Visual Studio Code IDE showing how to switch the debugging target in the debug extension](src/assets/images/fasthtmldocker.png)
+![Image of Visual Studio Code IDE showing how to switch the debugging target in the debug extension](./fasthtmldocker.png)
 
 
 So back to our original goal, after testing locally, once you're ready to deploy, run `terraform plan`, review your plan, and then `terraform apply`.
 You should get back your newly deployed lambda function's url. Enjoy your new FastHTML app!
 
-![Image of the FastHTML app running in Firefox browser](src/assets/images/fasthtmllambda.png)
+![Image of the FastHTML app running in Firefox browser](./fasthtmllambda.png)
 
 #### Does serving a FastHTML app on AWS Lambda work beyond a HelloWorld app? 
 I don't know, I haven't got that far. I do plan to build something more interesting on FastHTML to see
