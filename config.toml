@@ -23,11 +23,27 @@ highlight_theme= "css"
 
 [extra]
 # Put all your custom variables here
+copyright = "© $CURRENT_YEAR Isaac M $SEPARATOR Except where otherwise noted , content on this site is licensed under a [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) license."
 
 menu = [
     { name = "blog", url = "blog", trailing_slash = true },
+    { name = "linkedin", external_url = "https://www.linkedin.com/in/miisaac/", trailing_slash = false },
     #{ name = "archive", url = "archive", trailing_slash = true },
     { name = "tags", url = "tags", trailing_slash = true },
 ]
 
 override_serif_with_sans = true
+
+[link_checker]
+skip_prefixes = [
+    "https://www.linkedin.com/",
+    "https://linkedin.com/"
+]
+
+skip_anchor_prefixes = [
+    "https://caniuse.com/",
+]
+
+internal_level = "error"
+external_level = "error"
+
