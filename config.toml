@@ -29,3 +29,5 @@ menu = [
     #{ name = "archive", url = "archive", trailing_slash = true },
     { name = "tags", url = "tags", trailing_slash = true },
 ]
+
+override_serif_with_sans = true
