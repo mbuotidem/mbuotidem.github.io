@@ -4,7 +4,7 @@ slug= "ssh-tunneling-oke-kubernetes"
 description = "How to connect to your private Kubernetes Clusters on Oracle Cloud OKE"
 date = "2025-03-02"
 [taxonomies] 
-tags = ["k8s", "kubernetes", "ssh", "OKE"]
+tags = ["k8s", "kubernetes", "ssh", "OKE","IaC","terraform"]
 +++
 
 ### Preamble
