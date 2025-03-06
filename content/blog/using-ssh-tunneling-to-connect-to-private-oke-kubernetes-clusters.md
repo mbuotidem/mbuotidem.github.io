@@ -18,6 +18,8 @@ This post is about using an OCI instance as a jump box to access your private ku
 
 - OKE [Private Cluster](https://github.com/oracle-devrel/terraform-oci-arch-oke/tree/main/examples/oke-public-lb-private-api-endpoint-and-workers-no-existing-network) with Private Kubernetes API Endpoint, Private Worker Nodes, and Public Load Balancers. Read [this](https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengnetworkconfigexample.htm#example-flannel-cni-privatek8sapi_privateworkers_publiclb) for an explainer
 
+- OKE Cluster compartment id
+
 - OKE CLI [installed](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm#InstallingCLI) and [configured](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm#configfile)
 
 - An SSH key. You'll need the public key to setup the instance, and the private key to connect to the bastion. If you need a primer on how to generate an SSH key, [Generate an SSH Key Pair](https://docs.oracle.com/en/cloud/cloud-at-customer/occ-get-started/generate-ssh-key-pair.html) or [Generate SSH keys](https://docs.oracle.com/en/learn/generate_ssh_keys/index.html#introduction) should help.
@@ -168,9 +170,13 @@ Now that we've established that we can ssh to our bastion host, all we need to h
     sed -i.bak 's|server: https://[0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}:6443|server: https://127.0.0.1:6443|' ~/.kube/config
     ```
 
+1. Grab your cluster API endpoint
+    ```
+    CLUSTER_API=$(oci ce cluster list --compartment-id ocid1.compartment.oc1..aaaaaaaah...a | jq --raw-output '.data[0].endpoints["private-endpoint"]')
+    ```
 1. Launch the port forwarding session. Note that this terminal window must stay open.  
     ```
-    ssh -L 8443:localhost:8443 ubuntu@203.0.113.255
+    ssh -L 6443:$CLUSTER_API ubuntu@203.0.113.255
     ```
 
 1. Get the kubernetes context name with 
