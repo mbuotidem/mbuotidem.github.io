@@ -1,4 +1,14 @@
-on: push
+on: 
+  push:
+  workflow_dispatch:
+    inputs:
+      fromRunme:
+        description: "Whether run locally"
+        required: false
+        type: string
+        default: yes
+
+
 name: Build and deploy GH Pages
 permissions:
   contents: write
