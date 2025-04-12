@@ -74,14 +74,14 @@ stylesheets = []
 # remote_repository_url = "https://github.com/welpo/tabi"
 # Set this to "auto" to try and auto-detect the platform based on the repository URL.
 # Accepted values are "github", "gitlab", "gitea", and "codeberg".
-remote_repository_git_platform = "auto"  # Defaults to "auto".
+remote_repository_git_platform = "auto" # Defaults to "auto".
 # Branch in the repo hosting the Zola site.
-remote_repository_branch = "main"  # Defaults to "main".
+remote_repository_branch = "main" # Defaults to "main".
 # Show a link to the commit history of updated posts, right next to the last updated date.
 # Can be set at page or section levels, following the hierarchy: page > section > config. See: https://welpo.github.io/tabi/blog/mastering-tabi-settings/#settings-hierarchy
-show_remote_changes = true  # Defaults to true.
+show_remote_changes = true # Defaults to true.
 # Show a link to the repository of the site, right next to the "Powered by Zola & tabi" text.
-show_remote_source = true  # Defaults to true.
+show_remote_source = true # Defaults to true.
 
 # Add a "copy" button to codeblocks (loads ~700 bytes of JavaScript).
 # Can be set at page or section levels, following the hierarchy: page > section > config. See: https://welpo.github.io/tabi/blog/mastering-tabi-settings/#settings-hierarchy
@@ -122,7 +122,7 @@ post_listing_date = "date"
 # Determines if indexes should be increasing (false) or decreasing (true) in series' posts list.
 # It has only effect if the section uses indexes metadata (which is only the case for series as of now).
 # Can be set at section levels, following the hierarchy: section > config. See: https://welpo.github.io/tabi/blog/mastering-tabi-settings/#settings-hierarchy
-post_listing_index_reversed = false  # Defaults to false.
+post_listing_index_reversed = false # Defaults to false.
 
 # DEPRECATED!
 # Use Zola's built-in `bottom_footnotes = true` in the [markdown] section instead. (Available since v0.19.0)
@@ -232,7 +232,7 @@ full_content_in_feed = false
 # 2. Or, set 'encode_plaintext_email' to true for auto-encoding (only protects on site, not in public repos).
 # email = "bWFpbEBleGFtcGxlLmNvbQ=="  # base64 encoded version of "mail@example.com"
 # Decoding requires ~400 bytes of JavaScript. If JS is disabled, the email won't be displayed.
-encode_plaintext_email = true  # Setting is ignored if email is already encoded.
+encode_plaintext_email = true # Setting is ignored if email is already encoded.
 
 # Social media links for the footer.
 # Built-in icons: https://github.com/welpo/tabi/tree/main/static/social_icons
@@ -279,12 +279,35 @@ encode_plaintext_email = true  # Setting is ignored if email is already encoded.
 # This configuration (along with the right webserver settings) gets an A+ in Mozilla's Observatory: https://observatory.mozilla.org
 # Note: to use a Zola built-in syntax highlighting theme, allow unsafe-inline for style-src.
 allowed_domains = [
-    { directive = "font-src", domains = ["'self'", "data:"] },
-    { directive = "img-src", domains = ["'self'", "https://*", "data:"] },
-    { directive = "media-src", domains = ["'self'"] },
-    { directive = "script-src", domains = ["'self'"] },
-    { directive = "style-src", domains = ["'self'"] },
-    { directive = "frame-src", domains = ["player.vimeo.com", "https://www.youtube-nocookie.com"] },
+    { directive = "font-src", domains = [
+        "'self'",
+        "data:",
+    ] },
+    { directive = "img-src", domains = [
+        "'self'",
+        "https://*",
+        "data:",
+    ] },
+    { directive = "media-src", domains = [
+        "'self'",
+    ] },
+    { directive = "script-src", domains = [
+        "'self'",
+        "https://gist.github.com",
+    ] },
+    { directive = "style-src", domains = [
+        "'self'",
+        "https://emgithub.com 'unsafe-inline'",
+        "https://emgithub.misaac.me 'unsafe-inline'",
+        "https://gist.github.com 'unsafe-inline'",
+        "https://github.githubassets.com 'unsafe-inline'",
+    ] },
+    { directive = "frame-src", domains = [
+        "player.vimeo.com",
+        "https://www.youtube-nocookie.com",
+        "https://emgithub.com",
+        "https://emgithub.misaac.me",
+    ] },
 ]
 
 # Enable the CSP directives configured (or default).
