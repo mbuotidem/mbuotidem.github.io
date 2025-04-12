@@ -278,7 +278,7 @@ locals {
 }
 ```
 
-Then we'll add the required resources. Note that we don't use the `aws_acm_certificate` resource here - unlike with the server certificate, importing the client certificates into ACM is optional.
+Then we'll add the required resources. Note that we don't use the `aws_acm_certificate` resource here - unlike with the server certificate, importing the client certificates into ACM is optional. Similarly, we don't need to update `certs/dev/tls.json` as Serverless CA will create our client certificates with the `clientAuth` EKU by default.
 
 ```
 resource "tls_cert_request" "client_certs" {
@@ -324,6 +324,7 @@ Then go run the Step function as we did for the server certificate. Again, copy 
 ## Setting up Client VPN
 This is where all our pre-work above starts to gel. The steps are:
 - Set up logging
+- Add a security group rule to allow access to your target resource
 - Create the VPN endpoint
 - Associate a target network
 - Add an authorization rule
@@ -462,7 +463,7 @@ To connect to the Client VPN, we'll need both the Client VPN endpoint configurat
 
 1. Add the line `pull-filter ignore "redirect-gateway"` to the ovpn file. 
 
-Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided VPN client, I found that AWS Client VPN was still routing all traffic through the VPN—even though `split_tunnel` was enabled. The culprit was a default route pushed by the server. 
+Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided VPN client, I found that AWS Client VPN was still routing all traffic through the VPN—even though `split_tunnel` was enabled. The culprit was the `redirect-gateway` flag which the AWS provided client was setting.
 
 Fortunately, `pull-filter` is one of the supported [OpenVPN directives](https://docs.aws.amazon.com/vpn/latest/clientvpn-user/connect-aws-client-vpn-connect.html#support-openvpn) in the AWS client. By adding `pull-filter ignore "redirect-gateway"`, we instruct the client to ignore that directive and preserve split-tunnel behavior.
 
