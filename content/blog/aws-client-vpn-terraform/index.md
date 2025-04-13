@@ -406,7 +406,7 @@ Notice how we use the private CA issued server certificate we imported into ACM 
 
 Note that we're also setting `split_tunnel` to `true`. This ensures that only traffic destined for resources inside the VPN is routed through the VPN tunnel, while all other internet traffic continues to go through the user's local network. 
 
-If we left `split_tunnel` set to its default value of `false`, all traffic—including internet-bound requests—would be routed through the VPN. Because the VPC has no internet access, this would effectively break the user's connection, blackholing their traffic the moment they connect.
+If we left `split_tunnel` set to its default value of `false`, all traffic—including internet-bound requests—would be routed through the VPN. Because the our fully-private VPC has no public internet access, this would effectively break the user's connection, blackholing their traffic the moment they connect. If you're reading this and you intend to set this up with an internet-connected vpc, note that `split_tunnel` might still be useful for you if your security posture allows and you'd like to save on data transfer costs by only routing AWS-bound traffic through the VPN. 
 
 
 > **Note:** 
@@ -506,8 +506,10 @@ You can now leave that terminal window running, open a new one, and ssh, curl, o
 
 ### Wrapping Up
 
-That’s it! You now have a fully functional, certificate-based AWS Client VPN setup — without having to pay AWS Private CA’s [hefty price tag](https://aws.amazon.com/private-ca/pricing/). By using Serverless CA and Terraform, we’ve built a scalable, revocable, and IaC backed VPN solution that runs for under $50 a year.
+That’s it! You now have a fully functional, certificate-based AWS Client VPN — without having to pay AWS Private CA’s hefty price tag. By using Serverless CA, we’ve built a scalable, revocable, IaC-backed certificate authority that runs for under $50 a year. From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for internal services using SPIFFE.
 
-From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for internal services using SPIFFE.
+You’ll still need to pay for the [AWS VPN](https://aws.amazon.com/vpn/pricing/) itself — including the hourly charge for the VPN endpoint (even when idle), plus any connection and data transfer fees — but at least you're not spending $400/month just to run a CA.
+
+
 
 <!-- https://aws.amazon.com/blogs/security/connect-your-on-premises-kubernetes-cluster-to-aws-apis-using-iam-roles-anywhere/ -->
