@@ -34,13 +34,13 @@ The reasons for this choice are:
 
 ### Downsides to using only certificate-based auth with AWS Client VPN
 
-When using only certificate-auth, you need to have a process for revoking access. AWS Client VPN supports [importing](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html) Certificate Revocation Lists (CRLs), but there is currently no Terraform resource for managing CRLs. As a result, you'll need to use either the AWS Management Console or the AWS CLI to manually update your Client VPN endpoint with the CRL.
+When using only certificate-auth, you need to have a process for revoking access. AWS Client VPN supports [importing](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html) Certificate Revocation Lists (CRLs), but there is currently no Terraform resource for managing CRLs. As a result, you'll need to use either the AWS Management Console or the AWS CLI to manually update your Client VPN endpoint with the CRL. Fortunately, Serverless CA helps [automate] the certificate revocation process.
 
 Additionally, certificate authentication alone does not support [AWS Client VPN authorization rules](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-rules.html) based on user groups. This means you lose the ability to grant different levels of network access to different groups, which is only available when using either federated authentication with SAML or Active Directory or a combination of SAML/AD with certificates.
 
 ## Prerequisites
 
-- Route 53 Zone
+- Route 53 Zone (only required if you're going with public CRL)
 
 - AWS VPC with a private subnet (i.e subnet with no route to an internet gateway)
 
@@ -59,7 +59,9 @@ Instead, we'll use the excellent [Serverless CA on AWS](https://serverlessca.com
 
 Create a directory where we'll store our Terraform and other config. Throughout the rest of this post, we'll assume you're working from the root of this directory.
 
-Serverless CA expects an AWS provider [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) named `us-east-1`. However, the alias name is just a label — it doesn’t limit you to actually deploying in the `us-east-1` region. You’re free to configure that alias to point to any AWS region you need.
+Serverless CA expects an AWS provider [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) named `us-east-1` with region set to `us-east-1`. This is because certificates for CloudFront must be [created](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-requirements.html#https-requirements-certificate-issuer) in `us-east-1`. Although the CloudFront distribution only applies if you want to have a public CRL, the module requires you to pass one in regardless. 
+
+Note that this doesn’t limit you to actually deploying the rest of Serverless CA to your preferred region. You’re free to configure an additional aws provider and point that to your desired AWS region.
 
 ```
 // Default provider for other resources
@@ -68,15 +70,15 @@ provider "aws" {
 
 }
 
-// Specific provider required by Serverless CA module
+// Specific provider required for optional CloudFront Certificate
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
 }
 ```
-Once your provider is setup, you can pass it to the CA module as shown below. Make sure to specify both `issuing_ca_key_spec` and `root_ca_key_spec` as `RSA_2048`. This is necessary because in a future step, we'll want to add the generated certificates to AWS ACM and the default `ECC_NIST_P256` is [not supported](https://docs.aws.amazon.com/acm/latest/userguide/import-certificate-prerequisites.html) by ACM. 
+ Make sure to specify both `issuing_ca_key_spec` and `root_ca_key_spec` as `RSA_2048`. This is necessary because in a future step, we'll want to add the generated certificates to AWS ACM and the default `ECC_NIST_P256` is [not supported](https://docs.aws.amazon.com/acm/latest/userguide/import-certificate-prerequisites.html) by ACM. 
 
-As for `cert_info_files` and `csr_files`, we'll be generating them in the next section.
+Once your providers are setup, you can pass them to the CA module as shown below.
 
 ```
 module "certificate_authority" {
@@ -97,6 +99,10 @@ module "certificate_authority" {
   csr_files           = ["vpn.csr"]
 }
 ```
+
+If you'd like to customize your Root and Issuing CA certificate information, you can do so by modifying [root_ca_info](https://serverlessca.com/reference/#input_root_ca_info) and [issuing_ca_info](https://serverlessca.com/reference/#input_issuing_ca_info).
+
+As for `cert_info_files` and `csr_files`, we'll be generating them in the next section.
 
 <br>
 
