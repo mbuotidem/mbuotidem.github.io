@@ -8,7 +8,7 @@ date = "2025-04-11"
 tags = ["aws", "terraform", "vpn", "serverless-ca", "spiffe"]
 +++
 
-This post guides you through setting up a secure, cost-effective [AWS Client VPN](https://aws.amazon.com/vpn/client-vpn/) using Terraform and the open-source [Serverless CA](https://serverlessca.com/) for certificate management.
+This post guides you through setting up [AWS Client VPN](https://aws.amazon.com/vpn/client-vpn/) using [Serverless CA](https://serverlessca.com/), a secure, cost-effective open-source certifcate authority. 
 
 ## Problem Statement
 
@@ -20,7 +20,23 @@ We'll setup an AWS Client VPN to enable you connect to the resources from anywhe
 
 ![Architecture diagram showing the setup involving connecing a GitHub Codespaces to an EC2 in a private subnet via AWS Client VPN](./client-vpn.png)
 
-Our setup here will be just a VPC with a private subnet and no internet gateway, A.K.A a **fully private** VPC. 
+We'll be connecting to a VPC with a private subnet and no internet gateway, A.K.A a **fully private** VPC. 
+
+## Why use a Certificate Authority (CA)
+
+AWS Client VPN supports several [authentication methods](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html) , including certificate-based authentication, SAML, Active Directory (AD), or a combination of SAML/AD with certificates. For our setup, we’re choosing **certificate-based mutual authentication only**. 
+
+The reasons for this choice are:
+- **Headless access**: I want the ability to connect to the VPN without a GUI—for example, from environments like GitHub Codespaces. SAML requires a browser-based login flow, which doesn’t work well in headless or automated contexts.
+
+- **Reusable CA foundation**: I plan to build on this (CA) for other identity and authentication use cases down the line, such as [SPIFFE/SPIRE](https://spiffe.io/) or [AWS IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)
+
+
+### Downsides to using only certificate-based auth with AWS Client VPN
+
+When using only certificate-auth, you need to have a process for revoking access. AWS Client VPN supports [importing](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html) Certificate Revocation Lists (CRLs), but there is currently no Terraform resource for managing CRLs. As a result, you'll need to use either the AWS Management Console or the AWS CLI to manually update your Client VPN endpoint with the CRL.
+
+Additionally, certificate authentication alone does not support [AWS Client VPN authorization rules](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-rules.html) based on user groups. This means you lose the ability to grant different levels of network access to different groups, which is only available when using either federated authentication with SAML or Active Directory or a combination of SAML/AD with certificates.
 
 ## Prerequisites
 
@@ -30,23 +46,6 @@ Our setup here will be just a VPC with a private subnet and no internet gateway,
 
 - AWS resource that we'll be connecting to via the VPN, e.g. an EC2 instance
 
-- A private Certificate Authority (CA)
-
-## Why use a CA
-
-AWS Client VPN supports several [authentication methods](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html) , including certificate-based authentication, SAML, Active Directory (AD), or a combination of SAML/AD with certificates. For our setup, we’re choosing **certificate-based mutual authentication only**. 
-
-The reasons for this choice are:
-- **Headless access**: I want the ability to connect to the VPN without a GUI—for example, from environments like GitHub Codespaces. SAML requires a browser-based login flow, which doesn’t work well in headless or automated contexts.
-
-- **Reusable CA foundation**: I plan to build on this Certificate Authority (CA) for other identity and authentication use cases down the line, such as [SPIFFE/SPIRE](https://spiffe.io/) or [AWS IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)
-
-
-### Downsides to using only certificate-based auth with AWS Client VPN
-
-When using only certificate-auth, you need to have a process for revoking access. AWS Client VPN supports [importing](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html) Certificate Revocation Lists (CRLs), but there is currently no Terraform resource for managing CRLs. As a result, you'll need to use either the AWS Management Console or the AWS CLI to manually update your Client VPN endpoint with the CRL.
-
-Additionally, certificate authentication alone does not support [AWS Client VPN authorization rules](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-rules.html) based on user groups. This means you lose the ability to grant different levels of network access to different groups, which is only available when using either federated authentication with SAML or Active Directory or a combination of SAML/AD with certificates.
 
 ## Choosing a CA
 
@@ -60,14 +59,16 @@ Instead, we'll use the excellent [Serverless CA on AWS](https://serverlessca.com
 
 Create a directory where we'll store our Terraform and other config. Throughout the rest of this post, we'll assume you're working from the root of this directory.
 
-Serverless CA expects an aws provider [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) named with the destination region in addition to any other providers you may already have. 
+Serverless CA expects an AWS provider [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) named `us-east-1`. However, the alias name is just a label — it doesn’t limit you to actually deploying in the `us-east-1` region. You’re free to configure that alias to point to any AWS region you need.
 
 ```
+// Default provider for other resources
 provider "aws" {
   region = "us-east-1"
 
 }
 
+// Specific provider required by Serverless CA module
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
@@ -97,19 +98,21 @@ module "certificate_authority" {
 }
 ```
 
+<br>
+
 ### Generating a server certificate 
 
 You can use Terraform to generate the server certificate via GitOps. The steps are:
 - setup subdirectories and required files
-- create a CSR
-- sign the CSR
+- create and upload your CSR
+- request the serverAuth extension for the server certificate
 - run the generate certificate step function
 
 Let's tackle these step-by-step.
 
 #### Setup subdirectories and required files
 
-Run the command below to create the required files and folders. Substitute `dev` with your desired environment.
+Run the command below to create the required files and folders. Substitute `dev` with the environment you set when [instantiating](#setting-up-serverless-ca) Serverless CA. 
 
 ```
 mkdir -p certs/dev/csrs && \
@@ -134,7 +137,7 @@ certs
 
 #### Create Certificate Signing Request (CSR)
 
-A Certificate Signing Request (CSR) is an encoded file that contains your public key and identifying details, used by a Certificate Authority (CA) to issue an SSL/TLS certificate. Let's use the Terraform `tls_cert_request` [resource](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/cert_request) to create our CSR. 
+A Certificate Signing Request (CSR) is an encoded file that contains your public key along with information about your organization — such as the domain name (Common Name), organization, country, and other metadata. It's submitted to a CA to request an SSL/TLS certificate. Let's use the Terraform `tls_cert_request` [resource](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/cert_request) to create our CSR. 
 
 First, we need to generate our private key. I'm going to change directory and place this in `~/.ssh` so that we don't accidentally commit it. 
 
@@ -142,15 +145,15 @@ First, we need to generate our private key. I'm going to change directory and pl
 openssl genrsa -out ~/.ssh/vpn.key 2048
 ```
 
-Next, we'll populate the `tls_cert_request` resource and save the generated csr to the `csrs` directory using the `local_file` resource. Pass the private key using your preferred method, the `.tfvars` [method](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files) or the `TF_VAR_cert_private_key` enviroment variable [method](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).
+Next, we'll populate the `tls_cert_request` resource and save the generated csr to the `csrs` directory using the `local_file` resource. Pass the private key using your preferred method, the `.tfvars` [method](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files) or the `TF_VAR_server_cert_private_key` enviroment variable [method](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).
 ```
-variable "cert_private_key" {
+variable "server_cert_private_key" {
   type      = string
   sensitive = true
 }
 
 resource "tls_cert_request" "server" {
-  private_key_pem = chomp(var.cert_private_key)
+  private_key_pem = chomp(var.server_cert_private_key)
 
   subject {
     common_name         = "vpn.misaac.me"
@@ -172,13 +175,13 @@ resource "local_file" "server_csr" {
 > **Note:** 
 > By using the `tls_cert_request` resource, we are choosing to store our private key in the Terraform state file. You'll need to evaluate if this is appropriate for your security posture. If not, you should generate the CSR outside Terraform using `openssl` or another tool, and then pass only the CSR into Terraform.
 
-Run `terraform apply` twice, first to generate the csr and save it to the `csrs` directory, and second to have the Serverless CA module pickup the just created csr and save it to the destination S3 bucket.
+**Run `terraform apply` twice**, first to generate the csr and save it to the `csrs` directory, and second to have the Serverless CA module pickup the just created csr and save it to the destination S3 bucket.
 
-#### Sign the CSR 
+#### Request the serverAuth extension for the server certificate
 
-To generate a certificate, you sign the Certificate Signing Request (CSR) with a Certificate Authority (CA). By [default](https://serverlessca.com/client-certificates/#purposes), certificates issued by Serverless CA include only the **client authentication** [extension](https://docs.openssl.org/master/man5/x509v3_config/#extended-key-usage). 
+By [default](https://serverlessca.com/client-certificates/#purposes), certificates issued by Serverless CA include only the **client authentication** [extension](https://docs.openssl.org/master/man5/x509v3_config/#extended-key-usage). To perform mutual authentication however, our vpn server certificate needs to have the server authentication extension. 
 
-To create a server certificate instead, you’ll need to modify `certs/dev/tls.json` and explicitly set the `server_auth` purpose. This updates the certificate's Extended Key Usage (EKU) to include `serverAuth`. You can also define other server-specific settings like lifetime before running `terraform apply`
+To achieve this, you’ll need to modify `certs/dev/tls.json` and explicitly set the `server_auth` purpose. This updates the certificate's Extended Key Usage (EKU) to include `serverAuth`. You can also define other server-specific settings like lifetime before **running `terraform apply` twice**.
 
 ```
 [
@@ -225,11 +228,13 @@ Then create your `aws_acm_certificate` resource.
 
 ```
 resource "aws_acm_certificate" "vpncert" {
-  private_key       = chomp(var.cert_private_key)
+  private_key       = chomp(var.server_cert_private_key)
   certificate_body  = base64decode(chomp(var.cert_body))
   certificate_chain = base64decode(chomp(var.cert_chain))
 }
 ```
+<br>
+
 ### Generating a client certificate 
 
 Since we're performing mutual authentication, our GitHub Codespace will need its own certificate. Let's add the ability to generate client certificates to our Terraform. 
@@ -316,9 +321,9 @@ module "certificate_authority" {
 }
 ```
 
-Again, we'll `terraform apply` twice, first to generate the csr and save it to the `csrs` directory, and second to have the Serverless CA module pickup the just created csr and save it to the destination S3 bucket.
+Again, we'll **run `terraform apply` twice**, first to generate the csr and save it to the `csrs` directory, and second to have the Serverless CA module pickup the just created csr and save it to the destination S3 bucket.
 
-Then go run the Step function as we did for the server certificate. Again, copy and save the step function execution output as we'll need to add the certificate to our vpn config file later. 
+Then go run the Step Function as we did for the server certificate. Again, copy and save the Step Function execution output as we'll need to add the certificate to our vpn config file later. 
 <br>
 
 ## Setting up Client VPN
@@ -330,6 +335,7 @@ This is where all our pre-work above starts to gel. The steps are:
 - Add an authorization rule
 
 ### Setting up logging
+
 Connection logging records client connection requests, outcomes (success or failure), failure reasons, and client termination time. Since we care about security, this observability is something we want to have.
 
 ```
@@ -349,7 +355,7 @@ If you create an AWS Client VPN endpoint without specifiying a security group, t
 
 AWS strongly recommends that default security groups restrict all inbound and outbound traffic, even though they cannot be deleted. This is because inadvertently assigning a new AWS resource to the default security group can lead to unauthorized access if it has open rules. 
 
-If your are following this best practice (which you should), you'll need to create a security group/security group rule to allow access from the VPN to your target resource. 
+If your are following this best practice (which you should), you'll need to create a security group/security group rule to allow access from the VPN to your target resource. Adjust the ingress rules (port, protocol) based on the resource you need to access (e.g., port 5432 for PostgreSQL).
 
 ```
 resource "aws_security_group" "allow_ssh" {
@@ -379,7 +385,11 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 
 ### Create the Client VPN Endpoint
 
-This is the resource that you create and configure to enable and manage client VPN sessions. It's the termination point for all client VPN sessions. 
+This is the central resource you create and manage to enable secure connections between your remote users and your AWS resources. It acts as the termination point for all client VPN sessions. 
+
+> **Note:** 
+> Take care to select a cidr range for your vpn endpoint that does not clash with the cidr range of your VPC.
+
 
 ```
 resource "aws_ec2_client_vpn_endpoint" "org" {
@@ -402,20 +412,20 @@ resource "aws_ec2_client_vpn_endpoint" "org" {
   security_group_ids = [aws_security_group.allow_ssh.id]
 }
 ```
-Notice how we use the private CA issued server certificate we imported into ACM in the `server_certificate_arn` and `root_certificate_chain_arn` attributes as well as plug in the log group we created earlier. 
+Notice how we reference the server certificate issued by Serverless CA — which we previously imported into ACM — in both `server_certificate_arn` and `root_certificate_chain_arn`. 
 
-Note that we're also setting `split_tunnel` to `true`. This ensures that only traffic destined for resources inside the VPN is routed through the VPN tunnel, while all other internet traffic continues to go through the user's local network. 
+Since our client certificates will also be issued by the same CA (Serverless CA), we can use the same certificate ARN as the trust anchor for both server and client authentication. This allows any client certificate signed by the same CA to be accepted during mutual TLS authentication.
 
-If we left `split_tunnel` set to its default value of `false`, all traffic—including internet-bound requests—would be routed through the VPN. Because the our fully-private VPC has no public internet access, this would effectively break the user's connection, blackholing their traffic the moment they connect. If you're reading this and you intend to set this up with an internet-connected vpc, note that `split_tunnel` might still be useful for you if your security posture allows and you'd like to save on data transfer costs by only routing AWS-bound traffic through the VPN. 
+We're also setting `split_tunnel` to `true`. This ensures that only traffic destined for resources inside the VPN is routed through the VPN tunnel, while all other internet traffic continues to go through the user's local network. 
 
+If we left `split_tunnel` set to its default value of `false`, all traffic—including internet-bound requests—would be routed through the VPN. Because the our fully-private VPC has no public internet access, this would effectively break the user's connection, blackholing their traffic the moment they connect. 
 
-> **Note:** 
-> Take care to select a cidr range for your vpn endpoint that does not clash with the cidr range of your VPC.
+If you're reading this and you intend to set this up with an internet-connected vpc, note that `split_tunnel` might still be useful for you if your security posture allows and you'd like to save on data transfer costs by only routing AWS-bound traffic through the VPN. 
 
 
 ### Associate the VPN endpoint with the VPC and subnet
 
-To allow clients to establish a VPN session, you associate a target network with the Client VPN endpoint. A target network is a subnet in a VPC. 
+To route VPN traffic into your VPC, you need to associate the endpoint with a **target network** — which is just a subnet in your VPC. This tells AWS where to send traffic from connected clients.
 
 ```
 resource "aws_ec2_client_vpn_network_association" "subnet_b" {
@@ -425,7 +435,9 @@ resource "aws_ec2_client_vpn_network_association" "subnet_b" {
 ```
 ### Add an authorization rule for the VPC
 
-Even though we've associated the network with the VPN endpoint above, clients can currently only establish a VPN connection. To access resources in the VPC, we must add authorization rules. 
+Even after associating a subnet, clients can’t access anything yet — you need to explicitly allow it with an authorization rule.
+
+As mentioned [earlier](#downsides-to-using-only-certificate-based-auth-with-aws-client-vpn), when using mutual authentication only, authorizing all groups is the only [option](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-getting-started.html#cvpn-getting-started-rules) we have. 
 
 ```
 resource "aws_ec2_client_vpn_authorization_rule" "subnet_b" {
@@ -463,11 +475,12 @@ To connect to the Client VPN, we'll need both the Client VPN endpoint configurat
 
 1. Add the line `pull-filter ignore "redirect-gateway"` to the ovpn file. 
 
-Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided VPN client, I found that AWS Client VPN was still routing all traffic through the VPN—even though `split_tunnel` was enabled. The culprit was the `redirect-gateway` flag which the AWS provided client was setting.
-
-Fortunately, `pull-filter` is one of the supported [OpenVPN directives](https://docs.aws.amazon.com/vpn/latest/clientvpn-user/connect-aws-client-vpn-connect.html#support-openvpn) in the AWS client. By adding `pull-filter ignore "redirect-gateway"`, we instruct the client to ignore that directive and preserve split-tunnel behavior.
+> **Note:** Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided > VPN client, I found that AWS Client VPN was still routing all traffic through the VPN—even though `split_tunnel` was enabled. The culprit was the `redirect-gateway` flag which the AWS provided client was setting.
+>
+>Fortunately, `pull-filter` is one of the supported [OpenVPN directives](https://docs.aws.amazon.com/vpn/latest/clientvpn-user/connect-aws-client-vpn-connect.html#support-openvpn) in the AWS client. By adding `pull-filter ignore "redirect-gateway"`, we instruct the client to ignore that directive and preserve split-tunnel behavior.
 
 ### Connect to the Client VPN endpoint
+
 How you'll connect to the VPN depends on your OS as well as your VPN client. AWS provides its own [custom OpenVPN client](https://docs.aws.amazon.com/vpn/latest/clientvpn-user/user-getting-started.html#install-client) that is designed to be compatible with all features of AWS Client VPN. However, since the goal was to use this in an Ubuntu Linux GitHub Codespace, we'll just use the bog standard OpenVPN client.
 
 First we'll install openvpn. 
@@ -506,7 +519,9 @@ You can now leave that terminal window running, open a new one, and ssh, curl, o
 
 ### Wrapping Up
 
-That’s it! You now have a fully functional, certificate-based AWS Client VPN — without having to pay AWS Private CA’s hefty price tag. By using Serverless CA, we’ve built a scalable, revocable, IaC-backed certificate authority that runs for under $50 a year. From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for internal services using SPIFFE.
+That’s it! You now have a fully functional, certificate-based AWS Client VPN — without having to pay AWS Private CA’s hefty price tag. By using Serverless CA, we’ve built a scalable, revocable, IaC-backed certificate authority that runs for under $50 a year. 
+
+From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for internal services using SPIFFE.
 
 You’ll still need to pay for the [AWS VPN](https://aws.amazon.com/vpn/pricing/) itself — including the hourly charge for the VPN endpoint (even when idle), plus any connection and data transfer fees — but at least you're not spending $400/month just to run a CA.
 
