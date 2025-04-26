@@ -5,7 +5,7 @@ slug= "aws-client-vpn-terraform"
 description = "Create a certificate-based AWS Client VPN without AWS Private CA"
 date = "2025-04-11"
 [taxonomies] 
-tags = ["aws", "terraform", "vpn", "serverless-ca", "spiffe"]
+tags = ["aws", "terraform", "vpn", "serverless-ca"]
 +++
 
 This post guides you through setting up [AWS Client VPN](https://aws.amazon.com/vpn/client-vpn/) using [Serverless CA](https://serverlessca.com/), a secure, cost-effective open-source certifcate authority. 
@@ -24,19 +24,19 @@ We'll be connecting to a VPC with a private subnet and no internet gateway, A.K.
 
 ## Why use a Certificate Authority (CA)
 
-AWS Client VPN supports several [authentication methods](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html) , including certificate-based authentication, SAML, Active Directory (AD), or a combination of SAML/AD with certificates. For our setup, we’re choosing **certificate-based mutual authentication only**. 
+AWS Client VPN supports several [authentication methods](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html) , including mutual authentication (certificate-based), SAML, Active Directory (AD), or a combination of SAML/AD with certificates. For our setup, we’re choosing **certificate-based mutual authentication only**. 
 
 The reasons for this choice are:
 - **Headless access**: I want the ability to connect to the VPN without a GUI—for example, from environments like GitHub Codespaces. SAML requires a browser-based login flow, which doesn’t work well in headless or automated contexts.
 
-- **Reusable CA foundation**: I plan to build on this (CA) for other identity and authentication use cases down the line, such as [SPIFFE/SPIRE](https://spiffe.io/) or [AWS IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)
+- **Reusable CA foundation**: I plan to build on this (CA) for other identity and authentication use cases down the line, such as [AWS IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)
 
 
 ### Downsides to using only certificate-based auth with AWS Client VPN
 
-When using only certificate-auth, you need to have a process for revoking access. AWS Client VPN supports [importing](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html) Certificate Revocation Lists (CRLs), but there is currently no Terraform resource for managing CRLs. As a result, you'll need to use either the AWS Management Console or the AWS CLI to manually update your Client VPN endpoint with the CRL. Fortunately, Serverless CA helps [automate] the certificate revocation process.
+When using only mutual authentication, you need to have a process for revoking access. AWS Client VPN supports [importing](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html) Certificate Revocation Lists (CRLs), but there is currently no Terraform resource for managing CRLs. As a result, you'll need to use either the AWS Management Console or the AWS CLI to manually update your Client VPN endpoint with the CRL. Fortunately, Serverless CA helps [automate](https://serverlessca.com/revocation/#enable-certificate-revocation) the certificate revocation process.
 
-Additionally, certificate authentication alone does not support [AWS Client VPN authorization rules](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-rules.html) based on user groups. This means you lose the ability to grant different levels of network access to different groups, which is only available when using either federated authentication with SAML or Active Directory or a combination of SAML/AD with certificates.
+Mutual TLS authentication also has a limitation: it doesn’t support user group–based [authorization rules](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-rules.html). This means you can’t assign different levels of network access to different users. To enable group-based access control, you’ll need to use federated authentication with SAML, Active Directory, or combine one of those with certificate authentication.
 
 ## Prerequisites
 
@@ -481,7 +481,7 @@ To connect to the Client VPN, we'll need both the Client VPN endpoint configurat
 
 1. Add the line `pull-filter ignore "redirect-gateway"` to the ovpn file. 
 
-> **Note:** Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided > VPN client, I found that AWS Client VPN was still routing all traffic through the VPN—even though `split_tunnel` was enabled. The culprit was the `redirect-gateway` flag which the AWS provided client was setting.
+> **Note:** Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided VPN client, I found that AWS Client VPN was still routing all traffic through the VPN—even though `split_tunnel` was enabled. The culprit was the `redirect-gateway` flag which the AWS provided client was setting.
 >
 >Fortunately, `pull-filter` is one of the supported [OpenVPN directives](https://docs.aws.amazon.com/vpn/latest/clientvpn-user/connect-aws-client-vpn-connect.html#support-openvpn) in the AWS client. By adding `pull-filter ignore "redirect-gateway"`, we instruct the client to ignore that directive and preserve split-tunnel behavior.
 
@@ -527,7 +527,7 @@ You can now leave that terminal window running, open a new one, and ssh, curl, o
 
 That’s it! You now have a fully functional, certificate-based AWS Client VPN — without having to pay AWS Private CA’s hefty price tag. By using Serverless CA, we’ve built a scalable, revocable, IaC-backed certificate authority that runs for under $50 a year. 
 
-From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for internal services using SPIFFE.
+From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for other use cases.
 
 You’ll still need to pay for the [AWS VPN](https://aws.amazon.com/vpn/pricing/) itself — including the hourly charge for the VPN endpoint (even when idle), plus any connection and data transfer fees — but at least you're not spending $400/month just to run a CA.
 
