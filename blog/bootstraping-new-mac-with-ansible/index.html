@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Bootstraping my mac with ansible</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="How to have a repeatable mac bootstrapping process" />
+        <meta property="og:description" content="How to have a repeatable mac bootstrapping process" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Bootstraping my mac with ansible" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;bootstraping-new-mac-with-ansible&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+    <div class="content">
+
+        
+        
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Bootstraping my mac with ansible
+        </h1>
+
+        <ul class="meta">
+                <li>12th Feb 2025</li>
+                <li title="288 words"><span class='separator' aria-hidden='true'>•</span>2 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">IaC</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/ansible/">Ansible</a></li>
+        </ul>
+
+        <section class="body"><p>I recently purchased a Macbook and decided to finally take the time to setup a repeatable bootstrap process.</p>
+<p>I initially considered writing my own ansible playbook, but ultimately settled on the amazing <a href="https://github.com/geerlingguy/mac-dev-playbook">mac-dev-playbook</a> from Jeff Geerling. Here are the steps I took to get this going.</p>
+<h3 id="pre-requisites"><a class="header-anchor no-hover-padding" href="#pre-requisites" aria-label="Anchor link for: pre-requisites"><span class="link-icon" aria-hidden="true"></span></a>
+Pre-requisites</h3>
+<ol>
+<li>
+<p>Open a terminal window and type <code>xcode-select --install</code>. Follow prompts to install the command line tools.</p>
+</li>
+<li>
+<p>Install Ansible</p>
+<ul>
+<li>Add Python 3 to your $PATH:<br>
+<code>export PATH="$HOME/Library/Python/3.9/bin:/opt/homebrew/bin:$PATH"</code></li>
+<li>Upgrade Pip: <br><code>sudo pip3 install --upgrade pip</code></li>
+<li>Install Ansible: <br><code>pip3 install ansible</code></li>
+</ul>
+</li>
+<li>
+<p>Clone repo with
+<br><code>git clone https://github.com/geerlingguy/mac-dev-playbook.git</code></p>
+</li>
+<li>
+<p>Install required Ansible roles. <br><code>cd mac-dev-playbook &amp;&amp; ansible-galaxy install -r requirements.yml</code> <br></p>
+</li>
+</ol>
+<h3 id="customization"><a class="header-anchor no-hover-padding" href="#customization" aria-label="Anchor link for: customization"><span class="link-icon" aria-hidden="true"></span></a>
+Customization</h3>
+<p>Jeff Geerling provides a sample <a href="https://github.com/geerlingguy/mac-dev-playbook/blob/master/default.config.yml">config</a> file, but I don't need everything there so I modified it to suit my current needs. My config file looks like this:</p>
+<pre class="z-code"><code><span class="z-text z-plain">homebrew_taps:
+</span><span class="z-text z-plain">  - common-fate/granted
+</span><span class="z-text z-plain">  - hashicorp/tap
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">homebrew_installed_packages:
+</span><span class="z-text z-plain">  - git
+</span><span class="z-text z-plain">  - go
+</span><span class="z-text z-plain">  - mise
+</span><span class="z-text z-plain">  - zsh-history-substring-search
+</span><span class="z-text z-plain">  - terraform
+</span><span class="z-text z-plain">  - granted
+</span><span class="z-text z-plain">  - gh
+</span><span class="z-text z-plain">  - zola
+</span><span class="z-text z-plain">  - awscli
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">homebrew_cask_appdir: /Applications
+</span><span class="z-text z-plain">homebrew_cask_apps:
+</span><span class="z-text z-plain">  - firefox@nightly
+</span><span class="z-text z-plain">  - visual-studio-code
+</span><span class="z-text z-plain">  - google-chrome
+</span><span class="z-text z-plain">  - orbstack
+</span><span class="z-text z-plain">  - rectangle
+</span><span class="z-text z-plain">  - alt-tab
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">mas_installed_apps:
+</span><span class="z-text z-plain">  - { id: 497799835, name: &quot;Xcode&quot; }
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">configure_dock: true
+</span><span class="z-text z-plain">dockitems_remove:
+</span><span class="z-text z-plain">  - Launchpad
+</span><span class="z-text z-plain">  - News
+</span><span class="z-text z-plain">  - Keynote
+</span><span class="z-text z-plain">  - Numbers
+</span><span class="z-text z-plain">  - Pages
+</span><span class="z-text z-plain">  - &quot;App Store&quot;
+</span><span class="z-text z-plain">  - Freeform
+</span><span class="z-text z-plain">  - Reminders
+</span><span class="z-text z-plain">  - Notes
+</span><span class="z-text z-plain">dockitems_persist:
+</span><span class="z-text z-plain">  - name: &quot;Code&quot;
+</span><span class="z-text z-plain">    path: &quot;/Applications/Visual Studio Code.app&quot;
+</span><span class="z-text z-plain">    pos: 15
+</span><span class="z-text z-plain">
+</span></code></pre>
+<p>As I need other tools, I will simply add them to the relevant section, but for now, this is enough to get started with. You may notice I'm not using ansible/brew to install <code>rbenv</code>, <code>npm</code>, <code>pyenv</code> or <code>java</code>. That's because imho <a href="https://mise.jdx.dev/">mise</a> is the best tool for managing these. If you're unfamiliar with mise, see the <a href="https://mise.jdx.dev/getting-started.html">getting-started</a>, <a href="https://mise.jdx.dev/tasks/">tasks</a>, and <a href="https://mise.jdx.dev/mise-cookbook/">cookbooks</a> sections for a sense of how mise can make your life easier.</p>
+<h3 id="deployment"><a class="header-anchor no-hover-padding" href="#deployment" aria-label="Anchor link for: deployment"><span class="link-icon" aria-hidden="true"></span></a>
+Deployment</h3>
+<p>Run the command below and enter you macOS account password when prompted for the 'BECOME' password.<br> <code>ansible-playbook main.yml --ask-become-pass</code> <br></p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Using SSH tunneling to connect to private OKE kubernetes clusters</p></div>
+                <div><a href="https://misaac.me/blog/free-svgs-for-presentations/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Where to get free svgs for presentations</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/bootstraping-new-mac-with-ansible/#pre-requisites">Pre-requisites</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/bootstraping-new-mac-with-ansible/#customization">Customization</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/bootstraping-new-mac-with-ansible/#deployment">Deployment</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+    </div>
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2025 Isaac M • Except where otherwise noted , content on this site is licensed under a <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+</body>
+
+</html>
