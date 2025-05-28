@@ -1,0 +1,2 @@
+{% set reused = load_data(path="_snippets/" ~ path, format="plain") %}
+{{ reused | markdown | safe }}

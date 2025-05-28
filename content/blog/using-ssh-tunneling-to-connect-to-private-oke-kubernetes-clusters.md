@@ -32,7 +32,7 @@ Since we've decided to do things the old school way, we need a public subnet to 
 
 First, our security list:
 
-```terraform
+```
 resource "oci_core_security_list" "bastion" {
   compartment_id = var.compartment_ocid
   display_name   = "bastion_subnet_sec_list"
@@ -68,7 +68,7 @@ resource "oci_core_security_list" "bastion" {
 Next, we'll add the subnet. The subnets created by the terraform [used](https://github.com/oracle-devrel/terraform-oci-arch-oke/blob/main/variables.tf#L36-L55) `10.0.1.0/24`, `10.0.2.0/24` and `10.0.3.0/24` so we can take `10.0.4.0/24` for our bastion.
 
 
-```terraform
+```
 variable "bastion_subnet_cidr" {
   default = "10.0.4.0/24"
 }
@@ -91,7 +91,7 @@ With the subnet in place, we can launch our jump box. You'll likely need to chan
 
 Here's the terraform:
 
-```terraform
+```
 resource "oci_core_instance" "ubuntu_bastion_instance" {
   # Required
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
