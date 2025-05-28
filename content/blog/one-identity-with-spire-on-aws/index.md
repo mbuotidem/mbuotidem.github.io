@@ -5,8 +5,7 @@ description = "Use spiffe/spire as the one source of truth for identity across y
 date = "2025-05-07"
 [taxonomies] 
 tags = [
-  "spiffe",
-  "spire",
+  "spiffe/spire",
   "identity",
   "secrets management",
   "zero trust",
@@ -17,7 +16,7 @@ tags = [
 
 ### Preamble
 
-I recently stumbled across [SPIRE/SPIFFE](https://spiffe.io/), and the more I read about it, the more its core idea resonated with me. Most organizations suffer from secret sprawl: IAM credentials for cloud workloads, SSH keys for devs, .env files passed around Slack, or API keys hardcoded into CI jobs. Revocation is a nightmare, auditing is incomplete, and breaches become treasure hunts for whatever got copied where.
+I recently stumbled across [SPIFFE/SPIRE](https://spiffe.io/), and the more I read about it, the more its core idea resonated with me. Most organizations suffer from secret sprawl: IAM credentials for cloud workloads, SSH keys for devs, .env files passed around Slack, or API keys hardcoded into CI jobs. Revocation is a nightmare, auditing is incomplete, and breaches become treasure hunts for whatever got copied where.
 
 A unified identity system spanning all my workloads, from developer machines to production services, would simplify my life as a security engineer.
 
@@ -66,5 +65,6 @@ If you’ve ever wished for one source of truth for identity across your cloud, 
 
 ---
 
-**Part 1:** Local Dev Authentication with SPIRE + IAM Roles Anywhere  
-**Part 2:** SPIRE-Powered Access to AWS VPN from Dev Machines  
+**Part 1:** [Grant AWS Access to GitHub Codespaces via SPIFFE/SPIRE & IAM Roles Anywhere](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/)
+
+**Part 2:** [Connecting GitHub Codespaces to AWS VPN via SPIFFE/SPIRE & IAM Roles Anywhere](https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/)

@@ -5,7 +5,7 @@ slug= "fasthtml-aws-lambda-tutorial"
 description = "Learn how to run a FastHTML app on AWS Lambda."
 date = "2024-10-06"
 [taxonomies] 
-tags = ["python", "aws", "lambda", "aws-lambda-web-adapter", "terraform", "fasthtml", "htmx"]
+tags = ["python", "aws", "lambda", "aws-lambda-web-adapter", "terraform", "fasthtml", "htmx","iac"]
 +++
 
 **If you know Python, and don't want to learn JavaScript, FastHTML might be for you.**
