@@ -10,7 +10,8 @@ tags = ["AWS", "RDS", "Okta", "IAM", "Terraform", "IaC"]
 ### Introduction
 Developers often find themselves needing direct database access. It might be to debug slow queries, check migrations, or push a last resort data fix. But granting secure, individualized, developer access without leaving long-term credentials lying around can quickly become an unmanageable operational burden.
 
-In this post, we'll replace native DB credentials with [IAM Database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html). We'll also automate the entire lifecycle with Terraform, from DB creation to granting IAM-based database access to developers sourced from Okta. Once we're done, our devs can use their short-lived IAM credentials to connect. 
+In this post, we'll replace native DB credentials with [IAM Database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html). We'll also automate the entire lifecycle with Terraform, from DB creation to granting IAM-based database access to developers sourced from Okta. Once we're done, our devs can use their short-lived IAM credentials to connect. You can find the complete code for this solution on [GitHub](https://github.com/mbuotidem/passwordless-aws-rds-iam-okta-terraform).
+
 
 
 ### Prerequisites
@@ -273,7 +274,6 @@ Account assignment is where you assign a permission set to a user or group for a
 ```
 
 data "aws_identitystore_group" "admins" {
-  provider          = aws.sa-east-1
   identity_store_id = tolist(data.aws_ssoadmin_instances.sso.identity_store_ids)[0]
 
   alternate_identifier {
@@ -383,6 +383,15 @@ data "okta_users" "admins" {
 Next we'll call our revocation script using the list of `okta_users`. 
 
 ```
+
+locals {
+  host     = substr(module.db.db_instance_endpoint, 0, length(module.db.db_instance_endpoint) - 5)
+  username = "complete_postgresql"
+  database = "completePostgresql"
+  password = jsondecode(ephemeral.aws_secretsmanager_secret_version.secret-version.secret_string)["password"]
+  terminated_sessions_file = "${path.module}/terminated_sessions.json" 
+}
+
 resource "terraform_data" "terminate_stale_sessions" {
   # This ensures the script re-runs whenever the list of Okta users changes.
   triggers_replace = data.okta_users.admins.users[*].email
@@ -433,14 +442,6 @@ ephemeral "aws_secretsmanager_secret_version" "secret-version" {
   secret_id = module.db.db_instance_master_user_secret_arn
 }
 
-locals {
-  host     = substr(module.db.db_instance_endpoint, 0, length(module.db.db_instance_endpoint) - 5)
-  username = "complete_postgresql"
-  database = "completePostgresql"
-  password = jsondecode(ephemeral.aws_secretsmanager_secret_version.secret-version.secret_string)["password"]
-  terminated_sessions_file = "${path.module}/terminated_sessions.json" 
-}
-
 terraform {
   required_providers {
     # other providers omitted
@@ -470,6 +471,7 @@ resource "postgresql_role" "okta_users" {
   name     = each.value
   login    = true
   roles    = ["rds_iam"] # needed for IAM auth
+  depends_on = [module.db, module.security_group]
 }
 ```
 
