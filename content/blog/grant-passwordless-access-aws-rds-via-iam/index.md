@@ -209,7 +209,7 @@ data "aws_iam_policy_document" "db_access" {
         join(
             "",
             [
-                "arn:aws:rds-db:${var.region}$:",
+                "arn:aws:rds-db:${var.region}:",
                 data.aws_caller_identity.current.account_id,
                 ":dbuser:",
                 module.db.db_instance_resource_id,
@@ -233,7 +233,9 @@ resource "aws_iam_policy" "db_access_policy" {
   policy = data.aws_iam_policy_document.db_access.json
 }
 ```
-Notice that we have to escape the literal `${` that would otherwise introduce a template sequence.
+Notice that we have to escape the literal `${` in `$${saml:sub}` that would otherwise introduce a template sequence.
+
+TODO: Add note about `saml:sub_type` being set to persistent condition check. 
 
 #### Create permission set 
 A permission set in AWS IAM Identity Center is analagous to an IAM Role in classic IAM. It defines the permissions that a federated user will get during their short-lived session. 
@@ -300,10 +302,12 @@ resource "aws_ssoadmin_account_assignment" "assign_admins" {
 <br>
 
 ### Provision users in the DB
-IAM DB authentication requires the users to have DB users that are mapped to an IAM user or role. Our users already exist via the Okta/IAM Identity Center integration, and above, we just granted them the IAM permissions to access the DB. What's left is to create the equivalent users in the DB. When granting access however, it's crucial to also plan for revocation. We'll tackle this DB user provisioning and revocation here, starting with revocation. 
+IAM DB authentication requires the users to have DB users that are mapped to an IAM user or role. Our users already exist as IAM Identity Center users via the Okta/IAM Identity Center integration, and above, we just granted them the IAM permissions to access the DB. What's left is to create the equivalent users in the DB. 
+
+When granting access however, it's crucial to also plan for revocation. We'll tackle this DB user provisioning and revocation here, starting with revocation. 
 
 #### Planning for User Revocation
-Before we provision users in the database, we need to plan for revocation. When users leave the organization or lose access permissions, we need to both remove their database roles AND terminate any active sessions they might have.
+When users leave the organization or lose access permissions, we need to both remove their database roles AND terminate any active sessions they might have.
 
 You should have this project run as part of both your onboarding and offboarding. With Okta [Event hooks](https://developer.okta.com/docs/concepts/event-hooks/) you can trigger the GitHub pipeline using the `repository_dispatch` [event](https://docs.github.com/en/webhooks/webhook-events-and-payloads#repository_dispatch). This will update the roles in the database, ensuring that it matches the state in Okta. 
 
@@ -368,7 +372,7 @@ echo "${TERMINATED_USERS_JSON:-[]}" > "$OUTPUT_FILE"
 ```
 Our SQL query uses the most recent user list from Okta to determine which active user sessions in the DB should be terminated. It takes advantage of `pg_terminate_backend` and `pg_stat_activity` to figure out the active sessions, and terminate those that belong to users that are no longer authorized. 
 
-#### Run revocation
+#### Running the revocation script
 We begin breaking some rules of proper Terraform automation here. Many consider writing directly to a database during a `terraform apply` to be an anti-pattern. This is because it moves us away from simply provisioning resources, to mutating data or application state that it is argued should ideally be managed outside of the declarative infrastructure lifecycle.
 
 However, the real world is messy, and sometimes a sparing and conscious hack like this is a perfectly reasonable compromise. Just be sure to document it and understand the risks.
@@ -383,12 +387,15 @@ data "okta_users" "admins" {
 Next we'll call our revocation script using the list of `okta_users`. 
 
 ```
+ephemeral "aws_secretsmanager_secret_version" "secret-version" {
+  secret_id = module.db.db_instance_master_user_secret_arn
+}
+
 
 locals {
   host     = substr(module.db.db_instance_endpoint, 0, length(module.db.db_instance_endpoint) - 5)
   username = "complete_postgresql"
   database = "completePostgresql"
-  password = jsondecode(ephemeral.aws_secretsmanager_secret_version.secret-version.secret_string)["password"]
   terminated_sessions_file = "${path.module}/terminated_sessions.json" 
 }
 
@@ -438,10 +445,6 @@ We use the `terraform_data` resource, the native successor to `null_resource`, b
 Next, we'll use the latest Okta user list to create matching roles in the database. For this, we'll leverage a Terraform [PostgreSQL provider](https://registry.terraform.io/providers/cyrilgdn/postgresql/latest/docs). To configure the provider, we'll retrieve the AWS-managed master password from the RDS module and use it to authenticate. Once again, we'll use the `ephemeral` resource type.
 
 ```
-ephemeral "aws_secretsmanager_secret_version" "secret-version" {
-  secret_id = module.db.db_instance_master_user_secret_arn
-}
-
 terraform {
   required_providers {
     # other providers omitted
@@ -484,6 +487,10 @@ We now have everything needed to connect to our AWS RDS DB via IAM. To do so, we
 
 1. Download the required SSL certificate from [https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem](https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem)
 
+    ```
+    curl -O https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+    ```
+
 1. Export your DB host address to your current terminal:
     ```bash
     export RDSHOST=complete-postgresql.randomstring.us-east-1.rds.amazonaws.com
@@ -505,12 +512,12 @@ We now have everything needed to connect to our AWS RDS DB via IAM. To do so, we
       psql -h $RDSHOST -p 5432 \
         --dbname=completePostgresql \
         --username=you@yourcompany.com \
-        --password \
+        --password=$PGPASSWORD \
         --set=sslmode=verify-full \
         --set=sslrootcert=global-bundle.pem
     ```
   
-    When prompted, paste the value of $PGPASSWORD If everything worked out, you should see your psql prompt:
+    If everything worked out, you should see your psql prompt:
 
     ```
     psql (17.5, server 14.17)
@@ -527,7 +534,7 @@ Note that the generated token works [just as well](https://aws.amazon.com/blogs/
 
 Now that our developers can access our database using IAM Database authentication, its worth pointing out some key concerns and limitations. First, developers might find the steps needed to obtain the token cumbersome. You should therefore wrap the individual AWS CLI calls in a custom, organization-specific script or CLI tool.
 
-You'll likely need to grant additional privileges beyond just `rds_iam` to allow your users query or perform other actions on the database.  When you do this, you must ensure that **you never grant devs the permission to create roles**. This prevents bypassing IAM authentication. Also consider managing schema and sequence privileges in this project. This keeps all DB user privilege management operations version-controlled and will likely make your security auditors very happy. 
+You'll likely need to grant additional privileges beyond just `rds_iam` to allow your users query or perform other actions on the database.  When you do this, you must ensure that **you never grant devs the permission to create roles**. This prevents bypassing IAM authentication. Also consider managing schema and sequence privileges using IaC. This keeps all DB user privilege management operations version-controlled and will likely make your security auditors very happy. 
 
 With regards to limitations, perhaps the most important is that CloudWatch and CloudTrail [**don't log**](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html) IAM Database authentication events. CloudWatch and CloudTrail do not track the `generate-db-auth-token` API calls that authorize the IAM role to enable database connection. 
 
