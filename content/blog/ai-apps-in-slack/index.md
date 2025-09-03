@@ -9,21 +9,21 @@ tags = ["aws", "terraform", "slack", "gen-ai", "iac", "bedrock", "llms", "ai", "
 
 ## Introduction
 
-I've always found the idea of ChatOps alluring as it can be a [very powerful tool](https://github.blog/engineering/infrastructure/using-chatops-to-help-actions-on-call-engineers/) for helping teams get things done. However, many ChatOps tools were unable to understand intent from natural language, required hardcoded logic for user actions, and [faced other limitations](https://www.reddit.com/r/devops/comments/exwb9u/why_arent_chatops_more_popular/). 
+I've always found the idea of ChatOps alluring. With the right people building the ChatOps functionality, it can be a [very powerful tool](https://github.blog/engineering/infrastructure/using-chatops-to-help-actions-on-call-engineers/) for helping teams get things done. However, many ChatOps tools were unable to understand intent from natural language, required hardcoded logic for user actions, and [faced other limitations](https://www.reddit.com/r/devops/comments/exwb9u/why_arent_chatops_more_popular/). 
 
-With LLM's and Gen AI, I think ChatOps is worth revisiting as LLM's are fantastic at intent recognition. Depending on your risk tolerance, you can now let a foundational model loose on a problem ([ideally in a secure sandbox](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-tool.html)), give it access to tools via [MCP](https://github.com/awslabs/mcp/), and just sit back and watch magic happen. 
+With LLM's and Gen AI, I think ChatOps is worth revisiting. LLM's are fantastic at intent recognition. And depending on your risk tolerance, the hardcoded logic problem can be solved by letting a foundational model loose on a problem ([ideally in a secure sandbox](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-tool.html)), giving it access to tools via [MCP](https://github.com/awslabs/mcp/), and just sitting back and watching magic happen. 
 
-It is also a particularly good time to work on this as Slack recently released support for [developing apps with AI features](https://docs.slack.dev/ai/developing-ai-apps/). These AI powered apps let you open them in a dedicated pane, which means you can work on them side-by-side your other open channels. You can also follow the user around as their context changes as well as take into account conversation history.
+It is also a particularly good time to work on this as Slack recently released support for [developing apps with AI features](https://docs.slack.dev/ai/developing-ai-apps/). These AI powered apps let users open them in a dedicated pane, which means they can work on them side-by-side their other open channels. They also follow the user around as their context changes as well as have the ability to take into account conversation history.
 
 ![Image showing Slack interface with Slack AI app open in a side pane](slackaiapps.png)
 
-I'd like to explore what LLM's can offer ChatOps by building an AI agent to help with security automation. But this post is not about that. Before going all in, I wanted to see how easily I could hook up a Slack App to AWS Bedrock. Turns out, its pretty straightforward. If you're a CloudFormation nerd, check out [Deploy a Slack gateway for Amazon Bedrock](https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-bedrock/). But since Terraform is my IaC tool of choice, I borrowed some ideas from that post to create [slackbot-lambdalith](https://registry.terraform.io/modules/mbuotidem/slackbot-lambdalith/aws/latest).
+I'd like to explore what LLM's can offer ChatOps by building an AI agent to help with security automation. But this post is not about that. Before going all in, I wanted to see how easily I could hook up a Slack App to AWS Bedrock. Turns out, its pretty straightforward. If you're a CloudFormation nerd, check out [Deploy a Slack gateway for Amazon Bedrock](https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-bedrock/). But since Terraform is my jam, I borrowed some ideas from that post to create [slackbot-lambdalith](https://registry.terraform.io/modules/mbuotidem/slackbot-lambdalith/aws/latest).
 
 ## What we're building
 Because its Labor Day weekend, I'm too lazy to draw up a proper architecture diagram. Instead I'll use an image of the trace detailed view of our Slack AI App. 
 ![Trace detailed view showing lambda and resources called](tracedetails.png)
 
-We'll build a Lambda function that receives Slack requests, calls out to AWS Bedrock, and returns useful responses to the Slack user. On the way to achieving this, it uses DynamoDB to store message deduplication information. Sidebar: if anyone knows an AI app that I can use to create quality diagrams like those I'd make on [draw.io](https://app.diagrams.net/) with just prompting, please ping me! 
+We'll build a Lambda function that receives Slack requests, calls out to AWS Bedrock, and returns useful responses to the Slack user. On the way to achieving this, it uses DynamoDB to store message deduplication information. Sidebar: if anyone knows an AI app that I can use to create architecture diagrams in the style of [draw.io](https://app.diagrams.net/) with just prompting, please ping me! 
 
 
 ## Setting up the infrastructure
@@ -64,17 +64,17 @@ module "slack_bot" {
 
 ```
 
-I set up the module to deploy a Lambda function url with `use_function_url` While the module supports API Gateway, I went with the function url option for simplicity. If you're in an enterprise setting with strict security requirements around externally exposed resources, you should consider the API Gateway route.  
+I set up the module to deploy a Lambda function url with `use_function_url`. While slackbot-lambdalith supports API Gateway, I went with the function url option for simplicity. If you're in an enterprise setting with strict security requirements around externally exposed resources, you should consider the API Gateway option.  
 
 And because we're building a chat app, keeping an eye on latency and overall performance is key to a good user experience, so we setup application signals with `enable_application_signals`.
 
 ![List of lambda traces](traceslist.png)
 
-As you can see in the image above, enabling [application signals](https://aws.amazon.com/blogs/aws/amazon-cloudwatch-application-signals-for-automatic-instrumentation-of-your-applications-preview/) gives us automatic instrumentation so we can interrogate our apps performance with traces that include critical response-time metrics. More on this [later](#the-latency-problem). 
+As you can see in the image above, enabling [application signals](https://aws.amazon.com/blogs/aws/amazon-cloudwatch-application-signals-for-automatic-instrumentation-of-your-applications-preview/) gives us automatic instrumentation. This means we can interrogate our apps performance with traces that include critical response-time metrics. More on this [later](#the-latency-problem). 
 
 ## Our lambda function
 
-Here's how our lambdalith is setup. It's loosely modeled after the [bolt-python-assistant-template](https://github.com/slack-samples/bolt-python-assistant-template/tree/main) put out by Slack. 
+Here's how our lambdalith is setup. It's loosely modeled after the [bolt-python-assistant-template](https://github.com/slack-samples/bolt-python-assistant-template/tree/main) provided by Slack. 
 
 ```
  16:39:45 ~/slackbot/lambda 
@@ -93,7 +93,7 @@ $ tree
 3 directories, 9 files
 ```
 ### Entrypoint
-Our entry point is `index.py` where we have our lambda function handler. Slack needs a response within 3 seconds, and normally you'd send a quick HTTP 200 OK and then do the work. But with Lambda, that's complicated because returning a response effectively terminates execution. To get around this, we use Slack Bolt's [lazy listeners](https://docs.slack.dev/tools/bolt-python/concepts/lazy-listeners/). These work by acknowledging the request right away, then invoking another instance of the same lambda asynchronously to perform the required task. The key setting that enables this behavior is `process_before_response=True`.
+Our entry point is `index.py` where we have our lambda function handler. Slack needs a response within 3 seconds, and normally you'd send a quick HTTP 200 OK and then do the work. But with Lambda, that's complicated because returning a response effectively terminates execution. To get around this, we use the Slack Bolt SDK's [lazy listeners](https://docs.slack.dev/tools/bolt-python/concepts/lazy-listeners/). These work by acknowledging the request right away, then invoking another instance of the same lambda asynchronously to perform the required task. The key setting that enables this behavior is `process_before_response=True`.
 
 
 ```python
@@ -129,7 +129,7 @@ def handler(event, context):
 
 ### Listeners
 
-The Slack Bolt SDK provides the convenient [`Assistant` class](https://docs.slack.dev/tools/bolt-python/concepts/ai-apps/#assistant-class). It handles the `assistant_thread_started` , `assistant_thread_context_changed` and `message.im` events. For our purposes we don't need to worry about the context changed event but we'll be using the other two. 
+The Slack Bolt SDK provides the convenient [`Assistant` class](https://docs.slack.dev/tools/bolt-python/concepts/ai-apps/#assistant-class). It handles the `assistant_thread_started` , `assistant_thread_context_changed`, and `message.im` events. For our purposes we don't need to worry about the context changed event but we'll be using the other two. 
 
 #### @assistant.thread_started
 This is invoked when your user opens an assistant thread. You can use it as we do here to say something nice and helpful, or you could use it to [seed the first interaction with prompts](https://github.com/slack-samples/bolt-python-assistant-template/blob/main/listeners/assistant.py#L48). 
@@ -300,7 +300,7 @@ Fortunately, with application insights enabled, you can see detailed information
 
 ![Trace detailed view showing segments](tracesegments.png)
 
-As you can see, the init phase of the lambda took almost 3 seconds while the call to Bedrock took almost 5 seconds. And this is with [latency optimized inference](https://docs.aws.amazon.com/bedrock/latest/userguide/latency-optimized-inference.html) enabled. Without the latency config, I was seeing response times of magnitudes higher. 
+As you can see, the init phase of the lambda took almost 3 seconds while the call to Bedrock took almost 5 seconds. And this was with [latency optimized inference](https://docs.aws.amazon.com/bedrock/latest/userguide/latency-optimized-inference.html) enabled. Without the latency config, I was seeing response times of magnitudes higher. 
 
 What this means for you is that you need to be ruthless about minimizing the things your lambda has to do on initialization as well as during regular operation. Additionally, test different foundational models to find one that consistently delivers fast responses without sacrificing quality.
 
@@ -315,4 +315,4 @@ If you are familiar with building gen ai chat applications, you might wonder if 
 
 Unfortunately, true streaming is [not currently possible](https://github.com/slackapi/bolt-js/issues/2073) as the Slack API does not natively support streaming HTTP requests. There is a [workaround](https://github.com/slack-samples/bolt-js-assistant-template/issues/27#issuecomment-2755641964) however that involves calling [`chat.update`](https://docs.slack.dev/reference/methods/chat.update/) with each received chunk to update the previously sent message. This does have the effect of marking every message sent by the Slack App as 'edited', but the improved UX may be worth it in your case. 
 
-In part 2, I'll walk through how to implement this approach as well as briefly discuss other considerations for running a Slack AI App in production such as guardrails, evals, and security. 
+In part 2, I'll walk through how to implement this approach. And depending on how long that post is, we might briefly discuss other considerations for running a Slack AI App in production such as guardrails, evals, and security. 
