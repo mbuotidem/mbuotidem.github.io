@@ -308,7 +308,7 @@ What this means for you is that you need to be ruthless about minimizing the thi
 If you've made it this far, you should now have a fully functional Slack AI app. Here's what using our app looks like. 
 <video width="640" height="360" controls poster="slackaiapps.png">
   <source src="slackaiapp.mp4" type="video/mp4">
-  Your browser does not support the video tag.
+  Your browser does not support the video tag. [Download the video](slackaiapp.mp4).
 </video>
 
 If you are familiar with building gen ai chat applications, you might wonder if we could take advantage of either [Lambda response streaming](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html?icmpid=docs_lambda_rss) or the Converse API's [ConverseStream](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html) method to get responses quicker. 
