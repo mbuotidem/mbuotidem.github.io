@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Make your Slack AI app faster</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Tricks to make you Slack AI app feel faster for your users" />
+        <meta property="og:description" content="Tricks to make you Slack AI app feel faster for your users" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Make your Slack AI app faster" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+    <div class="content">
+
+        
+        
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Make your Slack AI app faster
+        </h1>
+
+        <ul class="meta">
+                <li>30th Sep 2025</li>
+                <li title="428 words"><span class='separator' aria-hidden='true'>•</span>3 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/slack/">slack</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/gen-ai/">gen-ai</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">iac</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/bedrock/">bedrock</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/llms/">llms</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/ai/">ai</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/generative-ai/">generative-ai</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/chatops/">chatops</a></li>
+        </ul>
+
+        <section class="body"><h2 id="introduction"><a class="header-anchor no-hover-padding" href="#introduction" aria-label="Anchor link for: introduction"><span class="link-icon" aria-hidden="true"></span></a>
+Introduction</h2>
+<p>In <a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/">part 1</a>, when we setup our Slack AI app, we observed that while <a href="https://github.com/slack-samples/bolt-js-assistant-template/issues/27#issuecomment-2755641964">true streaming responses</a> are not currently possible via the Slack SDK, a workaround involving continuously calling <code>chat.update</code> exists. In this post, we'll update our Slack AI app to use this workaround. We'll also briefly consider other tricks that might help with our lambda's responsiveness.</p>
+<h3 id="previous-state"><a class="header-anchor no-hover-padding" href="#previous-state" aria-label="Anchor link for: previous-state"><span class="link-icon" aria-hidden="true"></span></a>
+Previous state</h3>
+<p>As a refresher, our previous function looked like this:</p>
+<pre class="z-code"><code><span class="z-text z-plain">def call_bedrock(
+</span><span class="z-text z-plain">    messages_in_thread: List[Dict[str, str]],
+</span><span class="z-text z-plain">    system_content: str = DEFAULT_SYSTEM_CONTENT,
+</span><span class="z-text z-plain">):
+</span><span class="z-text z-plain">    # Format messages for Bedrock API - content must be a list
+</span><span class="z-text z-plain">    messages = [{&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: [{&quot;text&quot;: system_content}]}]
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    # Convert thread messages to Bedrock format
+</span><span class="z-text z-plain">    for msg in messages_in_thread:
+</span><span class="z-text z-plain">        formatted_msg = {&quot;role&quot;: msg[&quot;role&quot;], &quot;content&quot;: [{&quot;text&quot;: msg[&quot;content&quot;]}]}
+</span><span class="z-text z-plain">        messages.append(formatted_msg)
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    model_id = BEDROCK_MODEL_ID
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    response = bedrock_runtime_client.converse(
+</span><span class="z-text z-plain">        messages=messages, modelId=model_id, performanceConfig={&quot;latency&quot;: &quot;optimized&quot;}
+</span><span class="z-text z-plain">    )
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    # Process the response from the Bedrock AI model
+</span><span class="z-text z-plain">    response_content = response[&quot;output&quot;][&quot;message&quot;][&quot;content&quot;][0][&quot;text&quot;]
+</span><span class="z-text z-plain">    return markdown_to_slack(response_content)
+</span><span class="z-text z-plain">
+</span></code></pre>
+<p>Here we call the Amazon Bedrock api sending in our messages, and then post the returned response to the user in slack using <a href="https://docs.slack.dev/tools/bolt-python/reference/context/say/say.html"><code>say</code></a>. Notice that we're calling Bedrock with the <code>Converse</code> method. To incorporate 'streaming', we're going to switch to the <code>ConverseStream</code> method which returns the response in a stream. To learn more about both <code>Converse</code> and <code>ConverseStream</code>, see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#conversation-inference-supported-models-features">"Carry out a conversation with the Converse API operations"</a>.</p>
+<h3 id="switching-to-conversestream"><a class="header-anchor no-hover-padding" href="#switching-to-conversestream" aria-label="Anchor link for: switching-to-conversestream"><span class="link-icon" aria-hidden="true"></span></a>
+Switching to ConverseStream</h3>
+<p>Let's call our new function, <code>call_bedrock_stream</code>. It has a couple of new parameters,<code>slack_token</code>, <code>throttle_ms</code>, and <code>say</code>. Within it, we also have a helper function <code>call_slack_update</code> which uses these new parameters to call Slack and update the message using the Slack API's <a href="https://docs.slack.dev/reference/methods/chat.update/"><code>chat.update</code></a> method.</p>
+<pre class="z-code"><code><span class="z-text z-plain">def call_bedrock_stream(
+</span><span class="z-text z-plain">    messages_in_thread: List[Dict[str, str]],
+</span><span class="z-text z-plain">    system_content: str = DEFAULT_SYSTEM_CONTENT,
+</span><span class="z-text z-plain">    slack_token=None,
+</span><span class="z-text z-plain">    throttle_ms=500,
+</span><span class="z-text z-plain">    say=None,
+</span><span class="z-text z-plain">):
+</span><span class="z-text z-plain">    import time
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    # Convert thread messages to Bedrock format
+</span><span class="z-text z-plain">    messages = []
+</span><span class="z-text z-plain">    for msg in messages_in_thread:
+</span><span class="z-text z-plain">        formatted_msg = {&quot;role&quot;: msg[&quot;role&quot;], &quot;content&quot;: [{&quot;text&quot;: msg[&quot;content&quot;]}]}
+</span><span class="z-text z-plain">        messages.append(formatted_msg)
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    # System prompts for streaming API
+</span><span class="z-text z-plain">    system_prompts = [{&quot;text&quot;: system_content}]
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    model_id = BEDROCK_MODEL_ID
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    # Basic inference configuration
+</span><span class="z-text z-plain">    inference_config = {&quot;temperature&quot;: 0.7, &quot;maxTokens&quot;: 8192}
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    def call_slack_update(text, initial_message):
+</span><span class="z-text z-plain">        &quot;&quot;&quot;Helper to safely update the Slack message&quot;&quot;&quot;
+</span><span class="z-text z-plain">        if initial_message:
+</span><span class="z-text z-plain">            try:
+</span><span class="z-text z-plain">                from slack_sdk import WebClient
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">                sync_client = WebClient(token=slack_token)
+</span><span class="z-text z-plain">                sync_client.chat_update(
+</span><span class="z-text z-plain">                    channel=initial_message[&quot;channel&quot;],
+</span><span class="z-text z-plain">                    ts=initial_message[&quot;ts&quot;],
+</span><span class="z-text z-plain">                    text=text,
+</span><span class="z-text z-plain">                )
+</span><span class="z-text z-plain">            except Exception as e:
+</span><span class="z-text z-plain">                print(f&quot;Error updating Slack message: {e}&quot;)
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    try:
+</span><span class="z-text z-plain">        response = bedrock_runtime_client.converse_stream(
+</span><span class="z-text z-plain">            modelId=model_id,
+</span><span class="z-text z-plain">            messages=messages,
+</span><span class="z-text z-plain">            system=system_prompts,
+</span><span class="z-text z-plain">            inferenceConfig=inference_config,
+</span><span class="z-text z-plain">        )
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">        # Collect the streamed response
+</span><span class="z-text z-plain">        complete_response = &quot;&quot;
+</span><span class="z-text z-plain">        stream = response.get(&quot;stream&quot;)
+</span><span class="z-text z-plain">        last_update_time = 0
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">        initial_message = None
+</span><span class="z-text z-plain">        try:
+</span><span class="z-text z-plain">            initial_message = say(&quot; &quot;)
+</span><span class="z-text z-plain">        except Exception as e:
+</span><span class="z-text z-plain">            print(f&quot;Error creating initial Slack message: {e}&quot;)
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">        if stream:
+</span><span class="z-text z-plain">            for event in stream:
+</span><span class="z-text z-plain">                if &quot;contentBlockDelta&quot; in event:
+</span><span class="z-text z-plain">                    delta_text = event[&quot;contentBlockDelta&quot;][&quot;delta&quot;][&quot;text&quot;]
+</span><span class="z-text z-plain">                    complete_response += delta_text
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">                    # Call Slack update with throttling if provided
+</span><span class="z-text z-plain">                    current_time = time.time() * 1000  # Convert to milliseconds
+</span><span class="z-text z-plain">                    if current_time - last_update_time &gt;= throttle_ms:
+</span><span class="z-text z-plain">                        call_slack_update(
+</span><span class="z-text z-plain">                            markdown_to_slack(complete_response), initial_message
+</span><span class="z-text z-plain">                        )
+</span><span class="z-text z-plain">                        last_update_time = current_time
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">                if &quot;messageStop&quot; in event:
+</span><span class="z-text z-plain">                    print(f&quot;\nStop reason: {event[&#39;messageStop&#39;][&#39;stopReason&#39;]}&quot;)
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">                if &quot;metadata&quot; in event:
+</span><span class="z-text z-plain">                    metadata = event[&quot;metadata&quot;]
+</span><span class="z-text z-plain">                    if &quot;usage&quot; in metadata:
+</span><span class="z-text z-plain">                        print(
+</span><span class="z-text z-plain">                            f&quot;\nToken usage - Input: {metadata[&#39;usage&#39;][&#39;inputTokens&#39;]}, &quot;
+</span><span class="z-text z-plain">                            f&quot;Output: {metadata[&#39;usage&#39;][&#39;outputTokens&#39;]}, &quot;
+</span><span class="z-text z-plain">                            f&quot;Total: {metadata[&#39;usage&#39;][&#39;totalTokens&#39;]}&quot;
+</span><span class="z-text z-plain">                        )
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">        # Final update with complete response
+</span><span class="z-text z-plain">        final_response = markdown_to_slack(complete_response)
+</span><span class="z-text z-plain">        call_slack_update(final_response, initial_message)
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">        return final_response
+</span><span class="z-text z-plain">
+</span><span class="z-text z-plain">    except Exception as e:
+</span><span class="z-text z-plain">        print(f&quot;Error in streaming call: {str(e)}&quot;)
+</span><span class="z-text z-plain">        # Fallback to non-streaming call
+</span><span class="z-text z-plain">        return call_bedrock(messages_in_thread, system_content)
+</span></code></pre>
+<p>Here's how the streaming flow works.</p>
+<ol>
+<li>
+<p><strong>Setup</strong>: Before calling <code>call_bedrock_stream</code>  we use the <a href="https://docs.slack.dev/reference/methods/assistant.threads.setStatus/"><code>setStatus</code></a> method to immediately show users that the bot is thinking.</p>
+</li>
+<li>
+<p><strong>Stream processing</strong>:Inside call_bedrock_stream, we call Bedrock's converse_stream API to get response chunks. Immediately after making this call, we post an empty message to the Slack thread using say - this serves as a placeholder that we'll update with the actual response. As each chunk arrives from Bedrock (the stream continues until we receive a messageStop event), we update the Slack message in place using our helper function. Here's a quick video to demonstrate the effect.</p>
+</li>
+</ol>
+<video width="640" height="360" controls poster="slackaiapps.png">
+  <source src="slackstreaming.mp4" type="video/mp4">
+  Your browser does not support the video tag. Here is a <a href="slackstreaming.mp4">direct link to the video</a> and a brief description: "This video demonstrates how Slack messages are updated in real-time using streaming responses from Amazon Bedrock."
+</video>
+<ol start="3">
+<li><strong>Complete response</strong>: Finally, we send the entire response. This ensures that even if the streaming updates fail partway through (network issues, rate limiting, etc.), the final update ensures the complete message reaches Slack.</li>
+</ol>
+
+        </section>
+
+        
+                
+                
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div></div>
+                <div><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Build a Slack AI app powered by Amazon Bedrock</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/make-your-slack-ai-apps-faster/#introduction">Introduction</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/make-your-slack-ai-apps-faster/#previous-state">Previous state</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/make-your-slack-ai-apps-faster/#switching-to-conversestream">Switching to ConverseStream</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+    </div>
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2025 Isaac M • Except where otherwise noted , content on this site is licensed under a <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+</body>
+
+</html>
