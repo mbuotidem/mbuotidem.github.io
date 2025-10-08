@@ -43,16 +43,15 @@ Here we call the Amazon Bedrock api sending in our messages, and then post the r
 
 ### Switching to ConverseStream
 
-Let's call our new function, `call_bedrock_stream`. It has a couple of new parameters, `slack_channel`, `slack_ts`, `slack_token` and `throttle_ms`. Within it, we also have a helper function `call_slack_update` which uses these new parameters to call slack and update the message using the Slack API's [`chat.update`](https://docs.slack.dev/reference/methods/chat.update/) method.
+Let's call our new function, `call_bedrock_stream`. It has a couple of new parameters,`slack_token`, `throttle_ms`, and `say`. Within it, we also have a helper function `call_slack_update` which uses these new parameters to call Slack and update the message using the Slack API's [`chat.update`](https://docs.slack.dev/reference/methods/chat.update/) method.
 
 ```
 def call_bedrock_stream(
     messages_in_thread: List[Dict[str, str]],
     system_content: str = DEFAULT_SYSTEM_CONTENT,
-    slack_channel=None,
-    slack_ts=None,
     slack_token=None,
     throttle_ms=500,
+    say=None,
 ):
     import time
 
@@ -70,16 +69,16 @@ def call_bedrock_stream(
     # Basic inference configuration
     inference_config = {"temperature": 0.7, "maxTokens": 8192}
 
-    def call_slack_update(text):
+    def call_slack_update(text, initial_message):
         """Helper to safely update the Slack message"""
-        if slack_channel and slack_ts and slack_token:
+        if initial_message:
             try:
                 from slack_sdk import WebClient
 
                 sync_client = WebClient(token=slack_token)
                 sync_client.chat_update(
-                    channel=slack_channel,
-                    ts=slack_ts,
+                    channel=initial_message["channel"],
+                    ts=initial_message["ts"],
                     text=text,
                 )
             except Exception as e:
@@ -98,6 +97,13 @@ def call_bedrock_stream(
         stream = response.get("stream")
         last_update_time = 0
 
+        initial_message = None
+        try:
+            initial_message = say(" ")
+        except Exception as e:
+            print(f"Error creating initial Slack message: {e}")
+
+
         if stream:
             for event in stream:
                 if "contentBlockDelta" in event:
@@ -107,7 +113,9 @@ def call_bedrock_stream(
                     # Call Slack update with throttling if provided
                     current_time = time.time() * 1000  # Convert to milliseconds
                     if current_time - last_update_time >= throttle_ms:
-                        call_slack_update(markdown_to_slack(complete_response))
+                        call_slack_update(
+                            markdown_to_slack(complete_response), initial_message
+                        )
                         last_update_time = current_time
 
                 if "messageStop" in event:
@@ -124,7 +132,7 @@ def call_bedrock_stream(
 
         # Final update with complete response
         final_response = markdown_to_slack(complete_response)
-        call_slack_update(final_response)
+        call_slack_update(final_response, initial_message)
 
         return final_response
 
@@ -134,15 +142,17 @@ def call_bedrock_stream(
         return call_bedrock(messages_in_thread, system_content)
 ```
 
-Here's how the streaming flow works: First, we display a "thinking..." message to give immediate feedback to the user using [`Say`](https://docs.slack.dev/tools/bolt-python/reference/context/say/say.html). `Say` returns valuable information like the channel id and the thread timestamp which we then use when we invoke `call_bedrock_stream`, passing in the thread and timestamp information. 
+Here's how the streaming flow works. 
 
-Inside `call_bedrock_stream`, we hit Bedrock's converse_stream API, which returns a stream of response chunks. As each chunk arrives (we know the stream continues until we receive a `messageStop` event), we use our helper function to update the Slack message in place. 
+1. **Setup**: Before calling `call_bedrock_stream`  we use the [`setStatus`](https://docs.slack.dev/reference/methods/assistant.threads.setStatus/) method to immediately show users that the bot is thinking. 
 
-The first update replaces "thinking..." with the initial text from Bedrock. Each subsequent update appends the new chunk to the existing content, creating a growing response that appears to type itself out in real-time. Here's a quick video to demonstrate the effect. 
+2. **Stream processing**:Inside call_bedrock_stream, we call Bedrock's converse_stream API to get response chunks. Immediately after making this call, we post an empty message to the Slack thread using say - this serves as a placeholder that we'll update with the actual response. As each chunk arrives from Bedrock (the stream continues until we receive a messageStop event), we update the Slack message in place using our helper function. Here's a quick video to demonstrate the effect.
+
+
 
 <video width="640" height="360" controls poster="slackaiapps.png">
   <source src="slackstreaming.mp4" type="video/mp4">
   Your browser does not support the video tag. Here is a <a href="slackstreaming.mp4">direct link to the video</a> and a brief description: "This video demonstrates how Slack messages are updated in real-time using streaming responses from Amazon Bedrock."
 </video>
 
-Finally, we send the entire response. This ensures that even if the streaming updates fail partway through (network issues, rate limiting, etc.), the final update ensures the complete message reaches Slack.
+3. **Complete response**: Finally, we send the entire response. This ensures that even if the streaming updates fail partway through (network issues, rate limiting, etc.), the final update ensures the complete message reaches Slack.
