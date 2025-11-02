@@ -7,6 +7,13 @@ date = "2025-09-30"
 tags = ["aws", "terraform", "slack", "gen-ai", "iac", "bedrock", "llms", "ai", "generative-ai", "chatops"]
 +++
 
+> **Note:**
+>Update (October 2025): Since this post was written, Slack Web API has released a [native streaming message](https://docs.slack.dev/changelog/2025/10/7/chat-streaming/) capability. 
+>
+>You can now use the methods `chat.startStream`, `chat.appendStream`, and `chat.stopStream` along with new Block Kit elements to provide a token-by-token streaming experience in Slack apps.
+>If you’re building an AI agent in Slack today, you may want to swap out the manual “chat.update with chunks” workaround in the write-up for these new APIs.
+
+
 ## Introduction
 
 In [part 1](https://misaac.me/blog/ai-apps-in-slack-bedrock/), when we setup our Slack AI app, we observed that while [true streaming responses](https://github.com/slack-samples/bolt-js-assistant-template/issues/27#issuecomment-2755641964) are not currently possible via the Slack SDK, a workaround involving continuously calling `chat.update` exists. In this post, we'll update our Slack AI app to use this workaround. We'll also briefly consider other tricks that might help with our lambda's responsiveness.
@@ -146,7 +153,9 @@ Here's how the streaming flow works.
 
 1. **Setup**: Before calling `call_bedrock_stream`  we use the [`setStatus`](https://docs.slack.dev/reference/methods/assistant.threads.setStatus/) method to immediately show users that the bot is thinking. 
 
-2. **Stream processing**:Inside call_bedrock_stream, we call Bedrock's converse_stream API to get response chunks. Immediately after making this call, we post an empty message to the Slack thread using say - this serves as a placeholder that we'll update with the actual response. As each chunk arrives from Bedrock (the stream continues until we receive a messageStop event), we update the Slack message in place using our helper function. Here's a quick video to demonstrate the effect.
+2. **Stream processing**:Inside `call_bedrock_stream`, we invoke Bedrock's converse_stream API to get response chunks. Immediately after making this call, we post an empty message to the Slack thread using say - this serves as a placeholder that we'll update with the actual response. 
+
+    As each chunk arrives from Bedrock (the stream continues until we receive a `messageStop` event), we update the Slack message in place using our helper function. Here's a quick video to demonstrate the effect.
 
 
 
@@ -155,4 +164,4 @@ Here's how the streaming flow works.
   Your browser does not support the video tag. Here is a <a href="slackstreaming.mp4">direct link to the video</a> and a brief description: "This video demonstrates how Slack messages are updated in real-time using streaming responses from Amazon Bedrock."
 </video>
 
-3. **Complete response**: Finally, we send the entire response. This ensures that even if the streaming updates fail partway through (network issues, rate limiting, etc.), the final update ensures the complete message reaches Slack.
+3. **Complete response**: Finally, we send the entire response. This final update ensures that even if the streaming updates fail partway through (network issues, rate limiting, etc.), the complete message reaches Slack.
