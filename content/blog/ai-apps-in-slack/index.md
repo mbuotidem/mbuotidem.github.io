@@ -7,6 +7,12 @@ date = "2025-08-31"
 tags = ["aws", "terraform", "slack", "gen-ai", "iac", "bedrock", "llms", "ai", "generative-ai", "chatops"]
 +++
 
+> **Note:**
+>Update (October 2025): Since this post was written, Slack Web API has released a [native streaming message](https://docs.slack.dev/changelog/2025/10/7/chat-streaming/) capability. 
+>
+>You can now use the methods `chat.startStream`, `chat.appendStream`, and `chat.stopStream` along with new Block Kit elements to provide a token-by-token streaming experience in Slack apps.
+>If you’re building an AI agent in Slack today, you may want to swap out the manual “chat.update with chunks” workaround in the write-up for these new APIs.
+
 ## Introduction
 
 I've always found the idea of ChatOps alluring. With the right people building the ChatOps functionality, it can be a [very powerful tool](https://github.blog/engineering/infrastructure/using-chatops-to-help-actions-on-call-engineers/) for helping teams get things done. However, many ChatOps tools were unable to understand intent from natural language, required hardcoded logic for user actions, and [faced other limitations](https://www.reddit.com/r/devops/comments/exwb9u/why_arent_chatops_more_popular/). 
