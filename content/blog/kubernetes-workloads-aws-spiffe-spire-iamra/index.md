@@ -82,7 +82,7 @@ metadata:
   namespace: spire
 ```
 
-To enable the SPIRE server's node attestor to function properly, we need to grant it specific permissions through a ClusterRole. This role allows the server to read pods and nodes, update configmaps, and query the Token Review API—all essential for the node attestation process.
+To enable the SPIRE server's node attestor to function properly, we need to grant it specific permissions through a ClusterRole. This role allows the server to read pods and nodes, update configmaps, and query the Token Review API, steps that are all essential for the node attestation process.
 
 ```yaml
 kind: ClusterRole
