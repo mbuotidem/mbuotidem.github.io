@@ -872,7 +872,7 @@ DEBU[0000] Entry created                                 entry=b3be6f38-e411-4ff
 
 To allow SPIRE to identify a workload, you need to register it with the SPIRE Server using registration entries. These entries specify how SPIRE should recognize the workload and the corresponding SPIFFE ID it should be assigned. The set of properties by which SPIRE is to recognize a workload as valid are known as selectors. 
 
-The following command creates a registration entry based on the current user's UID (`$(id -u)`) — in other words, the UID is our only selector.  Open a new terminal window side-by-side with the one running the SPIRE agent and run the command below. You should see output similar to: 
+The following command creates a registration entry based on the current user's UID (`$(id -u)`). In other words, the UID is our only selector.  Open a new terminal window side-by-side with the one running the SPIRE agent and run the command below. You should see output similar to: 
 
 ```
 

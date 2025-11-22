@@ -170,7 +170,7 @@ Then delete any existing credentials:
 
 ```
 
-Now, simply run your application or any AWS CLI command as usual. The AWS SDKs and CLI will automatically detect the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable and fetch credentials from the local endpoint provided by the credential helper. No changes to your application code are required—credential renewal and retrieval are handled transparently in the background.
+Now, simply run your application or any AWS CLI command as usual. The AWS SDKs and CLI will automatically detect the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable and fetch credentials from the local endpoint provided by the credential helper. No changes to your application code are required as credential renewal and retrieval are handled transparently in the background.
 
 Let's run `whoami`. 
 

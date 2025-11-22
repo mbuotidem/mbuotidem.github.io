@@ -55,9 +55,9 @@ And yes, all the SPIRE components represent another piece of infra to manage. Yo
 
 I’ll walk through setting up SPIRE on AWS and using it as the single source of identity for everything from dev machines to EKS workloads.
 
-This won’t cover HA deployments, multi-region SPIRE, or plugging into enterprise PKI. But it’ll go over the basics and you can swap out the toy pieces for enterprise-grade alternatives that meet your security posture.
+We won’t cover HA deployments, multi-region SPIRE, or plugging into enterprise PKI. But we’ll go over the basics and you can swap out the toy pieces for enterprise-grade alternatives that meet your security posture.
 
-If you’ve ever wished for one source of truth for identity across your cloud, clusters, laptops, and runtime services — keep reading.
+If you’ve ever wished for one source of truth for identity across your cloud, clusters, laptops, and runtime services you're in the right spot!
 
 ---
 

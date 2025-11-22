@@ -27,7 +27,7 @@ We'll be connecting to a VPC with a private subnet and no internet gateway, A.K.
 AWS Client VPN supports several [authentication methods](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html) , including mutual authentication (certificate-based), SAML, Active Directory (AD), or a combination of SAML/AD with certificates. For our setup, we’re choosing **certificate-based mutual authentication only**. 
 
 The reasons for this choice are:
-- **Headless access**: I want the ability to connect to the VPN without a GUI—for example, from environments like GitHub Codespaces. SAML requires a browser-based login flow, which doesn’t work well in headless or automated contexts.
+- **Headless access**: I want the ability to connect to the VPN without a GUI, for example, from environments like GitHub Codespaces. SAML requires a browser-based login flow, which doesn’t work well in headless or automated contexts.
 
 - **Reusable CA foundation**: I plan to build on this (CA) for other identity and authentication use cases down the line, such as [AWS IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)
 
@@ -143,7 +143,7 @@ certs
 
 #### Create Certificate Signing Request (CSR)
 
-A Certificate Signing Request (CSR) is an encoded file that contains your public key along with information about your organization — such as the domain name (Common Name), organization, country, and other metadata. It's submitted to a CA to request an SSL/TLS certificate. Let's use the Terraform `tls_cert_request` [resource](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/cert_request) to create our CSR. 
+A Certificate Signing Request (CSR) is an encoded file that contains your public key along with information about your organization such as the domain name (Common Name), organization, country, and other metadata. It's submitted to a CA to request an SSL/TLS certificate. Let's use the Terraform `tls_cert_request` [resource](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/cert_request) to create our CSR. 
 
 First, we need to generate our private key. I'm going to change directory and place this in `~/.ssh` so that we don't accidentally commit it. 
 
@@ -362,11 +362,11 @@ You can now leave that terminal window running, open a new one, and ssh, curl, o
 
 ### Wrapping Up
 
-That’s it! You now have a fully functional, certificate-based AWS Client VPN — without having to pay AWS Private CA’s hefty price tag. By using Serverless CA, we’ve built a scalable, revocable, IaC-backed certificate authority that runs for under $50 a year. 
+That’s it! You now have a fully functional, certificate-based AWS Client VPN without having to pay AWS Private CA’s hefty price tag. By using Serverless CA, we’ve built a scalable, revocable, IaC-backed certificate authority that runs for under $50 a year. 
 
 From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for other use cases.
 
-You’ll still need to pay for the [AWS VPN](https://aws.amazon.com/vpn/pricing/) itself — including the hourly charge for the VPN endpoint (even when idle), plus any connection and data transfer fees — but at least you're not spending $400/month just to run a CA.
+You’ll still need to pay for the [AWS VPN](https://aws.amazon.com/vpn/pricing/) itself including the hourly charge for the VPN endpoint (even when idle), plus any connection and data transfer fees. But at least you're not spending $400/month just to run a CA.
 
 
 

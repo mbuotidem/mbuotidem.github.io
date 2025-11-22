@@ -92,7 +92,7 @@ vpc_id = aws_vpc.main.id
 security_group_ids = [aws_security_group.allow_ssh.id]
 }
 ```
-Notice how we reference the server certificate issued which we previously imported into ACM — in both
+Notice how we reference the server certificate issued which we previously imported into ACM in both
 `server_certificate_arn` and `root_certificate_chain_arn`.
 
 Since our client certificates will also be issued by the same CA, we can use the same certificate ARN as
@@ -102,7 +102,7 @@ be accepted during mutual TLS authentication.
 We're also setting `split_tunnel` to `true`. This ensures that only traffic destined for resources inside the VPN is
 routed through the VPN tunnel, while all other internet traffic continues to go through the user's local network.
 
-If we left `split_tunnel` set to its default value of `false`, all traffic—including internet-bound requests—would be
+If we left `split_tunnel` set to its default value of `false`, all traffic including internet-bound requests would be
 routed through the VPN. Because the our fully-private VPC has no public internet access, this would effectively break
 the user's connection, blackholing their traffic the moment they connect.
 
@@ -113,7 +113,7 @@ AWS-bound traffic through the VPN.
 
 ### Associate the VPN endpoint with the VPC and subnet
 
-To route VPN traffic into your VPC, you need to associate the endpoint with a **target network** — which is just a
+To route VPN traffic into your VPC, you need to associate the endpoint with a **target network**. A target network is just a 
 subnet in your VPC. This tells AWS where to send traffic from connected clients.
 
 ```
@@ -124,7 +124,7 @@ subnet_id = aws_subnet.subnet_b.id
 ```
 ### Add an authorization rule for the VPC
 
-Even after associating a subnet, clients can’t access anything yet — you need to explicitly allow it with an
+Even after associating a subnet, clients can’t access anything yet. You need to explicitly allow it with an
 authorization rule.
 
 ```
@@ -167,7 +167,7 @@ path to private key (.key) file
 1. Add the line `pull-filter ignore "redirect-gateway"` to the ovpn file.
 
 > **Note:** Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided VPN client, I
-found that AWS Client VPN was still routing all traffic through the VPN—even though `split_tunnel` was enabled. The
+found that even though `split-tunnel` was enabled, AWS Client VPN was still routing all traffic through the VPN. The
 culprit was the `redirect-gateway` flag which the AWS provided client was setting.
 >
 >Fortunately, `pull-filter` is one of the supported [OpenVPN
