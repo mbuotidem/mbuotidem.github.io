@@ -23,7 +23,7 @@ It is also a particularly good time to work on this as Slack recently released s
 
 ![Image showing Slack interface with Slack AI app open in a side pane](slackaiapps.png)
 
-I'd like to explore what LLM's can offer ChatOps by building an AI agent to help with security automation. But this post is not about that. Before going all in, I wanted to see how easily I could hook up a Slack App to AWS Bedrock. Turns out, its pretty straightforward. If you're a CloudFormation nerd, check out [Deploy a Slack gateway for Amazon Bedrock](https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-bedrock/). But since Terraform is my jam, I borrowed some ideas from that post to create [slackbot-lambdalith](https://registry.terraform.io/modules/mbuotidem/slackbot-lambdalith/aws/latest).
+I'd like to explore what LLM's can offer ChatOps by building an AI agent to help with security automation. But this post is not about that. Before going all in, I wanted to see how easily I could hook up a Slack App to AWS Bedrock. Turns out, its pretty straightforward. If you're a CloudFormation nerd, check out [Deploy a Slack gateway for Amazon Bedrock](https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-bedrock/). But since Terraform is my jam, I borrowed some ideas from that post to create [slackbot-lambdalith](https://registry.terraform.io/modules/mbuotidem/slackbot/aws/latest).
 
 ## What we're building
 Because its Labor Day weekend, I'm too lazy to draw up a proper architecture diagram. Instead I'll use an image of the trace detailed view of our Slack AI App. 
@@ -34,9 +34,9 @@ We'll build a Lambda function that receives Slack requests, calls out to AWS Bed
 
 ## Setting up the infrastructure
 
-[Slackbot-lambdalith](https://registry.terraform.io/modules/mbuotidem/slackbot-lambdalith/aws/latest) lets you setup a Slack AI app where all the functionality lives in [a single Lambda function](https://aws.amazon.com/blogs/compute/comparing-design-approaches-for-building-serverless-microservices/#:~:text=Lambda%2Dlith%3A%20Using%20one%20single%20Lambda%20function). This design choice is deliberate as it makes prototyping quicker. 
+[Slackbot-lambdalith](https://registry.terraform.io/modules/mbuotidem/slackbot/aws/latest) lets you setup a Slack AI app where all the functionality lives in [a single Lambda function](https://aws.amazon.com/blogs/compute/comparing-design-approaches-for-building-serverless-microservices/#:~:text=Lambda%2Dlith%3A%20Using%20one%20single%20Lambda%20function). This design choice is deliberate as it makes prototyping quicker. 
 
-You will need to apply the terraform twice, the first time to generate the `manifest.json` which you can use to setup the Slack app. And the second time to wire everything up properly with the required credentials. See the [setup guide](https://registry.terraform.io/modules/mbuotidem/slackbot-lambdalith/aws/latest#setup) for detailed instructions. 
+You will need to apply the terraform twice, the first time to generate the `manifest.json` which you can use to setup the Slack app. And the second time to wire everything up properly with the required credentials. See the [setup guide](https://registry.terraform.io/modules/mbuotidem/slackbot/aws/latest#quickstart) for detailed instructions. 
 
 ```
 module "slack_bot" {

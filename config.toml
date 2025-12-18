@@ -23,6 +23,9 @@ highlight_theme = "css"
 # Put all your custom variables here
 copyright = "© $CURRENT_YEAR Isaac M $SEPARATOR Except where otherwise noted , content on this site is licensed under a [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) license."
 
+# Canonical URL base - ensures all pages have proper canonical tags
+base_canonical_url = "https://misaac.me"
+
 menu = [
     { name = "blog", url = "blog", trailing_slash = true },
     { name = "linkedin", external_url = "https://www.linkedin.com/in/miisaac/", trailing_slash = false },

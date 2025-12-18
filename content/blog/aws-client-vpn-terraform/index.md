@@ -8,7 +8,7 @@ date = "2025-04-11"
 tags = ["aws", "terraform", "vpn", "serverless-ca", "iac"]
 +++
 
-This post guides you through setting up [AWS Client VPN](https://aws.amazon.com/vpn/client-vpn/) using [Serverless CA](https://serverlessca.com/), a secure, cost-effective open-source certifcate authority. 
+This post guides you through setting up [AWS Client VPN](https://aws.amazon.com/vpn/client-vpn/) using [Serverless CA](https://serverlessca.com/), a secure, cost-effective, open-source certifcate authority. 
 
 ## Problem Statement
 
@@ -29,7 +29,7 @@ AWS Client VPN supports several [authentication methods](https://docs.aws.amazon
 The reasons for this choice are:
 - **Headless access**: I want the ability to connect to the VPN without a GUI, for example, from environments like GitHub Codespaces. SAML requires a browser-based login flow, which doesn’t work well in headless or automated contexts.
 
-- **Reusable CA foundation**: I plan to build on this (CA) for other identity and authentication use cases down the line, such as [AWS IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)
+- **Reusable CA foundation**: I plan to build on this CA for other identity and authentication use cases down the line, such as [AWS IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)
 
 
 ### Downsides to using only certificate-based auth with AWS Client VPN

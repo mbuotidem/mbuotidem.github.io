@@ -5,14 +5,14 @@ description = "Learn how to authenticate Kubernetes workloads to AWS using SPIRE
 date = "2025-06-01"
 [taxonomies] 
 tags = [
-  "spiffe/spire",
+  "spiffe-spire",
   "identity",
   "secrets management",
   "zero trust",
   "aws",
   "iam",
   "terraform",
-  "iac", 
+  "iac",
   "kubernetes"
 ]
 

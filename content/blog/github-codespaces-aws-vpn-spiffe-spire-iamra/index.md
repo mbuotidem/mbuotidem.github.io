@@ -5,7 +5,7 @@ description = "Learn how to authenticate your GitHub Codespace to AWS VPN using 
 date = "2025-05-19"
 [taxonomies] 
 tags = [
-  "spiffe/spire",
+  "spiffe-spire",
   "identity",
   "secrets management",
   "zero trust",

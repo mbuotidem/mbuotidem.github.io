@@ -14,17 +14,12 @@ FastHTML is a lightweight Python web framework that is designed to help you crea
 in pure Python. It builds upon the principles of [htmx](https://htmx.org/), bridging the gap between 
 backend simplicity and frontend interactivity.
 
-## 5-Second Pitch
-
-Are you a backend dev, data scientist, or newbie programmer who knows Python and wants to build something for the web? 
-FastHTML is here to help you build your dreams without having to learn Javascript. Knowledge of CSS and HTML is required though!
-
-### Okay, I'm interested, tell me a little more
-
 ![Sample Code showing how to create a Table in FastHTML](./fasthtml.png)
 
-This example cribbed from the FastHTML homepage shows a table implemented fully in Python. FastHTML maps various HTML elements to their equivalent component forms in Python, allowing you describe your application in Python. And then using the magic of htmx, it converts these into HTML and CSS that gets sent to the browser. 
-For the pedants in the room, yes, at the end of the day, there's Javascript involved, but that comes from the htmx library, and you don't have to worry about or interact with it. And fear not, if you want to bring in javascript at some point, you can.
+This example cribbed from the FastHTML homepage shows a table implemented fully in Python. 
+
+FastHTML maps various HTML elements to their equivalent component forms in Python, allowing you describe your application in Python. And then using the magic of htmx, it converts these into HTML and CSS that gets sent to the browser. 
+For the pedants in the room, yes, at the end of the day, there's Javascript involved, but that comes from the htmx library, and you don't have to worry about or interact with it. And fear not, if you want to bring in JavaScript at some point, you can.
 
 So what does a minimal FastHTML app look like? After running `pip install python-fasthtml`, all you need is: 
 
@@ -46,7 +41,7 @@ serve()
 
 We'll use a slightly modified version to account for some lambda idiosyncracies, namely, 
 that you can't write to any other location than `/tmp` and FastHTML will try to create a 
-`.sesskey` file where its launched if we don't apass it a secret key. 
+`.sesskey` file where its launched if we don't pass it a secret key. 
 
 ```python
 from fasthtml import common as fh
@@ -69,7 +64,6 @@ fh.serve()
 
 We'll build the infrastructure for this using Terraform, specifically the [AWS Lambda module](https://github.com/terraform-aws-modules/terraform-aws-lambda) from [serverless.tf](https://serverless.tf/). We'll also leverage [AWS Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) to make our local development story smooth and purely Docker based. 
 This lets us migrate to ECS, EKS or even off AWS if we need to play the startup cloud credit arbitrage game. 
-You can find all the code below and more [here](https://github.com/mbuotidem/cle). 
 
 
 #### The Dockerfile
@@ -96,11 +90,10 @@ CMD ["python", "src/main.py"]
 
 We use the AWS Lambda Web Adapter to run the FastHTML app on Lambda without modifying the code for 
 Lambda. Normally, a Python Lambda function requires a [Lambda function handler](https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html) 
-as an entry point, but with the Web Adapter, you can build your project as usual. Simply add the 
-Lambda Web Adapter extension to your Dockerfile. The adapter listens for incoming events, translates 
-them, and routes them to your HTTP server (FastHTML). This lets you code normally while gaining the 
-[flexibility](https://kane.mx/posts/2023/build-serverless-web-application-with-aws-lambda-web-adapter/) to dynamically switch between AWS Lambda and Fargate using tools like [Lambda Flex](https://github.com/okigan/lambdaflex) or migrate 
-to any service that can run containers when its right for your workload.
+as an entry point, but with the Web Adapter, you can build your project as usual. 
+
+When you add the Lambda Web Adapter extension to your Dockerfile, it listens for incoming events, translates them, and routes them to your FastHTML HTTP server. This lets you code normally while gaining 
+[flexibility](https://kane.mx/posts/2023/build-serverless-web-application-with-aws-lambda-web-adapter/). For example, you could choose to dynamically switch between AWS Lambda and Fargate using tools like [Lambda Flex](https://github.com/okigan/lambdaflex). Or you could migrate to any service that can run containers when its right for your workload.
 
 
 #### Setup ECR repository where the lambda docker image will live 
@@ -124,8 +117,7 @@ module "ecr" {
 
 ```
 
-We used random here because I didn't particularly care about naming this, but you don't have to. You can name it something that makes sense for the project you're working on.
-Notice how we use `repository_lambda_read_access_arns` to ensure the lambda can pull the image during setup. 
+We used random here because I didn't particularly care about naming this, but you don't have to. You can name it something that makes sense for the project you're working on. Notice how we use `repository_lambda_read_access_arns` to ensure the lambda can pull the image during setup. 
 
 
 
@@ -168,7 +160,7 @@ module "docker_build_from_ecr" {
 
 The key thing here is to enable `use_image_tag` and set the `image_tag` to the sha of the changed files. 
 
-#### The lambda function infra defintion 
+#### The lambda function infra definition 
 
 ```
 # ./infra/main.tf
@@ -201,7 +193,7 @@ output "url" {
 }
 ```
 
-We build our lambda with a lambda function url which lets you expose your AWS Lambda function via a simple dedicated endpoint. No API Gateway or Load Balancer required. 
+We build our lambda with a lambda function url which exposes your AWS Lambda function via a simple dedicated endpoint, no API Gateway or Load Balancer required. 
 While super convenient, please understand that they are [security implications](https://www.wiz.io/blog/securing-aws-lambda-function-urls) when using these and so 
 they may not be appropriate for your use case. If nothing else, set a [reserved concurrency](https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html) you are comfortable with to account for 
 [denial of wallet attacks](https://www.sciencedirect.com/science/article/pii/S221421262100079X). 
@@ -211,7 +203,7 @@ In the environment variables, we set `LIVE=false` so that we don't serve the app
 #### The local development story
 As mentioned earlier, we will be packaging this up as a Docker image so we have two options for our local
 development experience. We can run the application as a Dockerfile if we want to get as close as possible
-to how it will be running on Lambda. Or we can just run it locally as python script. The vscode 
+to how it will be running on Lambda. Or we can just run it locally as a python script. The vscode 
 debugging definitions below allow you to use either approach. 
 
 
@@ -344,9 +336,7 @@ You should get back your newly deployed lambda function's url. Enjoy your new Fa
 
 #### Does serving a FastHTML app on AWS Lambda work beyond a HelloWorld app? 
 I don't know, I haven't got that far. I do plan to build something more interesting on FastHTML to see
-how it feels and form an actual opinion. If I do get around to doing so, I'll post a follow up. Curious
-to hear from you as well if you keep working in FastHTML, whether your deployment target ends up being
-Lambda or not!
+how it feels and form an actual opinion. If I do get around to doing so, I'll post a follow up. 
 
 Oh, one more thing, here's an [example](https://github.com/awslabs/aws-lambda-web-adapter/tree/main/examples/fasthtml-response-streaming) that shows FastHTML running on AWS Lambda with Bedrock and [response streaming](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/)!
 

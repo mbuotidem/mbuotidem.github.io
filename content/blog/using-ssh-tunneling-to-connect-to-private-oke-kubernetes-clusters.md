@@ -11,7 +11,7 @@ tags = ["k8s", "kubernetes", "ssh", "OKE","IaC","terraform"]
 This post is about using an OCI instance as a jump box to access your private kubernetes running on Oracle cloud. As such, I assume you already have a private OKE cluster you need to interact with. If you don't have one, see the prerequisites section below for a ready-to-go terraform repo which we will be adding on to.
 
 > **Note:** 
-> You can also do this with the OCI bastion service, Oracle cloud's fully managed service providing ephemeral SSH access to private resources in OCI. [Here](https://www.ateam-oracle.com/post/using-oci-bastion-service-to-manage-private-oke-kubernetes-clusters) is an Oracle blog post explaining how, and [here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengsettingupbastion.htm) is the full documentation for that approach. If you're curious about the differences between the two, this [article](https://www.ateam-oracle.com/post/simplify-secure-access-to-oracle-workloads-using-bastions) has an excellent breakdown. 
+> You can also do this with the OCI bastion service, Oracle cloud's fully managed service providing ephemeral SSH access to private resources in OCI. [Here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengsettingupbastion.htm) is the full documentation for that approach. If you're curious about the differences between that and the approach used here, this [article](https://www.ateam-oracle.com/post/simplify-secure-access-to-oracle-workloads-using-bastions) has an excellent breakdown. 
 
 
 ### Prerequisites

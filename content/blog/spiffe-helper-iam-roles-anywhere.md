@@ -5,7 +5,7 @@ description = "Learn how to combine SPIFFE Helper's SVID management with IAM Rol
 date = "2025-05-24"
 [taxonomies] 
 tags = [
-  "spiffe/spire",
+  "spiffe-spire",
   "identity",
   "secrets management",
   "zero trust",
