@@ -1,5 +1,5 @@
 +++
-title = "Connecting GitHub Codespaces to AWS VPN via SPIFFE/SPIRE & IAM Roles Anywhere"
+title = "Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere"
 slug = "connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere"
 description = "Learn how to authenticate your GitHub Codespace to AWS VPN using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere"
 date = "2025-05-19"
@@ -144,4 +144,4 @@ On the AWS Side, you can see the connection info if you visit your VPN endpoint'
 
 That’s it! You've now used your SPIRE issued SVID twice, first to [grab](http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere) AWS credentials, via AWS IAM Anywhere, and now, to connect to AWS Client VPN. 
 
-In our next post, we'll move beyond the local developer machine context and explore using SPIFFE/SPIRE to grant Kubernetes clusters not running on AWS access to AWS API's vi IAM Roles Anywhere. 
+In our next post, we'll move beyond the local developer machine context and explore using SPIFFE/SPIRE to grant Kubernetes clusters not running on AWS access to AWS API's via IAM Roles Anywhere. 

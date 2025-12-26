@@ -1,5 +1,5 @@
 +++
-title = "Grant AWS Access to GitHub Codespaces via SPIFFE/SPIRE & IAM Roles Anywhere"
+title = "Secure AWS API Authentication for GitHub Codespaces using SPIFFE and IAM Roles Anywhere"
 slug = "grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere"
 description = "Learn how to authenticate your GitHub Codespace to AWS using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere"
 date = "2025-05-19"
@@ -30,34 +30,6 @@ To acheive this securely, SPIRE has both workloads and the nodes they run on  pe
 
 
 In this post, we'll be focusing on one possible use case - letting our GitHub Codespace environments authenticate to AWS via AWS IAM Roles Anywhere. 
-
-<br>
-
-## Terminology
-
-Here's a brief guide to key terms used in this post:
-
-**SPIFFE (Secure Production Identity Framework for Everyone):** A universal standard for securely issuing identities to workloads, enabling them to prove their identity without managing traditional secrets.
-
-**SPIRE (SPIFFE Runtime Environment):** An open-source implementation of SPIFFE, responsible for issuing identities to workloads and verifying their authenticity.
-
-**PKI (Public Key Infrastructure):** A system used for generating, managing, distributing, and revoking digital certificates and associated cryptographic keys.
-
-**mTLS (Mutual TLS):** A variation of the Transport Layer Security (TLS) protocol, requiring both the client and server to verify each other's identity through cryptographic certificates.
-
-**IAM Roles Anywhere:** An AWS service that extends AWS Identity and Access Management (IAM) roles to workloads running outside AWS environments, enabling secure and temporary credential generation based on external certificates.
-
-**Attestation:** The cryptographic process used to verify that a workload or node truly is what it claims to be, often by validating metadata provided by cloud providers or system environments.
-
-**SVID (SPIFFE Verifiable Identity Document):** A short-lived, cryptographically verifiable certificate or token containing a unique SPIFFE ID, used by workloads to securely authenticate their identity.
-
-**Node Attestation:** A secure procedure used by SPIRE to confirm the identity of nodes (e.g., servers, virtual machines, or containers) before issuing credentials.
-
-**Workload Attestation:** A process where SPIRE verifies the identity of an individual workload, typically by inspecting attributes like Unix user IDs, Kubernetes service accounts, or other environment-specific metadata.
-
-**Trust Anchor:** A trusted entity, such as a root certificate authority, used as a starting point in establishing cryptographic trust chains. When a CA is a trust anchor, it means that a system can trust the CA to sign certificates that it can, in turn, trust.
-
-**Selector:** Attributes defined in SPIRE registration entries used to recognize and verify workloads, such as Unix user IDs or Kubernetes labels.
 
 <br>
 
