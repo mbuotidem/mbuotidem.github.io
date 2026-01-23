@@ -13,8 +13,9 @@ author = "Isaac Mbuotidem"
 taxonomies = [{ name = "tags", feed = true }]
 
 [markdown]
-# Whether to do syntax highlighting
-highlighting = true
+# Syntax highlighting configuration
+[markdown.highlighting]
+theme = "tokyo-night"
 
 
 [extra]
