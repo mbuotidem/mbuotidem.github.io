@@ -35,7 +35,7 @@ In this post, we'll be building on that work, with the goal of using the same ce
 
 This builds off the PKI we built in [Setting up our Public Key Infrastructure](http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki). We create a certificate signing request for our vpn server and have it signed by our Root CA. Then we add said certificate to AWS ACM so that we can reference it later when we setup our AWS Cient VPN endpoint.
 
-```
+```terraform
 # 3. VPN Server Private Key
 resource "tls_private_key" "vpn_server_key" {
   algorithm = "RSA"
@@ -87,7 +87,7 @@ resource "aws_acm_certificate" "vpn_server_cert" {
 
 As we have the SPIRE agent setup from our work in the previous post, all we need to do is request a certificate from it. 
 
-```
+```bash
 $ bin/spire-agent api fetch x509 -write /tmp/          
 Received 1 svid after 254.053709ms
 
@@ -108,12 +108,12 @@ Writing bundle #0 to file /tmp/bundle.0.pem.
 <br>
 
 ## Setting up Client VPN
-{{ include_md(path="clientvpn.md") }}
+See [this post](https://misaac.me/blog/aws-client-vpn-terraform/#setting-up-client-vpn) for how to setup Client VPN.
 
 
 If all went well, you should see this:
 
-```
+```text
 @mbuotidem ➜ /workspaces/mbuotidem.github.io (main) $ sudo openvpn --config o.ovpn
 Mon May 19 00:40:17 2025 OpenVPN 2.4.12 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO]
 [AEAD] built on Jun 27 2024

@@ -11,7 +11,7 @@ tags = ["aws", "cloudfront", "lambda"]
 toc = true
 +++
 
-Lambda@Edge is cool.You can use it to perform header modifications, alter your requests or responses, initiate auth flows, etc. When using them recently however, I struggled to find the logs for my edge Lambda. This article will show you how to find them. 
+Lambda@Edge is cool. You can use it to perform header modifications, alter your requests or responses, initiate auth flows, etc. When using them recently however, I struggled to find the logs for my edge Lambda. This article will show you how to find them. 
 
 If you've used Lambda at all, your initial instinct might be to go to the `View CloudWatch Logs` link on the `Monitor` tab of your lambda. 
 
@@ -24,7 +24,7 @@ You'd quickly find however that said log group does not exist.
 
 ![alt text](loggroupdoesnotexist.png)
 
-The reason is hidden in the AWS [docs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-functions-logs.html#:~:text=You%20must%20review,to%20investigate%20issues.). Lambda@Edge logs are created in the regions where the functions are invoked. In my case, my function was deployed in `us-east-1`, but my physical location meant that my edge lambda was invoked in `us-east-2`. So how do I find my Lambda@Edge logs? 
+The reason is hidden in the AWS [docs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-functions-logs.html#:~:text=You%20must%20review,to%20investigate%20issues.). Lambda@Edge logs are created in the regions where the functions are invoked. In my case, my function was deployed in `us-east-1`, but my physical location meant that when I visitied my CloudFront url, the version of the edge lambda that was invoked lived in `us-east-2`. So how do I find my Lambda@Edge logs? 
 
 
 1. Go to CloudFront>Telemetry>Monitoring>Lambda@Edge

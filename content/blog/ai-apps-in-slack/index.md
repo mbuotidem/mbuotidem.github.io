@@ -38,7 +38,7 @@ We'll build a Lambda function that receives Slack requests, calls out to AWS Bed
 
 You will need to apply the terraform twice, the first time to generate the `manifest.json` which you can use to setup the Slack app. And the second time to wire everything up properly with the required credentials. See the [setup guide](https://registry.terraform.io/modules/mbuotidem/slackbot/aws/latest#quickstart) for detailed instructions. 
 
-```
+```terraform
 module "slack_bot" {
   source = "mbuotidem/slackbot-lambdalith/aws"
 
@@ -82,7 +82,7 @@ As you can see in the image above, enabling [application signals](https://aws.am
 
 Here's how our lambdalith is setup. It's loosely modeled after the [bolt-python-assistant-template](https://github.com/slack-samples/bolt-python-assistant-template/tree/main) provided by Slack. 
 
-```
+```bash
  16:39:45 ~/slackbot/lambda 
 $ tree
 .

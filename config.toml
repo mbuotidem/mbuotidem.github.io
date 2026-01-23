@@ -16,6 +16,7 @@ taxonomies = [{ name = "tags", feed = true }]
 # Syntax highlighting configuration
 [markdown.highlighting]
 theme = "tokyo-night"
+style = "inline"
 
 
 [extra]

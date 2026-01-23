@@ -21,7 +21,7 @@ In [part 1](https://misaac.me/blog/ai-apps-in-slack-bedrock/), when we setup our
 ### Previous state
 As a refresher, our previous function looked like this:
 
-```
+```python
 def call_bedrock(
     messages_in_thread: List[Dict[str, str]],
     system_content: str = DEFAULT_SYSTEM_CONTENT,
@@ -45,14 +45,13 @@ def call_bedrock(
     return markdown_to_slack(response_content)
 
 ```
-
 Here we call the Amazon Bedrock api sending in our messages, and then post the returned response to the user in slack using [`say`](https://docs.slack.dev/tools/bolt-python/reference/context/say/say.html). Notice that we're calling Bedrock with the `Converse` method. To incorporate 'streaming', we're going to switch to the `ConverseStream` method which returns the response in a stream. To learn more about both `Converse` and `ConverseStream`, see ["Carry out a conversation with the Converse API operations"](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#conversation-inference-supported-models-features). 
 
 ### Switching to ConverseStream
 
 Let's call our new function, `call_bedrock_stream`. It has a couple of new parameters,`slack_token`, `throttle_ms`, and `say`. Within it, we also have a helper function `call_slack_update` which uses these new parameters to call Slack and update the message using the Slack API's [`chat.update`](https://docs.slack.dev/reference/methods/chat.update/) method.
 
-```
+```python
 def call_bedrock_stream(
     messages_in_thread: List[Dict[str, str]],
     system_content: str = DEFAULT_SYSTEM_CONTENT,

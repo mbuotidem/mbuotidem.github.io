@@ -138,7 +138,7 @@ Check the kubeconfig file - if it has the `client-certificate-data` and `client-
 
 Now that our kubeconfig is ready, we need to make it accessible to our SPIRE server. Since my SPIRE server runs on ECS, I'll store the kubeconfig as an SSM parameter for secure retrieval.
 
-```
+```terraform
 resource "aws_ssm_parameter" "kubeconfig" {
   name        = "/misaac-me/kubeconfig"
   description = "Kubernetes configuration for misaac.me"
@@ -162,7 +162,7 @@ aws ssm get-parameter --name "/misaac-me/kubeconfig" --with-decryption --query "
 
 With the kubeconfig in place, we can now update the [SPIRE server configuration](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-spire-server-config) to include the [k8s_psat](https://github.com/spiffe/spire/blob/main/doc/plugin_server_nodeattestor_k8s_psat.md) plugin. This plugin handles the server-side node attestation for Kubernetes workloads.
 
-```
+```text
 NodeAttestor "k8s_psat" {
   plugin_data {
     clusters = {
@@ -179,7 +179,7 @@ NodeAttestor "k8s_psat" {
 
 Notifiers are specialized plugins that receive updates from the SPIRE server and can act on those changes. We'll configure the [`k8sbundle` notifier](https://github.com/spiffe/spire/blob/main/doc/plugin_server_notifier_k8sbundle.md), which has the important responsibility of pushing the latest trust bundle contents into a Kubernetes ConfigMap whenever updates occur.
 
-```
+```text
 Notifier "k8sbundle" {
   plugin_data {
       namespace = "default"
@@ -241,7 +241,7 @@ As mentioned earlier, SPIRE’s attestation process operates at two levels to se
 **1. Node Attestation (k8s\_psat NodeAttestor):**
 The SPIRE agent presents a Projected Service Account Token (PSAT) to the server, which validates it against the Kubernetes API. This confirms the agent is running on an authorized node. This is done by both `k8s_psat` plugins, server and agent, working together. 
 
-```
+```text
 plugins {
   NodeAttestor "k8s_psat" {
     plugin_data {
@@ -258,7 +258,7 @@ plugins {
 Here, the SPIRE agent authenticates pods by querying the kubelet for pod metadata using the `MY_NODE_NAME` environment variable and the default service account token for authentication. 
 
 
-```
+```text
 plugins {
   WorkloadAttestor "k8s" {
     plugin_data {
@@ -418,7 +418,7 @@ Using hostPath can introduce security risks as it provides access to the underly
 
 After applying these manifests, check the agent logs to verify successful deployment. You should see output similar to the following:
 
-```
+```text
 ... level=info msg="Bundle loaded" subsystem_name=attestor trust_domain_id="spiffe://spire.misaac.me"
 ... level=debug msg="No pre-existing agent SVID found. Will perform node attestation" subsystem_name=attestor
 ... level=info msg="SVID is not found. Starting node attestation" subsystem_name=attestor trust_domain_id="spiffe://spire.misaac.me"

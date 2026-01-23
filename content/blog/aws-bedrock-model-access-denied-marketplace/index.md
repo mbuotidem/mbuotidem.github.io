@@ -24,15 +24,15 @@ That said, I was too impatient to wait for 15 minutes to see if this works. So i
 
 1. Find your model id, in my case, it was `anthropic.claude-haiku-4-5-20251001-v1:0`
 
-1. Get the offer token with 
+1. Get the offer token with
 
-    ``` 
-    aws bedrock list-foundation-model-agreement-offers --model-id anthropic.claude-haiku-4-5-20251001-v1:0        
+    ```bash
+    aws bedrock list-foundation-model-agreement-offers --model-id anthropic.claude-haiku-4-5-20251001-v1:0
     ```
 
-1. Create the marketplace agreement with 
+1. Create the marketplace agreement with
 
-    ```
+    ```bash
     aws bedrock create-foundation-model-agreement --model-id anthropic.claude-haiku-4-5-20251001-v1:0 --offer-token <value of offer token from last command>
 
     ```

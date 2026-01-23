@@ -29,22 +29,17 @@ While you can setup a GitHub token manually by going to https://github.com/setti
 	```bash
 	gh auth status
 	```
-	<pre><code style="line-height: 20%;">
+	```text
 	➜ gh auth status
 
 	github.com
-	
 	✓ Logged in to github.com account mbuotidem (keyring)
-
 	\- Active account: true
-
 	\- Git operations protocol: ssh
-
 	\- Token: gho_************************************
-
 	\- Token scopes: 'admin:public_key', 'gist', 'read:org', 'repo'
 
-	</code></pre>
+	```
 
 
 ### Grant yourself the packages read scope

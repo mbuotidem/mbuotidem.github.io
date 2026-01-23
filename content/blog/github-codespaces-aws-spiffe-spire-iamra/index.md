@@ -48,7 +48,7 @@ Our goal is gain access to AWS from our GitHub Codespace using a SPIRE issued X.
 
 By default, the SPIRE server can act as its own certificate authority. However because we want to use this SPIRE server as our universal identity control plane, we will instead set it up to use our own PKI system as this will help support future integrations. Through its robust plugin system, SPIRE lets us set our own `UpstreamAuthority`. Let's spin up a quick-and-dirty PKI using Terraform. 
 
-```
+```terraform
 # 1. Root CA Private Key
 resource "tls_private_key" "root_ca_key" {
   algorithm = "RSA"
@@ -80,7 +80,7 @@ resource "tls_self_signed_cert" "root_ca_cert" {
 
 Next we'll store this information in AWS Secret Manager as its one of the available `UpstreamAuthority` sources [supported by SPIRE](https://github.com/spiffe/spire/blob/v1.12.0/doc/plugin_server_upstreamauthority_awssecret.md). 
 
-```
+```terraform
 resource "aws_secretsmanager_secret" "upstream_authority_cert_file" {
   name                    = "spire_cert_file"
   recovery_window_in_days = 0
@@ -113,7 +113,7 @@ It is worth mentioning however that AWS PCA costs at minimum [$400 a month](http
 
 To use IAM Roles Anywhere, we need a configured trust anchor, an IAM role that will be assumed, and an IAM Roles Anywhere profile. Notice how we set `source_data` to the root cert of our PKI, but then add an `ignore_changes` directive. That's because once our SPIRE server is setup, it will update the trust anchor to point to the SPIRE intermediate CA it creates. When a workload requests AWS credentials, IAM Roles Anywhere will check if the workload's X.509 certificate was issued by our SPIRE server, i.e signed by SPIRE's intermediate CA. If so, IAM Roles Anywhere provides the credentials. 
 
-```
+```terraform
 resource "aws_rolesanywhere_trust_anchor" "iamra" {
   name = "spire-trust-anchor"
   source {
@@ -185,7 +185,7 @@ The terraform code below assumes the existence of the following:
 ### Setting up Route53 and the Network Load Balancer
 Pick a name for your record and then make sure you choose `network` as the load balancer type and `ip` as the target group listener `target_type`.
 
-```
+```terraform
 resource "aws_route53_record" "alb" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "spire.misaac.me"
@@ -241,7 +241,7 @@ module "alb" {
 #### The cluster
 First, we create our cluster. We'll be taking advantage of community modules from the invaluable [Terraform AWS modules](https://github.com/terraform-aws-modules) project. 
 
-```
+```terraform
 
 module "ecs" {
   source  = "terraform-aws-modules/ecs/aws"
@@ -266,7 +266,7 @@ module "ecs" {
 #### The log groups and IAM roles
 
 Next, we set up the log groups and IAM Roles that our task will need. Nothing revolutionary here, we use the managed policies and allow ECS access to perform actions on our behalf. 
-```
+```terraform
 # CloudWatch Logs Group for ECS Task
 resource "aws_cloudwatch_log_group" "spire" {
   name              = "/ecs/misaac-me-spire"
@@ -329,7 +329,7 @@ With our roles setup, we can define the IAM policies that should be attached, na
 1. Set permissions to allow for [ECS Exec](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-exec.html) as we'll be using this to run some SPIRE server commands. 
 1. Grant our SPIRE server the ability to update an AWS IAM Roles Anywhere trust anchor. 
 
-```
+```terraform
 # ECS Task policy for reading configuration
 resource "aws_iam_policy" "spire_server_policy" {
   name        = "spire-server-policy"
@@ -395,7 +395,7 @@ Before we setup the ECS Task definition that will run our SPIRE Server, we need 
 
 We'll make use of a number of plugins below, and set up our config as a terraform template file, so we can interpolate our `UpstreamAuthority` and AWS IAM Roles Anywhere trust anchor. For our purposes, the following settings and plugins shall suffice:
 
-```
+```text
 # server.conf.tftpl
 server {
     bind_address = "0.0.0.0"
@@ -456,7 +456,7 @@ health_checks {
 
 We store this config file as an AWS SSM Parameter and we'll load in into a volume attached to our SPIRE server during our ECS task startup. 
 
-```
+```terraform
 resource "aws_ssm_parameter" "server_config" {
   name        = "/misaac-me/server-config"
   description = "SPIRE server configuration for misaac.me"
@@ -482,7 +482,7 @@ Similarly, we use the disk `KeyManager` which means a set of private keys are pe
 
 As mentioned earlier, we will need to provide the SPIRE server the config file. We create a shared config volume where we will place the config and attach both our init container and the SPIRE server container to it. We use the [aws-cli](https://hub.docker.com/r/amazon/aws-cli) docker image as our init container's image and instruct it to fetch the SPIRE server config and save it to the volume. When starting the SPIRE server up, we pass it the location of the config file, so it can initialize properly. 
 
-```
+```terraform
 resource "aws_ecs_task_definition" "spire" {
   family                   = "misaac-me-spire"
   requires_compatibilities = ["FARGATE"]
@@ -611,7 +611,7 @@ resource "aws_ecs_task_definition" "spire" {
 
 We need to set up the rules for traffic flow. Below, we allow SPIRE traffic into the ALB, and allow traffic from the ALB to our ECS task. We also allow the usual 80 and 443 ports (these are useful if we decide to setup healtchecks in the future), as well as outbound traffic to anywhere.
 
-```
+```terraform
 # Security group for ALB
 resource "aws_security_group" "alb_sg" {
   name        = "alb-security-group"
@@ -685,7 +685,7 @@ resource "aws_vpc_security_group_egress_rule" "ecs_allow_all_outbound" {
 
 We place our service in our private subnets, and assign it the ecs security group we created above. The other key thing here is that we reference the target group, `spire_ip` which we created earlier in the [route 53/load balancer](#setting-up-route53-and-the-network-load-balancer) section. This tells ECS to wire the task up to that listener once it is ready to receive requests. We also set up our terraform to redeploy this service anytime we run a new apply with a redeployment trigger. This is optional but proved utterly useful while iterating on this. 
 
-```
+```terraform
 resource "aws_ecs_service" "spire" {
   name                   = "misaac-me-spire"
   cluster                = module.ecs.cluster_id
@@ -723,7 +723,7 @@ After hitting `terraform plan` and `terraform apply`, head over to your the ECS 
 
 The best way to be sure things are all good to go however is to run the health check command. For this and further interactions with the SPIRE server, we'll rely on the ECS Exec functionality that we enabled. Grab the ECS task ID and run the healtcheck command. You should see output similar to below. 
 
-```
+```bash
 
 $ aws ecs execute-command --cluster misaac-me-cluster \
     --task 7a1c81dd127448f6aad9b9c8064efa54 \
@@ -754,7 +754,7 @@ Just like the server, the SPIRE agent needs a config file to tell it how to run.
 
 Another production note is that below, we set the `insecure_bootstrap` flag. Insecure bootstrap is **NOT** appropriate for production use. We only use it here to make things slightly easier as we evaluate. To turn this off and connect the ideal way remove the `insecure_bootstrap` line, provide your agent with the CA trust bundle, placing it in the same location as the config file, and uncomment the `trust_bundle_path` line. With the bundle, the SPIRE agent will verify the server chain, rather than perform just the soft verification of the server URI. 
 
-```
+```text
 agent {
     data_dir = "./.data"
     log_level = "DEBUG"
@@ -798,7 +798,7 @@ The key takeway then is the shift in trust boundary. Instead of each individual 
 
 Here's the command to run, and the output to expect. 
 
-```
+```bash
 
 $ aws ecs execute-command --cluster misaac-me-cluster \
     --task 7a1c81dd127448f6aad9b9c8064efa54 \
@@ -819,7 +819,7 @@ Exiting session with sessionId: ecs-execute-command-gg5fgucsodxjrjz5netervpkce.
 
 Armed with this join token, we can now perform node attestation. Run the spire agent run command, passing in the join token: 
 
-```
+```bash
 
 $ ./bin/spire-agent run -joinToken c31f79f2-3462-11f0-8be1-06e43f96721d
 WARN[0000] Current umask 0022 is too permissive; setting umask 0027 
@@ -846,7 +846,7 @@ To allow SPIRE to identify a workload, you need to register it with the SPIRE Se
 
 The following command creates a registration entry based on the current user's UID (`$(id -u)`). In other words, the UID is our only selector.  Open a new terminal window side-by-side with the one running the SPIRE agent and run the command below. You should see output similar to: 
 
-```
+```bash
 
 $ aws ecs execute-command --cluster misaac-me-cluster \
     --task 7a1c81dd127448f6aad9b9c8064efa54 \
@@ -878,7 +878,7 @@ Over on the spire agent terminal, you should also see that the agent
 <span id="informed-workload">got informed about this new workload</span>:
 
 
-```
+```text
 DEBU[0083] Entry created                                 entry=0892eada-63ff-4d22-9762-2a348bdde7c7 selectors_added=1 spiffe_id="spiffe://misaac.me/myservice" subsystem_name=cache_manager
 DEBU[0083] Renewing stale entries                        cache_type=workload count=1 limit=500 subsystem_name=manager
 INFO[0083] Creating X509-SVID                            entry_id=0892eada-63ff-4d22-9762-2a348bdde7c7 spiffe_id="spiffe://misaac.me/myservice" subsystem_name=manager
@@ -898,7 +898,7 @@ We'll <span id="fetch">simulate</span> the act of a workload requesting an SVID 
 
 Here's what that would look like:
 
-```
+```bash
 $ bin/spire-agent api fetch x509 -write /tmp/          
 Received 1 svid after 254.053709ms
 
@@ -918,7 +918,7 @@ Writing bundle #0 to file /tmp/bundle.0.pem.
 
 Using `openssl` shows us the contents of the SVID:
 
-```
+```bash
 $ openssl x509 -in /tmp/svid.0.pem -text -noout
 Certificate:
     Data:
@@ -1006,7 +1006,7 @@ To get the credential helper, head over to the [rolesanywhere-credential-helper]
 
 Once you have the binary built or downloaded, if you're on a unix or unix-like OS, you might need to `chmod+x` it so that you can execute it. Verify that you can run it with `./aws_signing_helper -h`. You should see:
 
-```
+```bash
 $ ./aws_signing_helper -h
 A tool that utilizes certificates and their associated private keys to 
 sign requests to AWS IAM Roles Anywhere's CreateSession API and retrieve temporary 
@@ -1035,13 +1035,13 @@ Use "aws_signing_helper [command] --help" for more information about a command.
 
 Before we use the `aws_signing_helper` to request our certificate, there's one more thing we need to do. The SPIRE agent does not include SPIRE's intermediate CA in the bundle it issues when we ran [fetch](#fetch). Instead, it places that in the end-entity certificate stored in `/tmp/svid.0.pem`. So we'll use a one-liner to copy that into the bundle. 
 
-```
+```text
 echo -e "\n$(awk '/-----BEGIN CERTIFICATE-----/{i++}i==2{print}' /tmp/svid.0.pem)" >> /tmp/bundle.0.pem
 ```
 
 With our bundle ready, we can now call `aws_signing_helper` and request an AWS credential. 
 
-```
+```bash
 $ eval $(./aws_signing_helper credential-process \
       --certificate /tmp/svid.0.pem \
       --private-key /tmp/svid.0.key \
@@ -1053,7 +1053,7 @@ $ eval $(./aws_signing_helper credential-process \
 
 Now that we have our credentials, let's do something with it, let's run `whoami`. 
 
-```
+```bash
 $ aws sts get-caller-identity
 {
     "UserId": "AROADBQP57FF2AEXAMPLE:30a7fe7d714958787f6075c9904ce642",

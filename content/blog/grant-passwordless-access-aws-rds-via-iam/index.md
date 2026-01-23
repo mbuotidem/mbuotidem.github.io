@@ -63,8 +63,8 @@ Since we'll be accessing the Okta API from Terraform, we need to setup an Okta a
     
 #### Add credentials to Terraform
 
-1. Next, lets create an AWS secret manager resource to store this credential. 
-    ```
+1. Next, lets create an AWS secret manager resource to store this credential.
+    ```terraform
     resource "aws_secretsmanager_secret" "okta_private_key" {
       name = "okta-private-key"
       description = "Private key for Okta API access"
@@ -75,7 +75,7 @@ Since we'll be accessing the Okta API from Terraform, we need to setup an Okta a
 
 
 1. Next add the okta provider to the `required_providers`. Update the version to the latest available version on the [Okta Provider](https://registry.terraform.io/providers/okta/okta/latest/docs) page.
-    ```
+    ```terraform
     terraform {
         required_providers {
             okta = {
@@ -87,16 +87,16 @@ Since we'll be accessing the Okta API from Terraform, we need to setup an Okta a
     ```
 
 
-1. Then, add the provider to your `providers.tf`. 
-    
-    Note our usage of the `ephemeral` resource to retrieve and pass the okta private key to the Okta provider. [Ephemeral resources](https://developer.hashicorp.com/terraform/language/resources/ephemeral) in Terraform are **not persisted to the state file** which is ideal for a secret of this nature. 
-    ```
+1. Then, add the provider to your `providers.tf`.
+
+    Note our usage of the `ephemeral` resource to retrieve and pass the okta private key to the Okta provider. [Ephemeral resources](https://developer.hashicorp.com/terraform/language/resources/ephemeral) in Terraform are **not persisted to the state file** which is ideal for a secret of this nature.
+    ```terraform
     ephemeral "aws_secretsmanager_secret_version" "okta_private_key" {
       secret_id = aws_secretsmanager_secret.okta_private_key.id
     }
     provider "okta" {
       # org_name is first part of orgs's Okta domain before .okta.com
-      org_name = "{yourOktaOrg}" 
+      org_name = "{yourOktaOrg}"
       base_url = "okta.com"
       client_id   = "{yourClientID}"
       scopes = ["okta.groups.manage","okta.users.manage"]
@@ -106,7 +106,7 @@ Since we'll be accessing the Okta API from Terraform, we need to setup an Okta a
 
 1. Finally, test access with a resource and output
 
-    ```
+    ```terraform
     data "okta_group" "admins" {
       name = "Admins"
     }
@@ -126,7 +126,7 @@ If you hate the idea of doing anything in the web console, or your compliance en
 Let's use the modules from [Terraform AWS modules](https://github.com/terraform-aws-modules) to setup our DB. IAM database authentication works with MariaDB, MySQL, and PostgreSQL, but for this guide, we'll focus on PostgreSQL.
 
 First, we'll create a security group.
-```
+```terraform
 module "security_group" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
@@ -149,9 +149,9 @@ module "security_group" {
   tags = local.tags
 }
 ```
-Next, let's setup the db. 
+Next, let's setup the db.
 
-```
+```terraform
 module "db" {
   source = "terraform-aws-modules/rds/aws"
 
@@ -194,9 +194,9 @@ Instead, we'll lean on the `saml:sub` policy variable, one of the ways to [uniqu
 
 
 
-Here's the policy - the `join` function is only used to allow display of the full arn in the code snippet. 
+Here's the policy - the `join` function is only used to allow display of the full arn in the code snippet.
 
-```
+```terraform
 data "aws_iam_policy_document" "db_access" {
   statement {
     sid = "1"
@@ -240,10 +240,10 @@ TODO: Add note about `saml:sub_type` being set to persistent condition check.
 #### Create permission set 
 A permission set in AWS IAM Identity Center is analagous to an IAM Role in classic IAM. It defines the permissions that a federated user will get during their short-lived session. 
 
-We'll create a permission set that will be assumed by our users when they want to connect to the DB. This permission set doesn't have to be solely used for db access, it could just as well be a permission set that grants other permissions in addition to db access. 
+We'll create a permission set that will be assumed by our users when they want to connect to the DB. This permission set doesn't have to be solely used for db access, it could just as well be a permission set that grants other permissions in addition to db access.
 
 
-```
+```terraform
 data "aws_ssoadmin_instances" "sso" {
 }
 
@@ -258,8 +258,8 @@ resource "aws_ssoadmin_permission_set" "db_access_permission_set" {
 }
 ```
 #### Attach IAM DB access policy to permission set
-For the permission set to grant access, it needs a policy attachment. That's what we're doing here: 
-```
+For the permission set to grant access, it needs a policy attachment. That's what we're doing here:
+```terraform
 resource "aws_ssoadmin_customer_managed_policy_attachment" "db_access_policy_attachment" {
   instance_arn       = aws_ssoadmin_permission_set.db_access_permission_set.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.db_access_permission_set.arn
@@ -271,9 +271,9 @@ resource "aws_ssoadmin_customer_managed_policy_attachment" "db_access_policy_att
 ```
 
 #### Assign permission set to account where DB resides
-Account assignment is where you assign a permission set to a user or group for a specific AWS account. IAM Identity Center then provisions an IAM Role in that account with policies attached that reflect the permissions defined in the permission set. 
+Account assignment is where you assign a permission set to a user or group for a specific AWS account. IAM Identity Center then provisions an IAM Role in that account with policies attached that reflect the permissions defined in the permission set.
 
-```
+```terraform
 
 data "aws_identitystore_group" "admins" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.sso.identity_store_ids)[0]
@@ -377,16 +377,16 @@ We begin breaking some rules of proper Terraform automation here. Many consider 
 
 However, the real world is messy, and sometimes a sparing and conscious hack like this is a perfectly reasonable compromise. Just be sure to document it and understand the risks.
 
-Lets grab the users we intend to grant access to. We're using `Admins` here, but it could as well be `Developers`, `DBAs`, `Data Analysts` or whatever group needs access. Note also that what we're about to do, writing to the database, only works if your Terraform runner also has network access to the just created DB. 
+Lets grab the users we intend to grant access to. We're using `Admins` here, but it could as well be `Developers`, `DBAs`, `Data Analysts` or whatever group needs access. Note also that what we're about to do, writing to the database, only works if your Terraform runner also has network access to the just created DB.
 
-```
+```terraform
 data "okta_users" "admins" {
   group_id = data.okta_group.admins.id
 }
 ```
-Next we'll call our revocation script using the list of `okta_users`. 
+Next we'll call our revocation script using the list of `okta_users`.
 
-```
+```terraform
 ephemeral "aws_secretsmanager_secret_version" "secret-version" {
   secret_id = module.db.db_instance_master_user_secret_arn
 }
@@ -396,7 +396,7 @@ locals {
   host     = substr(module.db.db_instance_endpoint, 0, length(module.db.db_instance_endpoint) - 5)
   username = "complete_postgresql"
   database = "completePostgresql"
-  terminated_sessions_file = "${path.module}/terminated_sessions.json" 
+  terminated_sessions_file = "${path.module}/terminated_sessions.json"
 }
 
 resource "terraform_data" "terminate_stale_sessions" {
@@ -444,7 +444,7 @@ We use the `terraform_data` resource, the native successor to `null_resource`, b
 #### Provision the user roles in the DB
 Next, we'll use the latest Okta user list to create matching roles in the database. For this, we'll leverage a Terraform [PostgreSQL provider](https://registry.terraform.io/providers/cyrilgdn/postgresql/latest/docs). To configure the provider, we'll retrieve the AWS-managed master password from the RDS module and use it to authenticate. Once again, we'll use the `ephemeral` resource type.
 
-```
+```terraform
 terraform {
   required_providers {
     # other providers omitted
@@ -468,7 +468,7 @@ provider "postgresql" {
 
 We can now use the `postgresql_role` resource to create our users, making sure to grant them the [`rds_iam`](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.DBAccounts.html#UsingWithRDS.IAMDBAuth.DBAccounts.PostgreSQL) permission. IAM authentication **takes precedence over password authentication**, so any users granted `rds_iam` must log in as an IAM user.
 
-```
+```terraform
 resource "postgresql_role" "okta_users" {
   for_each = toset(data.okta_users.admins.users[*].email)
   name     = each.value
@@ -487,7 +487,7 @@ We now have everything needed to connect to our AWS RDS DB via IAM. To do so, we
 
 1. Download the required SSL certificate from [https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem](https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem)
 
-    ```
+    ```bash
     curl -O https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
     ```
 
@@ -516,7 +516,7 @@ We now have everything needed to connect to our AWS RDS DB via IAM. To do so, we
         --set=sslmode=verify-full \
         --set=sslrootcert=global-bundle.pem
     ```
-  
+
     If everything worked out, you should see your psql prompt:
 
     ```

@@ -98,7 +98,7 @@ When you add the Lambda Web Adapter extension to your Dockerfile, it listens for
 
 #### Setup ECR repository where the lambda docker image will live 
 
-```
+```terraform
 # ./infra/main.tf
 resource "random_pet" "this" {
   length = 2
@@ -122,7 +122,7 @@ We used random here because I didn't particularly care about naming this, but yo
 
 
 #### The local docker build using Terraform
-```
+```terraform
 # ./infra/main.tf
 locals {
   source_path   = "../"
@@ -162,7 +162,7 @@ The key thing here is to enable `use_image_tag` and set the `image_tag` to the s
 
 #### The lambda function infra definition 
 
-```
+```terraform
 # ./infra/main.tf
 resource "random_password" "session_secret" {
   length  = 20

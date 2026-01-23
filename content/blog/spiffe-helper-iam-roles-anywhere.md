@@ -48,7 +48,7 @@ You can download the roles anywhere credential helper from the AWS docs page [he
 
     You should see :
 
-    ```
+    ```bash
     $ ~/aws_signing_helper -h
     A tool that utilizes certificates and their associated private keys to 
     sign requests to AWS IAM Roles Anywhere's CreateSession API and retrieve temporary 
@@ -141,7 +141,7 @@ If you're on a linux machine, you're in luck - you can just grab the binaries fr
 
     You should see the following:
 
-    ```
+    ```text
     $ ./spiffe-helper -config helper.conf
     INFO[0000] Using configuration file: "helper.conf"       system=spiffe-helper
     INFO[0000] Launching daemon                              system=spiffe-helper
@@ -174,7 +174,7 @@ Now, simply run your application or any AWS CLI command as usual. The AWS SDKs a
 
 Let's run `whoami`. 
 
-```
+```bash
 $ aws sts get-caller-identity
 {
     "UserId": "AROADBQP57FF2AEXAMPLE:30a7fe7d714958787f6075c9904ce642",

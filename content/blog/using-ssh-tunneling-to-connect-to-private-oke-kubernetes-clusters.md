@@ -32,7 +32,7 @@ Since we've decided to do things the old school way, we need a public subnet to 
 
 First, our security list:
 
-```
+```terraform
 resource "oci_core_security_list" "bastion" {
   compartment_id = var.compartment_ocid
   display_name   = "bastion_subnet_sec_list"
@@ -68,7 +68,7 @@ resource "oci_core_security_list" "bastion" {
 Next, we'll add the subnet. The subnets created by the terraform [used](https://github.com/oracle-devrel/terraform-oci-arch-oke/blob/main/variables.tf#L36-L55) `10.0.1.0/24`, `10.0.2.0/24` and `10.0.3.0/24` so we can take `10.0.4.0/24` for our bastion.
 
 
-```
+```terraform
 variable "bastion_subnet_cidr" {
   default = "10.0.4.0/24"
 }
@@ -91,7 +91,7 @@ With the subnet in place, we can launch our jump box. You'll likely need to chan
 
 Here's the terraform:
 
-```
+```terraform
 resource "oci_core_instance" "ubuntu_bastion_instance" {
   # Required
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[0].name
@@ -134,22 +134,22 @@ Before we try to connect to our OKE cluster, we need to verify that basic SSH wo
 
 1. Make sure that your private key is in your ssh directory, usually 
 
-    ```
+    ```text
     ~/.ssh
     ```
 
 1. Refresh or start your ssh agent with 
-    ```
+    ```text
     eval "$(ssh-agent -s)"
     ```
 
 1. Add your private key to your local ssh agent. Enter your passphrase if/when asked
-    ```
+    ```text
     ssh-add ~/.ssh/private-key-file-name
     ```
 
 1. SSH in, replacing this IP with the IP from the terraform output. Accept the remote fingerprint and voila! 
-    ```
+    ```text
     ssh ubuntu@203.0.113.255
     ```
 
@@ -160,36 +160,36 @@ Now that we've established that we can ssh to our bastion host, all we need to h
 
 1. Use the oci cli to create your kubeconfig, replacing `cluster-id` and `region` with your details
 
-    ```
+    ```text
     oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.phx.aaaaaaaaae... --file $HOME/.kube/config  --region us-chicago-1 --token-version 2.0.0 --kube-endpoint PRIVATE_ENDPOINT
     ```
 
 1. Change the server ip with this regex
 
-    ```
+    ```text
     sed -i.bak 's|server: https://[0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}:6443|server: https://127.0.0.1:6443|' ~/.kube/config
     ```
 
 1. Grab your cluster API endpoint
-    ```
+    ```text
     CLUSTER_API=$(oci ce cluster list --compartment-id ocid1.compartment.oc1..aaaaaaaah...a | jq --raw-output '.data[0].endpoints["private-endpoint"]')
     ```
 1. Launch the port forwarding session. Note that this terminal window must stay open.  
-    ```
+    ```text
     ssh -L 6443:$CLUSTER_API ubuntu@203.0.113.255
     ```
 
 1. Get the kubernetes context name with 
-    ```
+    ```text
     kubectl config get-contexts -o name
     ```
 
 1. Set the current kubernetes context with 
-    ```
+    ```text
     kubectl config use-context context-name-of-your-context
     ```
 
 1. Connect to the cluster
-    ```
+    ```text
     kubectl cluster-info
     ```
