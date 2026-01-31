@@ -1,0 +1,146 @@
+{% import "macros/format_date.html" as macros_format_date %}
+{% import "macros/list_posts.html" as macros_list_posts %}
+{% import "macros/page_header.html" as macros_page_header %}
+{% import "macros/rel_attributes.html" as macros_rel_attributes %}
+{% import "macros/settings.html" as macros_settings %}
+{% import "macros/table_of_contents.html" as macros_toc %}
+{% import "macros/translate.html" as macros_translate %}
+{% import "macros/series_page.html" as macros_series_page %}
+
+{# Load the internationalisation data for the current language from
+the .toml files in the user's '/i18n' folder, falling back to the theme's.
+This variable will hold all the text strings for the language #}
+{%- set language_strings = load_data(path="i18n/" ~ lang ~ '.toml', required=false) -%}
+{%- if not language_strings -%}
+    {%- set language_strings = load_data(path="themes/tabi/i18n/" ~ lang ~ ".toml", required=false) -%}
+{%- endif -%}
+{% set rtl_languages = ["ar", "arc", "az", "dv", "ff", "he", "ku", "nqo", "fa", "rhg", "syc", "ur"] %}
+
+{#- Necessary for the hierarchy macro -#}
+{%- if page -%}
+    {%- set current_page = page -%}
+{%- else -%}
+    {%- set current_page = ""-%}
+{%- endif -%}
+
+<!DOCTYPE html>
+<html lang="{{ lang }}" {% if config.extra.default_theme -%}
+    data-theme="{{config.extra.default_theme}}"
+{%- endif -%}{% if macros_settings::evaluate_setting_priority(setting="force_codeblock_ltr", page=current_page, default_global_value=true) == "false" -%}
+    data-code-direction="inherit"{% endif %}>
+
+{% include "partials/header.html" %}
+
+<body{% if lang in rtl_languages %} dir="rtl"{% endif %}{% if config.extra.override_serif_with_sans %} class="use-sans-serif"{% endif %}>
+    {% include "partials/nav.html" %}
+
+    <div class="layout-container">
+        {# Mobile browse section - appears at top on mobile #}
+        <div class="mobile-browse">
+            {%- set blog_section = get_section(path="blog/_index.md") -%}
+
+            <div class="mobile-browse-grid">
+                {# Archives #}
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list">
+                        {%- set_global years = [] -%}
+                        {%- for page in blog_section.pages -%}
+                            {%- set year = page.date | date(format="%Y") -%}
+                            {%- if year not in years -%}
+                                {%- set_global years = years | concat(with=year) -%}
+                            {%- endif -%}
+                        {%- endfor -%}
+
+                        {%- for year in years | sort | reverse -%}
+                        <li><a href="/archive/#{{ year }}">{{ year }}</a></li>
+                        {%- endfor -%}
+                    </ul>
+                </div>
+
+                {# Top Tags #}
+                {%- if config.taxonomies -%}
+                    {%- set tags = get_taxonomy(kind="tags") -%}
+                    {%- if tags -%}
+                    <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags">
+                            {%- for term in tags.items | sort(attribute="name") | slice(end=10) -%}
+                            <a href="{{ term.permalink }}">{{ term.name }}</a>
+                            {%- endfor -%}
+                        </div>
+                    </div>
+                    {%- endif -%}
+                {%- endif -%}
+            </div>
+        </div>
+
+        <div class="content main-content">
+            {# Post page is the default #}
+            {% block main_content %}
+                Nothing here?!
+            {% endblock main_content %}
+        </div>
+
+        <aside class="sidebar">
+            {% block sidebar %}
+                {# Get all blog posts for sidebar #}
+                {%- set blog_section = get_section(path="blog/_index.md") -%}
+
+                {# Recent Posts #}
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list">
+                        {%- for page in blog_section.pages | slice(end=10) -%}
+                        <li>
+                            <a href="{{ page.permalink }}">{{ page.title }}</a>
+                            <span class="sidebar-date">{{ page.date | date(format="%Y-%m-%d") }}</span>
+                        </li>
+                        {%- endfor -%}
+                    </ul>
+                </div>
+
+                {# Archives by Year #}
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list">
+                        {%- set_global years = [] -%}
+                        {%- for page in blog_section.pages -%}
+                            {%- set year = page.date | date(format="%Y") -%}
+                            {%- if year not in years -%}
+                                {%- set_global years = years | concat(with=year) -%}
+                            {%- endif -%}
+                        {%- endfor -%}
+
+                        {%- for year in years | sort | reverse -%}
+                        <li>
+                            <a href="/archive/#{{ year }}">{{ year }}</a>
+                        </li>
+                        {%- endfor -%}
+                    </ul>
+                </div>
+
+                {# Tags #}
+                {%- if config.taxonomies -%}
+                    {%- set tags = get_taxonomy(kind="tags") -%}
+                    {%- if tags -%}
+                    <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags">
+                            {%- for term in tags.items | sort(attribute="name") | slice(end=20) -%}
+                            <a href="{{ term.permalink }}" class="sidebar-tag">
+                                {{ term.name }} ({{ term.pages | length }})
+                            </a>
+                            {%- endfor -%}
+                        </div>
+                    </div>
+                    {%- endif -%}
+                {%- endif -%}
+            {% endblock sidebar %}
+        </aside>
+    </div>
+
+    {% include "partials/footer.html" %}
+</body>
+
+</html>

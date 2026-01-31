@@ -26,11 +26,14 @@ copyright = "© $CURRENT_YEAR Isaac M $SEPARATOR Except where otherwise noted , 
 # Canonical URL base - ensures all pages have proper canonical tags
 base_canonical_url = "https://misaac.me"
 
+# Custom stylesheets
+stylesheets = ["custom-sidebar.css"]
+
 menu = [
     { name = "blog", url = "blog", trailing_slash = true },
+    { name = "archive", url = "archive", trailing_slash = true },
     { name = "linkedin", external_url = "https://www.linkedin.com/in/miisaac/", trailing_slash = false },
     { name = "github", external_url = "https://github.com/mbuotidem/", trailing_slash = false },
-    #{ name = "archive", url = "archive", trailing_slash = true },
     { name = "tags", url = "tags", trailing_slash = true },
 ]
 

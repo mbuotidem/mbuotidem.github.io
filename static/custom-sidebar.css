@@ -1,0 +1,221 @@
+/* Custom two-column layout with sidebar */
+
+/* Align navbar with content grid */
+.navbar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.layout-container {
+    display: grid;
+    grid-template-columns: minmax(0, 900px) 280px;
+    gap: 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    justify-content: center;
+}
+
+.main-content {
+    min-width: 0; /* Prevents grid blowout */
+}
+
+/* Mobile browse section - shows at top */
+.mobile-browse {
+    display: none;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: var(--background-secondary, #f9f9f9);
+    border-radius: 8px;
+}
+
+.mobile-browse h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.mobile-browse-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.mobile-browse-section h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+}
+
+.mobile-browse-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.mobile-browse-list li {
+    margin-bottom: 0.4rem;
+}
+
+.mobile-browse-list a {
+    text-decoration: none;
+}
+
+.mobile-browse-list a:hover {
+    text-decoration: underline;
+}
+
+.mobile-browse-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.mobile-browse-tags a {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--background-tertiary, #e8e8e8);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.mobile-browse-tags a:hover {
+    background: var(--background-body, #ddd);
+}
+
+/* Sidebar Styles */
+.sidebar {
+    padding: 2rem 0;
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+.sidebar-section {
+    margin-bottom: 2.5rem;
+}
+
+.sidebar-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+}
+
+.sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-list li {
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.sidebar-list a {
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.sidebar-list a:hover {
+    text-decoration: underline;
+}
+
+.sidebar-date {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: 0.25rem;
+}
+
+.sidebar-count {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin-left: 0.25rem;
+}
+
+/* Tags in sidebar */
+.sidebar-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.sidebar-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--background-secondary, #f0f0f0);
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.sidebar-tag:hover {
+    background: var(--background-tertiary, #e0e0e0);
+}
+
+/* Responsive: Show mobile browse, hide sidebar */
+@media (max-width: 1024px) {
+    .layout-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        max-width: 800px;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .mobile-browse {
+        display: block;
+    }
+}
+
+/* Extra small screens - single column browse */
+@media (max-width: 480px) {
+    .mobile-browse-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Dark mode support */
+[data-theme="dark"] .sidebar-tag {
+    background: var(--background-secondary, #2a2a2a);
+}
+
+[data-theme="dark"] .sidebar-tag:hover {
+    background: var(--background-tertiary, #3a3a3a);
+}
+
+/* Scrollbar styling for sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--border-color, #ccc);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary, #999);
+}
