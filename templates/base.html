@@ -37,9 +37,17 @@ This variable will hold all the text strings for the language #}
     <div class="layout-container">
         {# Mobile browse section - appears at top on mobile #}
         <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+
             {%- set blog_section = get_section(path="blog/_index.md") -%}
 
-            <div class="mobile-browse-grid">
+            <div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
                 {# Archives #}
                 <div class="mobile-browse-section">
                     <h4>Archives</h4>
@@ -72,6 +80,7 @@ This variable will hold all the text strings for the language #}
                     </div>
                     {%- endif -%}
                 {%- endif -%}
+                </div>
             </div>
         </div>
 
@@ -141,6 +150,8 @@ This variable will hold all the text strings for the language #}
     </div>
 
     {% include "partials/footer.html" %}
+
+    <script defer src="{{ get_url(path='js/mobileBrowseToggle.js', cachebust=true) | safe }}"></script>
 </body>
 
 </html>
