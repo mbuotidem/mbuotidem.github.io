@@ -22,6 +22,11 @@
     min-width: 0; /* Prevents grid blowout */
 }
 
+/* Remove max-width constraint from articles to match index page width */
+article {
+    max-width: none;
+}
+
 /* Mobile browse section - shows at top */
 .mobile-browse {
     display: none;
@@ -140,6 +145,24 @@
     height: fit-content;
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
+    z-index: 1;
+}
+
+/* Ensure footer appears above sticky sidebar */
+footer {
+    position: relative;
+    z-index: 10;
+    background: var(--background-color);
+}
+
+/* Ensure article navigation appears above sidebar */
+.article-navigation {
+    position: relative;
+    z-index: 10;
+    background: var(--background-color);
+    /* Override full-width negative margins to prevent sidebar overlap */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 .sidebar-section {
