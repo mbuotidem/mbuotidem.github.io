@@ -143,9 +143,10 @@ article {
     position: sticky;
     top: 2rem;
     height: fit-content;
-    max-height: calc(100vh - 4rem);
+    max-height: calc(100vh - 8rem);
     overflow-y: auto;
     z-index: 1;
+    margin-bottom: 4rem;
 }
 
 /* Ensure footer appears above sticky sidebar */
@@ -153,6 +154,11 @@ footer {
     position: relative;
     z-index: 10;
     background: var(--background-color);
+}
+
+/* Ensure back to top button appears above footer */
+#button-container {
+    z-index: 100 !important;
 }
 
 /* Ensure article navigation appears above sidebar */
@@ -259,12 +265,47 @@ footer {
 }
 
 /* Dark mode support */
+[data-theme="dark"] .mobile-browse {
+    background: var(--background-secondary, #2a2a2a);
+}
+
+[data-theme="dark"] .mobile-browse-tags a {
+    background: var(--background-tertiary, #3a3a3a);
+}
+
+[data-theme="dark"] .mobile-browse-tags a:hover {
+    background: var(--background-body, #4a4a4a);
+}
+
 [data-theme="dark"] .sidebar-tag {
     background: var(--background-secondary, #2a2a2a);
 }
 
 [data-theme="dark"] .sidebar-tag:hover {
     background: var(--background-tertiary, #3a3a3a);
+}
+
+/* Support for system dark mode preference */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .mobile-browse {
+        background: var(--background-secondary, #2a2a2a);
+    }
+
+    :root:not([data-theme="light"]) .mobile-browse-tags a {
+        background: var(--background-tertiary, #3a3a3a);
+    }
+
+    :root:not([data-theme="light"]) .mobile-browse-tags a:hover {
+        background: var(--background-body, #4a4a4a);
+    }
+
+    :root:not([data-theme="light"]) .sidebar-tag {
+        background: var(--background-secondary, #2a2a2a);
+    }
+
+    :root:not([data-theme="light"]) .sidebar-tag:hover {
+        background: var(--background-tertiary, #3a3a3a);
+    }
 }
 
 /* Scrollbar styling for sidebar */
