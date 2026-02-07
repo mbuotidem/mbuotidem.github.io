@@ -16,7 +16,9 @@ In the intervening years, I'd make do with vscode's `Simple Browser` a [little k
 
 But yesterday, while reading through vscodes release notes, I saw this little note about vscodes new [integrated browser](https://code.visualstudio.com/docs/debugtest/integrated-browser), now in preview. Well guess who was prescient?!!
 
-Reading between the lines, I have the AI craze to thank for this. Putting the browser in vscode makes it so much easier to grab relevant context to feed to the model, right down to specific page elements. There is a big warning on the docs page that says the integrated browser is expermiental and may change. I sure hope change means improving, and not being deprecated. I'd be very sad to lose this! 
+![alt text](browse.gif)
+
+Reading between the lines, I have the AI craze to thank for this. Putting the browser in vscode makes it so much easier to grab relevant context to feed to the model, right down to specific page elements. 
 
 
 Sometimes, you're just ahead of your time.
