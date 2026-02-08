@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Learn how to authenticate your GitHub Codespace to AWS VPN using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere" />
+        <meta property="og:description" content="Learn how to authenticate your GitHub Codespace to AWS VPN using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere
+        </h1>
+
+        <ul class="meta">
+                <li>19th May 2025</li>
+                <li title="416 words"><span class='separator' aria-hidden='true'>•</span>3 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/spiffe-spire/">spiffe-spire</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/identity/">identity</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/secrets-management/">secrets management</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/zero-trust/">zero trust</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/codespaces/">codespaces</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iam/">iam</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/vpn/">vpn</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/github/">github</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">iac</a></li>
+        </ul>
+
+        <section class="body"><h2 id="preamble"><a class="header-anchor no-hover-padding" href="#preamble" aria-label="Anchor link for: preamble"><span class="link-icon" aria-hidden="true"></span></a>
+Preamble</h2>
+<p>In <a rel="external" href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/">Grant AWS Access to GitHub Codespaces via SPIFFE/SPIRE &amp; IAM Roles Anywhere</a>, we setup a SPIRE Server and SPIRE Agent and successfully authenticated to AWS using a SPIRE issued certificate.</p>
+<p>In this post, we'll be building on that work, with the goal of using the same certificate to authenticate to AWS Client VPN.</p>
+<h3 id="prerequisites"><a class="header-anchor no-hover-padding" href="#prerequisites" aria-label="Anchor link for: prerequisites"><span class="link-icon" aria-hidden="true"></span></a>
+Prerequisites</h3>
+<ul>
+<li>All the setup in the previous <a rel="external" href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/">post</a></li>
+<li>AWS resource that we'll be connecting to via the VPN, e.g. an EC2 instance</li>
+</ul>
+<h2 id="setup-the-vpn-server-certificate"><a class="header-anchor no-hover-padding" href="#setup-the-vpn-server-certificate" aria-label="Anchor link for: setup-the-vpn-server-certificate"><span class="link-icon" aria-hidden="true"></span></a>
+Setup the VPN Server Certificate</h2>
+<p>This builds off the PKI we built in <a rel="external" href="http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki">Setting up our Public Key Infrastructure</a>. We create a certificate signing request for our vpn server and have it signed by our Root CA. Then we add said certificate to AWS ACM so that we can reference it later when we setup our AWS Cient VPN endpoint.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #51597D;font-style: italic;"># 3. VPN Server Private Key</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;tls_private_key&quot; &quot;vpn_server_key&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  algorithm</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">RSA</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  rsa_bits</span><span style="color: #89DDFF;">  =</span><span style="color: #FF9E64;"> 2048</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># 4. VPN Server Certificate Signing Request (CSR)</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;tls_cert_request&quot; &quot;vpn_server_csr&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  private_key_pem</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> tls_private_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">vpn_server_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">private_key_pem</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  subject</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    common_name</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">vpn.misaac.me</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    organization</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Misaac Org</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    country</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">US</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  dns_names</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">vpn.misaac.me</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># 5. Root CA Signs VPN Server Certificate (leaf cert)</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;tls_locally_signed_cert&quot; &quot;vpn_server_cert&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cert_request_pem</span><span style="color: #89DDFF;">   =</span><span style="color: #9ABDF5;"> tls_cert_request</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">vpn_server_csr</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_request_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ca_private_key_pem</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> tls_private_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">root_ca_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">private_key_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ca_cert_pem</span><span style="color: #89DDFF;">        =</span><span style="color: #9ABDF5;"> tls_self_signed_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">root_ca_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_pem</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  validity_period_hours</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 8760</span><span style="color: #51597D;font-style: italic;"> # 1 year</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  allowed_uses</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">server_auth</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">client_auth</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">digital_signature</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">key_encipherment</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  is_ca_certificate</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> false</span><span style="color: #51597D;font-style: italic;"> # It&#39;s a leaf cert (not a CA)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># 6. Upload VPN Server Certificate (and chain) to ACM</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_acm_certificate&quot; &quot;vpn_server_cert&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  private_key</span><span style="color: #89DDFF;">       =</span><span style="color: #9ABDF5;"> tls_private_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">vpn_server_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">private_key_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  certificate_body</span><span style="color: #89DDFF;">  =</span><span style="color: #9ABDF5;"> tls_locally_signed_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">vpn_server_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  certificate_chain</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> tls_self_signed_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">root_ca_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_pem</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h2 id="setup-our-client-certificate-svid"><a class="header-anchor no-hover-padding" href="#setup-our-client-certificate-svid" aria-label="Anchor link for: setup-our-client-certificate-svid"><span class="link-icon" aria-hidden="true"></span></a>
+Setup our Client Certificate (SVID)</h2>
+<p>As we have the SPIRE agent setup from our work in the previous post, all we need to do is request a certificate from it.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> bin/spire-agent api fetch x509</span><span style="color: #E0AF68;"> -write</span><span style="color: #9ECE6A;"> /tmp/</span><span>          </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Received</span><span style="color: #FF9E64;"> 1</span><span style="color: #9ECE6A;"> svid after 254.053709ms</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SPIFFE</span><span style="color: #9ECE6A;"> ID:              spiffe://misaac.me/myservice</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SVID</span><span style="color: #9ECE6A;"> Valid After:       2025-05-19 11:06:54 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SVID</span><span style="color: #9ECE6A;"> Valid Until:       2025-05-19 12:07:04 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Intermediate</span><span style="color: #51597D;font-style: italic;"> #1 Valid After:    2025-05-18 21:04:32 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Intermediate</span><span style="color: #51597D;font-style: italic;"> #1 Valid Until:    2025-05-19 21:04:42 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">CA</span><span style="color: #51597D;font-style: italic;"> #1 Valid After:      2025-04-29 01:29:07 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">CA</span><span style="color: #51597D;font-style: italic;"> #1 Valid Until:      2035-04-27 01:29:07 +0000 UTC</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Writing</span><span style="color: #9ECE6A;"> SVID</span><span style="color: #51597D;font-style: italic;"> #0 to file /tmp/svid.0.pem.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Writing</span><span style="color: #9ECE6A;"> key</span><span style="color: #51597D;font-style: italic;"> #0 to file /tmp/svid.0.key.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Writing</span><span style="color: #9ECE6A;"> bundle</span><span style="color: #51597D;font-style: italic;"> #0 to file /tmp/bundle.0.pem.</span></span>
+<span class="giallo-l"></span></code></pre><br>
+<h2 id="setting-up-client-vpn"><a class="header-anchor no-hover-padding" href="#setting-up-client-vpn" aria-label="Anchor link for: setting-up-client-vpn"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up Client VPN</h2>
+<p>See <a rel="external" href="https://misaac.me/blog/aws-client-vpn-terraform/#setting-up-client-vpn">this post</a> for how to setup Client VPN.</p>
+<p>If all went well, you should see this:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>@mbuotidem ➜ /workspaces/mbuotidem.github.io (main) $ sudo openvpn --config o.ovpn</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:17 2025 OpenVPN 2.4.12 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO]</span></span>
+<span class="giallo-l"><span>[AEAD] built on Jun 27 2024</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:17 2025 library versions: OpenSSL 1.1.1f 31 Mar 2020, LZO 2.10</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:17 2025 TCP/UDP: Preserving recently used remote address: [AF_INET]3.XXX.XXX.72:443</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:17 2025 Socket Buffers: R=[1048576-&gt;1048576] S=[212992-&gt;212992]</span></span>
+<span class="giallo-l"><span>...</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 Outgoing Data Channel: Cipher &#39;AES-256-GCM&#39; initialized with 256 bit key</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 Incoming Data Channel: Cipher &#39;AES-256-GCM&#39; initialized with 256 bit key</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 ROUTE_GATEWAY 10.0.0.1/255.255.0.0 IFACE=eth0 HWADDR=7c:1e:52:5b:bf:9b</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 TUN/TAP device tun0 opened</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 TUN/TAP TX queue length set to 100</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 /sbin/ip link set dev tun0 up mtu 1500</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 /sbin/ip addr add dev tun0 172.16.0.13/27 broadcast 172.16.0.31</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 /sbin/ip route add 172.31.0.0/16 via 172.16.0.1</span></span>
+<span class="giallo-l"><span>Mon May 19 00:40:19 2025 Initialization Sequence Completed</span></span></code></pre>
+<p>You can now leave that terminal window running, open a new one, and ssh, curl, or otherwise connect to the resource in your private subnet!</p>
+<p>On the AWS Side, you can see the connection info if you visit your VPN endpoint's info page. Notice how our common name shows up, indicating we're connected using a certificate.</p>
+<p><img src="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/vpn-via-spire-svid.png" alt="Image showing an active AWS Client VPN connection with identifiers such as the x.509 certificate common name" /></p>
+<h2 id="wrapping-up"><a class="header-anchor no-hover-padding" href="#wrapping-up" aria-label="Anchor link for: wrapping-up"><span class="link-icon" aria-hidden="true"></span></a>
+Wrapping Up</h2>
+<p>That’s it! You've now used your SPIRE issued SVID twice, first to <a rel="external" href="http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere">grab</a> AWS credentials, via AWS IAM Anywhere, and now, to connect to AWS Client VPN.</p>
+<p>In our next post, we'll move beyond the local developer machine context and explore using SPIFFE/SPIRE to grant Kubernetes clusters not running on AWS access to AWS API's via IAM Roles Anywhere.</p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</p></div>
+                <div><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Secure AWS API Authentication for GitHub Codespaces using SPIFFE and IAM Roles Anywhere</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/#preamble">Preamble</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/#prerequisites">Prerequisites</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/#setup-the-vpn-server-certificate">Setup the VPN Server Certificate</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/#setup-our-client-certificate-svid">Setup our Client Certificate (SVID)</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/#setting-up-client-vpn">Setting up Client VPN</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/#wrapping-up">Wrapping Up</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

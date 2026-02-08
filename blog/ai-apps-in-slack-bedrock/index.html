@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Build a Slack AI app powered by Amazon Bedrock</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Build a Slack app with AI features" />
+        <meta property="og:description" content="Build a Slack app with AI features" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Build a Slack AI app powered by Amazon Bedrock" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Build a Slack AI app powered by Amazon Bedrock
+        </h1>
+
+        <ul class="meta">
+                <li>31st Aug 2025</li>
+                <li title="1818 words"><span class='separator' aria-hidden='true'>•</span>10 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/slack/">slack</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/gen-ai/">gen-ai</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">iac</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/bedrock/">bedrock</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/llms/">llms</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/ai/">ai</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/generative-ai/">generative-ai</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/chatops/">chatops</a></li>
+        </ul>
+
+        <section class="body"><blockquote>
+<p><strong>Note:</strong>
+Update (October 2025): Since this post was written, Slack Web API has released a <a rel="external" href="https://docs.slack.dev/changelog/2025/10/7/chat-streaming/">native streaming message</a> capability.</p>
+<p>You can now use the methods <code>chat.startStream</code>, <code>chat.appendStream</code>, and <code>chat.stopStream</code> along with new Block Kit elements to provide a token-by-token streaming experience in Slack apps.
+If you’re building an AI agent in Slack today, you may want to swap out the manual “chat.update with chunks” workaround in the write-up for these new APIs.</p>
+</blockquote>
+<h2 id="introduction"><a class="header-anchor no-hover-padding" href="#introduction" aria-label="Anchor link for: introduction"><span class="link-icon" aria-hidden="true"></span></a>
+Introduction</h2>
+<p>I've always found the idea of ChatOps alluring. With the right people building the ChatOps functionality, it can be a <a rel="external" href="https://github.blog/engineering/infrastructure/using-chatops-to-help-actions-on-call-engineers/">very powerful tool</a> for helping teams get things done. However, many ChatOps tools were unable to understand intent from natural language, required hardcoded logic for user actions, and <a rel="external" href="https://www.reddit.com/r/devops/comments/exwb9u/why_arent_chatops_more_popular/">faced other limitations</a>.</p>
+<p>With LLM's and Gen AI, I think ChatOps is worth revisiting. LLM's are fantastic at intent recognition. And depending on your risk tolerance, the hardcoded logic problem can be solved by letting a foundational model loose on a problem (<a rel="external" href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-tool.html">ideally in a secure sandbox</a>), giving it access to tools via <a rel="external" href="https://github.com/awslabs/mcp/">MCP</a>, and just sitting back and watching magic happen.</p>
+<p>It is also a particularly good time to work on this as Slack recently released support for <a rel="external" href="https://docs.slack.dev/ai/developing-ai-apps/">developing apps with AI features</a>. These AI powered apps let users open them in a dedicated pane, which means they can work on them side-by-side their other open channels. They also follow the user around as their context changes as well as have the ability to take into account conversation history.</p>
+<p><img src="https://misaac.me/blog/ai-apps-in-slack-bedrock/slackaiapps.png" alt="Image showing Slack interface with Slack AI app open in a side pane" /></p>
+<p>I'd like to explore what LLM's can offer ChatOps by building an AI agent to help with security automation. But this post is not about that. Before going all in, I wanted to see how easily I could hook up a Slack App to AWS Bedrock. Turns out, its pretty straightforward. If you're a CloudFormation nerd, check out <a rel="external" href="https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-bedrock/">Deploy a Slack gateway for Amazon Bedrock</a>. But since Terraform is my jam, I borrowed some ideas from that post to create <a rel="external" href="https://registry.terraform.io/modules/mbuotidem/slackbot/aws/latest">slackbot-lambdalith</a>.</p>
+<h2 id="what-we-re-building"><a class="header-anchor no-hover-padding" href="#what-we-re-building" aria-label="Anchor link for: what-we-re-building"><span class="link-icon" aria-hidden="true"></span></a>
+What we're building</h2>
+<p>Because its Labor Day weekend, I'm too lazy to draw up a proper architecture diagram. Instead I'll use an image of the trace detailed view of our Slack AI App.
+<img src="https://misaac.me/blog/ai-apps-in-slack-bedrock/tracedetails.png" alt="Trace detailed view showing lambda and resources called" /></p>
+<p>We'll build a Lambda function that receives Slack requests, calls out to AWS Bedrock, and returns useful responses to the Slack user. On the way to achieving this, it uses DynamoDB to store message deduplication information. Sidebar: if anyone knows an AI app that I can use to create architecture diagrams in the style of <a rel="external" href="https://app.diagrams.net/">draw.io</a> with just prompting, please ping me!</p>
+<h2 id="setting-up-the-infrastructure"><a class="header-anchor no-hover-padding" href="#setting-up-the-infrastructure" aria-label="Anchor link for: setting-up-the-infrastructure"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up the infrastructure</h2>
+<p><a rel="external" href="https://registry.terraform.io/modules/mbuotidem/slackbot/aws/latest">Slackbot-lambdalith</a> lets you setup a Slack AI app where all the functionality lives in <a rel="external" href="https://aws.amazon.com/blogs/compute/comparing-design-approaches-for-building-serverless-microservices/#:~:text=Lambda%2Dlith%3A%20Using%20one%20single%20Lambda%20function">a single Lambda function</a>. This design choice is deliberate as it makes prototyping quicker.</p>
+<p>You will need to apply the terraform twice, the first time to generate the <code>manifest.json</code> which you can use to setup the Slack app. And the second time to wire everything up properly with the required credentials. See the <a rel="external" href="https://registry.terraform.io/modules/mbuotidem/slackbot/aws/latest#quickstart">setup guide</a> for detailed instructions.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">module</span><span style="color: #7AA2F7;"> &quot;slack_bot&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  source</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">mbuotidem/slackbot-lambdalith/aws</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  slack_bot_token</span><span style="color: #89DDFF;">      =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">slack_bot_token</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  slack_signing_secret</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">slack_signing_secret</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Optional: Customize your Slack app manifest</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  slack_app_name</span><span style="color: #89DDFF;">                  = &quot;</span><span style="color: #9ECE6A;">Qofiy</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  slack_app_description</span><span style="color: #89DDFF;">           = &quot;</span><span style="color: #9ECE6A;">A custom bot built with Terraform and AWS Lambda</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  slack_slash_command</span><span style="color: #89DDFF;">             = &quot;</span><span style="color: #9ECE6A;">/slash-command</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  slack_slash_command_description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Executes my custom command</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  lambda_function_name</span><span style="color: #89DDFF;">            = &quot;</span><span style="color: #9ECE6A;">qofiy</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  lambda_source_path</span><span style="color: #89DDFF;">              = &quot;</span><span style="color: #9ECE6A;">./lambda</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  lambda_source_type</span><span style="color: #89DDFF;">              = &quot;</span><span style="color: #9ECE6A;">directory</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  bedrock_model_id</span><span style="color: #89DDFF;">                = &quot;</span><span style="color: #9ECE6A;">anthropic.claude-3-5-haiku-20241022-v1:0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  bedrock_model_inference_profile</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">us.anthropic.claude-3-5-haiku-20241022-v1:0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  lambda_env_vars</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">BEDROCK_MODEL_INFERENCE_PROFILE</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;"> = </span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">us.anthropic.claude-3-5-haiku-20241022-v1:0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  use_function_url</span><span style="color: #89DDFF;">           =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  enable_application_signals</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  tags</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Environment</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">production</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Project</span><span style="color: #89DDFF;">     = &quot;</span><span style="color: #9ECE6A;">slack-bot</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>I set up the module to deploy a Lambda function url with <code>use_function_url</code>. While slackbot-lambdalith supports API Gateway, I went with the function url option for simplicity. If you're in an enterprise setting with strict security requirements around externally exposed resources, you should consider the API Gateway option.</p>
+<p>And because we're building a chat app, keeping an eye on latency and overall performance is key to a good user experience, so we setup application signals with <code>enable_application_signals</code>.</p>
+<p><img src="https://misaac.me/blog/ai-apps-in-slack-bedrock/traceslist.png" alt="List of lambda traces" /></p>
+<p>As you can see in the image above, enabling <a rel="external" href="https://aws.amazon.com/blogs/aws/amazon-cloudwatch-application-signals-for-automatic-instrumentation-of-your-applications-preview/">application signals</a> gives us automatic instrumentation. This means we can interrogate our apps performance with traces that include critical response-time metrics. More on this <a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#the-latency-problem">later</a>.</p>
+<h2 id="our-lambda-function"><a class="header-anchor no-hover-padding" href="#our-lambda-function" aria-label="Anchor link for: our-lambda-function"><span class="link-icon" aria-hidden="true"></span></a>
+Our lambda function</h2>
+<p>Here's how our lambdalith is setup. It's loosely modeled after the <a rel="external" href="https://github.com/slack-samples/bolt-python-assistant-template/tree/main">bolt-python-assistant-template</a> provided by Slack.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;"></span><span style="color: #9ECE6A;"> 16:39:45 ~/slackbot/lambda</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> tree</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">├──</span><span style="color: #9ECE6A;"> index.py</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">├──</span><span style="color: #9ECE6A;"> listeners</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">│</span><span style="color: #9ECE6A;">   ├── __init__.py</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">│</span><span style="color: #9ECE6A;">   ├── assistant.py</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">│</span><span style="color: #9ECE6A;">   └── llm_caller.py</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">├──</span><span style="color: #9ECE6A;"> requirements.txt</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">└──</span><span style="color: #9ECE6A;"> utils</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    ├──</span><span style="color: #9ECE6A;"> __init__.py</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    └──</span><span style="color: #9ECE6A;"> deduplication.py</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">3</span><span style="color: #9ECE6A;"> directories,</span><span style="color: #FF9E64;"> 9</span><span style="color: #9ECE6A;"> files</span></span></code></pre><h3 id="entrypoint"><a class="header-anchor no-hover-padding" href="#entrypoint" aria-label="Anchor link for: entrypoint"><span class="link-icon" aria-hidden="true"></span></a>
+Entrypoint</h3>
+<p>Our entry point is <code>index.py</code> where we have our lambda function handler. Slack needs a response within 3 seconds, and normally you'd send a quick HTTP 200 OK and then do the work. But with Lambda, that's complicated because returning a response effectively terminates execution. To get around this, we use the Slack Bolt SDK's <a rel="external" href="https://docs.slack.dev/tools/bolt-python/concepts/lazy-listeners/">lazy listeners</a>. These work by acknowledging the request right away, then invoking another instance of the same lambda asynchronously to perform the required task. The key setting that enables this behavior is <code>process_before_response=True</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="python"><span class="giallo-l"><span style="color: #7DCFFF;">from</span><span> slack_bolt</span><span style="color: #7DCFFF;"> import</span><span> App</span></span>
+<span class="giallo-l"><span style="color: #7DCFFF;">from</span><span> slack_bolt</span><span style="color: #89DDFF;">.</span><span>adapter</span><span style="color: #89DDFF;">.</span><span>aws_lambda</span><span style="color: #7DCFFF;"> import</span><span> SlackRequestHandler</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7DCFFF;">from</span><span> listeners</span><span style="color: #7DCFFF;"> import</span><span> register_listeners</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># process_before_response must be True when running on FaaS</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># See https://tools.slack.dev/bolt-python/concepts/lazy-listeners/ </span></span>
+<span class="giallo-l"><span>app</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> App</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    process_before_response</span><span style="color: #89DDFF;">=</span><span style="color: #FF9E64;">True</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> signing_secret</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">slack_signing_secret</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> token</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">slack_token</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">def</span><span style="color: #7AA2F7;"> handle_challenge</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">event</span><span style="color: #9ABDF5;">):</span></span>
+<span class="giallo-l"><span>    body</span><span style="color: #89DDFF;"> =</span><span> json</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">loads</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">event</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">body</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">])</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    return</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">statusCode</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #FF9E64;"> 200</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">headers</span><span style="color: #89DDFF;">&quot;: {&quot;</span><span style="color: #9ECE6A;">x-slack-no-retry</span><span style="color: #89DDFF;">&quot;: &quot;</span><span style="color: #9ECE6A;">1</span><span style="color: #89DDFF;">&quot;},</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">body</span><span style="color: #89DDFF;">&quot;:</span><span> body</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">challenge</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">def</span><span style="color: #7AA2F7;"> handler</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">event</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> context</span><span style="color: #9ABDF5;">):</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span> event_body</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">get</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">type</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">)</span><span style="color: #BB9AF7;"> ==</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">url_verification</span><span style="color: #89DDFF;">&quot;:</span></span>
+<span class="giallo-l"><span>        response</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> handle_challenge</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">event</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        return</span><span> response</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    else</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        register_listeners</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">app</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span>        slack_handler</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> SlackRequestHandler</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">app</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">app</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        return</span><span> slack_handler</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">handle</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">event</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> context</span><span style="color: #9ABDF5;">)</span></span></code></pre><h3 id="listeners"><a class="header-anchor no-hover-padding" href="#listeners" aria-label="Anchor link for: listeners"><span class="link-icon" aria-hidden="true"></span></a>
+Listeners</h3>
+<p>The Slack Bolt SDK provides the convenient <a rel="external" href="https://docs.slack.dev/tools/bolt-python/concepts/ai-apps/#assistant-class"><code>Assistant</code> class</a>. It handles the <code>assistant_thread_started</code> , <code>assistant_thread_context_changed</code>, and <code>message.im</code> events. For our purposes we don't need to worry about the context changed event but we'll be using the other two.</p>
+<h4 id="assistant-thread-started"><a class="header-anchor no-hover-padding" href="#assistant-thread-started" aria-label="Anchor link for: assistant-thread-started"><span class="link-icon" aria-hidden="true"></span></a>
+@assistant.thread_started</h4>
+<p>This is invoked when your user opens an assistant thread. You can use it as we do here to say something nice and helpful, or you could use it to <a rel="external" href="https://github.com/slack-samples/bolt-python-assistant-template/blob/main/listeners/assistant.py#L48">seed the first interaction with prompts</a>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="python"><span class="giallo-l"><span style="color: #89DDFF;">@</span><span style="color: #7AA2F7;">assistant</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">thread_started</span><span style="color: #9ABDF5;">()</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">def</span><span style="color: #7AA2F7;"> start_assistant_thread</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    say</span><span style="color: #89DDFF;">:</span><span> Say</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    context</span><span style="color: #89DDFF;">:</span><span> BoltContext</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    logger</span><span style="color: #89DDFF;">=</span><span>logger</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">):</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    try</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        channel_id</span><span style="color: #89DDFF;"> =</span><span> context</span><span style="color: #89DDFF;">.</span><span>channel_id</span></span>
+<span class="giallo-l"><span>        thread_ts</span><span style="color: #89DDFF;"> =</span><span> context</span><span style="color: #89DDFF;">.</span><span>thread_ts</span></span>
+<span class="giallo-l"><span>        thread_start_message</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">THREAD_STARTED</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span>        </span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">        # Check for duplicate thread start using channel_id and thread_ts</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        if</span><span style="color: #7AA2F7;"> is_duplicate_message</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">channel_id</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> thread_ts</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> thread_start_message</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>            logger</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">info</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">f</span><span style="color: #9ECE6A;">&quot;Duplicate thread start detected, skipping&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">            return</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">        # Mark thread start as processed</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        mark_message_processed</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">channel_id</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> thread_ts</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> thread_start_message</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        say</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">:wave: Hi, how can I help you today?</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    except</span><span style="color: #0DB9D7;"> Exception</span><span style="color: #BB9AF7;"> as</span><span> e</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        logger</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">exception</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">f</span><span style="color: #9ECE6A;">&quot;Failed to handle an assistant_thread_started event: </span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">e</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        say</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">f</span><span style="color: #9ECE6A;">&quot;:warning: Something went wrong! (</span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">e</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">)&quot;</span><span style="color: #9ABDF5;">)</span></span></code></pre>
+<p>To ensure we don't respond to the same message twice when the app is invoked from a <a rel="external" href="https://github.com/slackapi/bolt-js/issues/816#issuecomment-971386939">cold start</a>, we implement DynamoDB-based message deduplication in our calls to <code>is_duplicate_message</code> and <code>mark_message_processed</code>. This allows us to track processed messages across all our Lambda invocations. We also use DynamoDB's native <a rel="external" href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html">TTL feature</a> to remove stale deduplication markers.</p>
+<h4 id="assistant-user-message"><a class="header-anchor no-hover-padding" href="#assistant-user-message" aria-label="Anchor link for: assistant-user-message"><span class="link-icon" aria-hidden="true"></span></a>
+@assistant.user_message</h4>
+<p>This is invoked when the user replies in the assistant thread. We use the aforementioned lazy listener functionality here to handle the call to Bedrock with <code>@assistant.user_message(lazy=[process_message_lazily])</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="python"><span class="giallo-l"><span style="color: #89DDFF;">@</span><span style="color: #7AA2F7;">assistant</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">user_message</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">lazy</span><span style="color: #89DDFF;">=[</span><span style="color: #7AA2F7;">process_message_lazily</span><span style="color: #89DDFF;">]</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">def</span><span style="color: #7AA2F7;"> respond_in_assistant_thread</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    payload</span><span style="color: #89DDFF;">:</span><span style="color: #0DB9D7;"> dict</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    set_status</span><span style="color: #89DDFF;">:</span><span> SetStatus</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    say</span><span style="color: #89DDFF;">:</span><span> Say</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    logger</span><span style="color: #89DDFF;">=</span><span>logger</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">):</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    try</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        set_status</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">is typing...</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span>        </span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    except</span><span style="color: #0DB9D7;"> Exception</span><span style="color: #BB9AF7;"> as</span><span> e</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        logger</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">exception</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">f</span><span style="color: #9ECE6A;">&quot;Failed to handle a user message event: </span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">e</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        say</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">f</span><span style="color: #9ECE6A;">&quot;:warning: Something went wrong! (</span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">e</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">)&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Its also recommended to send the user an indicator that their message was received and is being acted on. We do that above with <a rel="external" href="https://docs.slack.dev/reference/methods/assistant.threads.setStatus/"><code>set_status</code></a>. Now lets take a deeper look at <code>process_message_lazily</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="python"><span class="giallo-l"><span style="color: #BB9AF7;">def</span><span style="color: #7AA2F7;"> process_message_lazily</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    payload</span><span style="color: #89DDFF;">:</span><span style="color: #0DB9D7;"> dict</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    logger</span><span style="color: #89DDFF;">:</span><span> Logger</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    context</span><span style="color: #89DDFF;">:</span><span> BoltContext</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    client</span><span style="color: #89DDFF;">:</span><span> WebClient</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    say</span><span style="color: #89DDFF;">:</span><span> Say</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">):</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    &quot;&quot;&quot;Process the message, call Bedrock, and send a reply.&quot;&quot;&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    user_message</span><span style="color: #89DDFF;"> =</span><span> payload</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">text</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span>    user_id</span><span style="color: #89DDFF;"> =</span><span> payload</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">get</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">user</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span>    channel_id</span><span style="color: #89DDFF;"> =</span><span> context</span><span style="color: #89DDFF;">.</span><span>channel_id</span></span>
+<span class="giallo-l"><span>    thread_ts</span><span style="color: #89DDFF;"> =</span><span> context</span><span style="color: #89DDFF;">.</span><span>thread_ts</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">    print</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        f</span><span style="color: #9ECE6A;">&quot;Processing message: </span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">user_message</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">:</span><span style="color: #FF9E64;">50</span><span style="color: #9ABDF5;">]</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">... in channel </span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">channel_id</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">, thread </span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">thread_ts</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    )</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # Check for duplicate message</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #7AA2F7;"> is_duplicate_message</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">channel_id</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> thread_ts</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> user_message</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> user_id</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        logger</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">info</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">f</span><span style="color: #9ECE6A;">&quot;Duplicate message detected, skipping processing&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        return</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # Mark message as being processed</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    mark_message_processed</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">channel_id</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> thread_ts</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> user_message</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> user_id</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if not</span><span> user_message</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        logger</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">info</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">No text in message, skipping Bedrock call.</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        return</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    try</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        replies</span><span style="color: #89DDFF;"> =</span><span> client</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">conversations_replies</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">            channel</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">context</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">channel_id</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">            ts</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">context</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">thread_ts</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">            oldest</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">context</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">thread_ts</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">            limit</span><span style="color: #89DDFF;">=</span><span style="color: #FF9E64;">10</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        )</span></span>
+<span class="giallo-l"><span>        messages_in_thread</span><span style="color: #89DDFF;">:</span><span> List</span><span style="color: #9ABDF5;">[</span><span>Dict</span><span style="color: #9ABDF5;">[</span><span style="color: #0DB9D7;">str</span><span style="color: #89DDFF;">,</span><span style="color: #0DB9D7;"> str</span><span style="color: #9ABDF5;">]]</span><span style="color: #89DDFF;"> = []</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        for</span><span> message</span><span style="color: #BB9AF7;"> in</span><span> replies</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">messages</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>            role</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">user</span><span style="color: #89DDFF;">&quot;</span><span style="color: #BB9AF7;"> if</span><span> message</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">get</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">bot_id</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">)</span><span style="color: #BB9AF7;"> is</span><span style="color: #FF9E64;"> None</span><span style="color: #BB9AF7;"> else</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">assistant</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span>            messages_in_thread</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">append</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">{&quot;</span><span style="color: #9ECE6A;">role</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #C0CAF5;"> role</span><span style="color: #89DDFF;">, &quot;</span><span style="color: #9ECE6A;">content</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #C0CAF5;"> message</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">text</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">}</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        returned_message</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> call_bedrock</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">messages_in_thread</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        say</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">returned_message</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    except</span><span style="color: #0DB9D7;"> Exception</span><span style="color: #BB9AF7;"> as</span><span> e</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        logger</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">error</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">f</span><span style="color: #9ECE6A;">&quot;Error processing event: </span><span style="color: #BB9AF7;">{</span><span style="color: #C0CAF5;">e</span><span style="color: #BB9AF7;">}</span><span style="color: #9ECE6A;">&quot;</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        say</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;</span><span style="color: #9ECE6A;">Sorry, there was an error communicating with AWS Bedrock. The good news is that your Slack App works! If you want to get Bedrock working, check that you&#39;ve </span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;</span><span style="color: #9ECE6A;">&lt;https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html|enabled model access&gt; </span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;</span><span style="color: #9ECE6A;">and are using the correct &lt;https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html#cross-region-inference-use|inference profile&gt;. </span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;</span><span style="color: #9ECE6A;">If both of these are true, there is some other error. Check your lambda logs for more info.</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        )</span></span></code></pre>
+<p>Once again, we perform deduplication to ensure we handle multiple invocations due to cold starts gracefully.</p>
+<p>Notice also how we use the <a rel="external" href="https://docs.slack.dev/reference/methods/conversations.replies/"><code>conversations.replies</code></a> method to gain access to a bit of conversation history to pass on to the model. This allows us to mimic the sensation of conversational continuity even though every model call is a new invocation.</p>
+<p>To ensure the model knows who is who, we cycle through the messages and clearly delineate which message was from the user and which was a reply from the assistant. Then we invoke the model passing in this list of attributed messages.</p>
+<h3 id="calling-bedrock"><a class="header-anchor no-hover-padding" href="#calling-bedrock" aria-label="Anchor link for: calling-bedrock"><span class="link-icon" aria-hidden="true"></span></a>
+Calling Bedrock</h3>
+<p>If this is your first time using AWS Bedrock, make sure to <a rel="external" href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html">request model access</a>. In our case, we're using a Claude model which requires filling in some information regarding your desired use-case. The whole process gives one the impression that you have to wait for a human to review your request but in my experience, approval comes pretty quickly so its likely automated.</p>
+<h4 id="our-prompt"><a class="header-anchor no-hover-padding" href="#our-prompt" aria-label="Anchor link for: our-prompt"><span class="link-icon" aria-hidden="true"></span></a>
+Our prompt</h4>
+<p>Your prompt can make a difference in how the model responds. Our prompt for this exploration is relatively simple however since we just want to get things working. If you'd like to learn more tricks of the trade, Anthropic has a whole <a rel="external" href="https://github.com/anthropics/courses/tree/master/prompt_engineering_interactive_tutorial">course</a> on prompt engineering.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="python"><span class="giallo-l"><span style="color: #FF9E64;">DEFAULT_SYSTEM_CONTENT</span><span style="color: #89DDFF;"> = &quot;&quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">You&#39;re an assistant in a Slack workspace.</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Users in the workspace will ask you to help them write something or to think better about a specific topic.</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">You&#39;ll respond to those questions in a professional way.</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">When you include markdown text, convert them to Slack compatible ones.</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">When a prompt has Slack&#39;s special syntax like &lt;@USER_ID&gt; or &lt;#CHANNEL_ID&gt;, you must keep them as-is in your response.</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">&quot;&quot;&quot;</span></span></code></pre><h4 id="calling-with-the-converse-api"><a class="header-anchor no-hover-padding" href="#calling-with-the-converse-api" aria-label="Anchor link for: calling-with-the-converse-api"><span class="link-icon" aria-hidden="true"></span></a>
+Calling with the Converse API</h4>
+<p>Armed with our prompt, we can now call Bedrock. The recommended way to do so is with the <a rel="external" href="https://aws.amazon.com/about-aws/whats-new/2024/05/amazon-bedrock-new-converse-api/">Converse API</a>. Here's the code:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="python"><span class="giallo-l"><span style="color: #BB9AF7;">def</span><span style="color: #7AA2F7;"> call_bedrock</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    messages_in_thread</span><span style="color: #89DDFF;">:</span><span> List</span><span style="color: #9ABDF5;">[</span><span>Dict</span><span style="color: #9ABDF5;">[</span><span style="color: #0DB9D7;">str</span><span style="color: #89DDFF;">,</span><span style="color: #0DB9D7;"> str</span><span style="color: #9ABDF5;">]]</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    system_content</span><span style="color: #89DDFF;">:</span><span style="color: #0DB9D7;"> str</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> DEFAULT_SYSTEM_CONTENT</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">):</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">    print</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">json</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">dumps</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">messages_in_thread</span><span style="color: #9ABDF5;">))</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # Format messages for Bedrock API - content must be a list</span></span>
+<span class="giallo-l"><span>    messages</span><span style="color: #89DDFF;"> = [{&quot;</span><span style="color: #9ECE6A;">role</span><span style="color: #89DDFF;">&quot;: &quot;</span><span style="color: #9ECE6A;">assistant</span><span style="color: #89DDFF;">&quot;, &quot;</span><span style="color: #9ECE6A;">content</span><span style="color: #89DDFF;">&quot;: [{&quot;</span><span style="color: #9ECE6A;">text</span><span style="color: #89DDFF;">&quot;:</span><span> system_content</span><span style="color: #89DDFF;">}]}]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # Convert thread messages to Bedrock format</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    for</span><span> msg</span><span style="color: #BB9AF7;"> in</span><span> messages_in_thread</span><span style="color: #89DDFF;">:</span></span>
+<span class="giallo-l"><span>        formatted_msg</span><span style="color: #89DDFF;"> = {&quot;</span><span style="color: #9ECE6A;">role</span><span style="color: #89DDFF;">&quot;:</span><span> msg</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">role</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">, &quot;</span><span style="color: #9ECE6A;">content</span><span style="color: #89DDFF;">&quot;: [{&quot;</span><span style="color: #9ECE6A;">text</span><span style="color: #89DDFF;">&quot;:</span><span> msg</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">content</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">}]}</span></span>
+<span class="giallo-l"><span>        messages</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">append</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">formatted_msg</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    model_id</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> BEDROCK_MODEL_ID</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    response</span><span style="color: #89DDFF;"> =</span><span> bedrock_runtime_client</span><span style="color: #89DDFF;">.</span><span style="color: #7AA2F7;">converse</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        messages</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">messages</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> modelId</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">model_id</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> performanceConfig</span><span style="color: #89DDFF;">={&quot;</span><span style="color: #9ECE6A;">latency</span><span style="color: #89DDFF;">&quot;: &quot;</span><span style="color: #9ECE6A;">optimized</span><span style="color: #89DDFF;">&quot;}</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    )</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # Process the response from the Bedrock AI model</span></span>
+<span class="giallo-l"><span>    response_content</span><span style="color: #89DDFF;"> =</span><span> response</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">output</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">[&quot;</span><span style="color: #9ECE6A;">message</span><span style="color: #89DDFF;">&quot;][&quot;</span><span style="color: #9ECE6A;">content</span><span style="color: #89DDFF;">&quot;][</span><span style="color: #FF9E64;">0</span><span style="color: #89DDFF;">][&quot;</span><span style="color: #9ECE6A;">text</span><span style="color: #89DDFF;">&quot;]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    return</span><span style="color: #7AA2F7;"> markdown_to_slack</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">response_content</span><span style="color: #9ABDF5;">)</span></span></code></pre><h4 id="the-latency-problem"><a class="header-anchor no-hover-padding" href="#the-latency-problem" aria-label="Anchor link for: the-latency-problem"><span class="link-icon" aria-hidden="true"></span></a>
+The latency problem</h4>
+<p>Eagle eyes would have clocked the <code>performanceConfig={"latency": "optimized"}</code> part of the Bedrock model invocation. Getting responses down to a reasonable latency is arguably the hardest part of building a Slack AI App.</p>
+<p>Fortunately, with application insights enabled, you can see detailed information of which parts of your app are taking the longest. Here is an image of an invocation of our app.</p>
+<p><img src="https://misaac.me/blog/ai-apps-in-slack-bedrock/tracesegments.png" alt="Trace detailed view showing segments" /></p>
+<p>As you can see, the init phase of the lambda took almost 3 seconds while the call to Bedrock took almost 5 seconds. And this was with <a rel="external" href="https://docs.aws.amazon.com/bedrock/latest/userguide/latency-optimized-inference.html">latency optimized inference</a> enabled. Without the latency config, I was seeing response times of magnitudes higher.</p>
+<p>What this means for you is that you need to be ruthless about minimizing the things your lambda has to do on initialization as well as during regular operation. Additionally, test different foundational models to find one that consistently delivers fast responses without sacrificing quality.</p>
+<h4 id="wrapping-up"><a class="header-anchor no-hover-padding" href="#wrapping-up" aria-label="Anchor link for: wrapping-up"><span class="link-icon" aria-hidden="true"></span></a>
+Wrapping up</h4>
+<p>If you've made it this far, you should now have a fully functional Slack AI app. Here's what using our app looks like.
+<video width="640" height="360" controls poster="slackaiapps.png">
+<source src="slackaiapp.mp4" type="video/mp4">
+Your browser does not support the video tag. <a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/slackaiapp.mp4">Download the video</a>.
+</video></p>
+<p>If you are familiar with building gen ai chat applications, you might wonder if we could take advantage of either <a rel="external" href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html?icmpid=docs_lambda_rss">Lambda response streaming</a> or the Converse API's <a rel="external" href="https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html">ConverseStream</a> method to get responses quicker.</p>
+<p>Unfortunately, true streaming is <a rel="external" href="https://github.com/slackapi/bolt-js/issues/2073">not currently possible</a> as the Slack API does not natively support streaming HTTP requests. There is a <a rel="external" href="https://github.com/slack-samples/bolt-js-assistant-template/issues/27#issuecomment-2755641964">workaround</a> however that involves calling <a rel="external" href="https://docs.slack.dev/reference/methods/chat.update/"><code>chat.update</code></a> with each received chunk to update the previously sent message. This does have the effect of marking every message sent by the Slack App as 'edited', but the improved UX may be worth it in your case.</p>
+<p>In <a rel="external" href="https://misaac.me/blog/make-your-slack-ai-apps-faster/">part 2</a>, I'll walk through how to implement this approach. And depending on how long that post is, we might briefly discuss other considerations for running a Slack AI App in production such as guardrails, evals, and security.</p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/make-your-slack-ai-apps-faster/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Make your Slack AI app faster</p></div>
+                <div><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#introduction">Introduction</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#what-we-re-building">What we&#x27;re building</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#setting-up-the-infrastructure">Setting up the infrastructure</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#our-lambda-function">Our lambda function</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#entrypoint">Entrypoint</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#listeners">Listeners</a>
+                                        
+                                            <ul>
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#assistant-thread-started">@assistant.thread_started</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#assistant-user-message">@assistant.user_message</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                            </ul>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#calling-bedrock">Calling Bedrock</a>
+                                        
+                                            <ul>
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#our-prompt">Our prompt</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#calling-with-the-converse-api">Calling with the Converse API</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#the-latency-problem">The latency problem</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/#wrapping-up">Wrapping up</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                            </ul>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

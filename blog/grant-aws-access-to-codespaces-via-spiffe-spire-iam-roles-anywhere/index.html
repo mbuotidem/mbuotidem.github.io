@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Secure AWS API Authentication for GitHub Codespaces using SPIFFE and IAM Roles Anywhere</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Learn how to authenticate your GitHub Codespace to AWS using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere" />
+        <meta property="og:description" content="Learn how to authenticate your GitHub Codespace to AWS using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Secure AWS API Authentication for GitHub Codespaces using SPIFFE and IAM Roles Anywhere" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Secure AWS API Authentication for GitHub Codespaces using SPIFFE and IAM Roles Anywhere
+        </h1>
+
+        <ul class="meta">
+                <li>19th May 2025</li>
+                <li title="3289 words"><span class='separator' aria-hidden='true'>•</span>17 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/spiffe-spire/">spiffe-spire</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/identity/">identity</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/secrets-management/">secrets management</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/zero-trust/">zero trust</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/codespaces/">codespaces</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iam/">iam</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/github/">github</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">iac</a></li>
+        </ul>
+
+        <section class="body"><h2 id="preamble"><a class="header-anchor no-hover-padding" href="#preamble" aria-label="Anchor link for: preamble"><span class="link-icon" aria-hidden="true"></span></a>
+Preamble</h2>
+<p>In our <a rel="external" href="https://misaac.me/blog/spiffe-spire-secret-sprawl-fix/">intro post</a>, we discussed why <a rel="external" href="https://spiffe.io/">SPIFFE/SPIRE</a> might just be the right identity foundation for your org. SPIFFE is the open standard, while SPIRE is the reference implementation.</p>
+<p>As a refresher, SPIFFE/SPIRE solves the secret zero problem, namely, how do I securely bootstrap trust of a workload, without first giving it a secret? SPIFFE does this by requiring that implementations provide a mechanism for workloads to request an x.509 certificate using only properties that are inherently available in the environment the workload is running on.</p>
+<p>To acheive this securely, SPIRE has both workloads and the nodes they run on  perform <a rel="external" href="https://spiffe.io/docs/latest/spire-about/spire-concepts/#attestation">attestation</a> using out-of-band authenticity checks. In other words, it checks that a workload <strong>is truly running</strong> on the environment it claims by verifying platform-specific properties such as AWS instance metadata, Kubernetes service account tokens, or other environment specific metadata it can obtain. Its like having a cool friend that gets you on the guest list at a hard to enter club in Berlin - the workload just has to show up as itself, and if its on the list, it'll get the certificate.</p>
+<p>In this post, we'll be focusing on one possible use case - letting our GitHub Codespace environments authenticate to AWS via AWS IAM Roles Anywhere.</p>
+<br>
+<h2 id="what-s-our-goal"><a class="header-anchor no-hover-padding" href="#what-s-our-goal" aria-label="Anchor link for: what-s-our-goal"><span class="link-icon" aria-hidden="true"></span></a>
+What's our goal?</h2>
+<p>Our goal is gain access to AWS from our GitHub Codespace using a SPIRE issued X.509 certificate, also known as <a rel="external" href="https://spiffe.io/docs/latest/spire-about/spire-concepts/#a-day-in-the-life-of-an-svid">SVIDs</a>. To do this, we will :</p>
+<ul>
+<li>set up our PKI</li>
+<li>set up IAM Roles Anywhere</li>
+<li>set up a SPIRE Server on AWS that will register itself with IAM Roles Anywhere</li>
+<li>fire up a local SPIRE agent to listen for SPIFFE SVID x.509 certificate requests</li>
+<li>request a certificate (SVID)</li>
+<li>use that certificate to obtain AWS credentials via IAM Roles Anywhere</li>
+</ul>
+<h2 id="setting-up-our-public-key-infrastructure-pki"><a class="header-anchor no-hover-padding" href="#setting-up-our-public-key-infrastructure-pki" aria-label="Anchor link for: setting-up-our-public-key-infrastructure-pki"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up our Public Key Infrastructure (PKI)</h2>
+<p>By default, the SPIRE server can act as its own certificate authority. However because we want to use this SPIRE server as our universal identity control plane, we will instead set it up to use our own PKI system as this will help support future integrations. Through its robust plugin system, SPIRE lets us set our own <code>UpstreamAuthority</code>. Let's spin up a quick-and-dirty PKI using Terraform.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #51597D;font-style: italic;"># 1. Root CA Private Key</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;tls_private_key&quot; &quot;root_ca_key&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  algorithm</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">RSA</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  rsa_bits</span><span style="color: #89DDFF;">  =</span><span style="color: #FF9E64;"> 2048</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># 2. Root CA Self-Signed Certificate</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;tls_self_signed_cert&quot; &quot;root_ca_cert&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  private_key_pem</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> tls_private_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">root_ca_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">private_key_pem</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  subject</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    common_name</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">misaac.me Root CA</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    organization</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Misaac Org</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    country</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">US</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  is_ca_certificate</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  validity_period_hours</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 87600</span><span style="color: #51597D;font-style: italic;"> # 10 years</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  allowed_uses</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">cert_signing</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">crl_signing</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">key_encipherment</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    &quot;</span><span style="color: #9ECE6A;">digital_signature</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Next we'll store this information in AWS Secret Manager as its one of the available <code>UpstreamAuthority</code> sources <a rel="external" href="https://github.com/spiffe/spire/blob/v1.12.0/doc/plugin_server_upstreamauthority_awssecret.md">supported by SPIRE</a>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_secretsmanager_secret&quot; &quot;upstream_authority_cert_file&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">                    = &quot;</span><span style="color: #9ECE6A;">spire_cert_file</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  recovery_window_in_days</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 0</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_secretsmanager_secret_version&quot; &quot;upstream_authority_cert_file&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_id</span><span style="color: #89DDFF;">                =</span><span style="color: #9ABDF5;"> aws_secretsmanager_secret</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">upstream_authority_cert_file</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_string_wo</span><span style="color: #89DDFF;">         =</span><span style="color: #9ABDF5;"> tls_self_signed_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">root_ca_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_string_wo_version</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 12</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_secretsmanager_secret&quot; &quot;upstream_authority_key_file&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">                    = &quot;</span><span style="color: #9ECE6A;">spire_key_file</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  recovery_window_in_days</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 0</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_secretsmanager_secret_version&quot; &quot;upstream_authority_key_file&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_id</span><span style="color: #89DDFF;">                =</span><span style="color: #9ABDF5;"> aws_secretsmanager_secret</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">upstream_authority_key_file</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_string_wo</span><span style="color: #89DDFF;">         =</span><span style="color: #9ABDF5;"> tls_private_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">root_ca_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">private_key_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_string_wo_version</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 12</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Using Terraform as your PKI will likely not win you security awards, and if you don't already have a production grade PKI, you can always use AWS ACM Private Certificate Authority via the <a rel="external" href="https://github.com/spiffe/spire/blob/v1.12.0/doc/plugin_server_upstreamauthority_aws_pca.md"><code>aws_pca</code></a> plugin.</p>
+<p>It is worth mentioning however that AWS PCA costs at minimum <a rel="external" href="https://aws.amazon.com/private-ca/pricing/">$400 a month</a> unless you use the short-lived certificate mode. And while the short-lived certificate mode does work with SPIRE, you need to make sure that your scenarios support certificates with such a short (7 days) validity period. For example, AWS Client VPN, one of the services we intend to support, <a rel="external" href="https://repost.aws/questions/QUJNVBimQVQjW7L7DHRFaxQQ#ANzORcy-x6RcaVWg2gqeLZUA">doesn't</a>.</p>
+<br>
+<h2 id="setting-up-iam-roles-anywhere"><a class="header-anchor no-hover-padding" href="#setting-up-iam-roles-anywhere" aria-label="Anchor link for: setting-up-iam-roles-anywhere"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up IAM Roles Anywhere</h2>
+<p>To use IAM Roles Anywhere, we need a configured trust anchor, an IAM role that will be assumed, and an IAM Roles Anywhere profile. Notice how we set <code>source_data</code> to the root cert of our PKI, but then add an <code>ignore_changes</code> directive. That's because once our SPIRE server is setup, it will update the trust anchor to point to the SPIRE intermediate CA it creates. When a workload requests AWS credentials, IAM Roles Anywhere will check if the workload's X.509 certificate was issued by our SPIRE server, i.e signed by SPIRE's intermediate CA. If so, IAM Roles Anywhere provides the credentials.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_rolesanywhere_trust_anchor&quot; &quot;iamra&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">spire-trust-anchor</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  source</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">    source_data</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      x509_certificate_data</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> tls_self_signed_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">root_ca_cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_pem</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    source_type</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">CERTIFICATE_BUNDLE</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  lifecycle</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    ignore_changes</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">source</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">source_data</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">x509_certificate_data</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  enabled</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_iam_role&quot; &quot;iamra&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">iamra</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  path</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">/</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  assume_role_policy</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> jsonencode</span><span style="color: #9ABDF5;">({</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">2012-10-17</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Statement</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      Action</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">sts:AssumeRole</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">sts:TagSession</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">sts:SetSourceIdentity</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      Principal</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Service</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">rolesanywhere.amazonaws.com</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      Effect</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Allow</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      Sid</span><span style="color: #89DDFF;">    = &quot;&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span><span style="color: #7AA2F7;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  })</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_rolesanywhere_profile&quot; &quot;iamra&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">example</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  role_arns</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">aws_iam_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">iamra</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  enabled</span><span style="color: #89DDFF;">   =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Note that we don't grant this IAM role any permissions at this time. So the most we'll be able to do with it once assumed is run <code>aws-get-caller-identity</code>. But that's sufficient for us to verify that our plumbing works.</p>
+<br>
+<h2 id="setting-up-the-spire-server"><a class="header-anchor no-hover-padding" href="#setting-up-the-spire-server" aria-label="Anchor link for: setting-up-the-spire-server"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up the SPIRE Server</h2>
+<p>While most people running SPIRE will likely be running it on Kubernetes, for the purposes of this series, we'll keep things simple and use ECS.</p>
+<h3 id="architecture"><a class="header-anchor no-hover-padding" href="#architecture" aria-label="Anchor link for: architecture"><span class="link-icon" aria-hidden="true"></span></a>
+Architecture</h3>
+<p>Below is our proposed setup:</p>
+<p><img src="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/spire-on-aws-ecs-architecture.png" alt="Image showing one way to deploy the SPIRE Server on AWS using ECS" /></p>
+<p>Here's how the solution works :</p>
+<ol>
+<li>A Route 53 record holds the address that SPIRE agents will reach the SPIRE server on</li>
+<li>The Route 53 record will point to a Network Load Balancer (NLB) deployed in our public subnet</li>
+<li>This Network Load Balancer routes traffic to the SPIRE server hosted on an ECS Fargate service in a private subnet</li>
+</ol>
+<p>We choose a Network Load Balancer to allow for SSL passthrough as this is required for the SPIRE server and agent to complete their mTLS handshake.</p>
+<h3 id="prerequisites"><a class="header-anchor no-hover-padding" href="#prerequisites" aria-label="Anchor link for: prerequisites"><span class="link-icon" aria-hidden="true"></span></a>
+Prerequisites</h3>
+<p>The terraform code below assumes the existence of the following:</p>
+<ul>
+<li>AWS VPC with both public and private subnets</li>
+<li>A Route 53 hosted zone</li>
+</ul>
+<h3 id="setting-up-route53-and-the-network-load-balancer"><a class="header-anchor no-hover-padding" href="#setting-up-route53-and-the-network-load-balancer" aria-label="Anchor link for: setting-up-route53-and-the-network-load-balancer"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up Route53 and the Network Load Balancer</h3>
+<p>Pick a name for your record and then make sure you choose <code>network</code> as the load balancer type and <code>ip</code> as the target group listener <code>target_type</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_route53_record&quot; &quot;alb&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  zone_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_route53_zone</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">primary</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">zone_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">    = &quot;</span><span style="color: #9ECE6A;">spire.misaac.me</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  type</span><span style="color: #89DDFF;">    = &quot;</span><span style="color: #9ECE6A;">A</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  alias</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    name</span><span style="color: #89DDFF;">                   =</span><span style="color: #C0CAF5;"> module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">dns_name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    zone_id</span><span style="color: #89DDFF;">                =</span><span style="color: #C0CAF5;"> module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">zone_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    evaluate_target_health</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">module</span><span style="color: #7AA2F7;"> &quot;alb&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  source</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">terraform-aws-modules/alb/aws</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">9.16.0</span><span style="color: #89DDFF;">&quot;</span><span style="color: #51597D;font-style: italic;"> # Latest version as of April 2025</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">misaac-me-alb</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  load_balancer_type</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">network</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vpc_id</span><span style="color: #89DDFF;">             =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  subnets</span><span style="color: #89DDFF;">            =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">aws_subnet</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">public_subnet_a</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> aws_subnet</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">public_subnet_b</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_groups</span><span style="color: #89DDFF;">    =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  listeners</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    alb_listener</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      port</span><span style="color: #89DDFF;">     =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      protocol</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">TCP</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      forward</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        target_group_key</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">spire_ip</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  target_groups</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    spire_ip</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      name</span><span style="color: #89DDFF;">                 = &quot;</span><span style="color: #9ECE6A;">misaac-me-tg</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      port</span><span style="color: #89DDFF;">                 =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      protocol</span><span style="color: #89DDFF;">             = &quot;</span><span style="color: #9ECE6A;">TCP</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      target_type</span><span style="color: #89DDFF;">          = &quot;</span><span style="color: #9ECE6A;">ip</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      deregistration_delay</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 5</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      create_attachment</span><span style="color: #89DDFF;">    =</span><span style="color: #FF9E64;"> false</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h3 id="setting-up-our-ecs-service"><a class="header-anchor no-hover-padding" href="#setting-up-our-ecs-service" aria-label="Anchor link for: setting-up-our-ecs-service"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up our ECS Service</h3>
+<h4 id="the-cluster"><a class="header-anchor no-hover-padding" href="#the-cluster" aria-label="Anchor link for: the-cluster"><span class="link-icon" aria-hidden="true"></span></a>
+The cluster</h4>
+<p>First, we create our cluster. We'll be taking advantage of community modules from the invaluable <a rel="external" href="https://github.com/terraform-aws-modules">Terraform AWS modules</a> project.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">module</span><span style="color: #7AA2F7;"> &quot;ecs&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  source</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">terraform-aws-modules/ecs/aws</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">5.12.1</span><span style="color: #89DDFF;">&quot;</span><span style="color: #51597D;font-style: italic;"> # Latest version as of April 2025</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cluster_name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">misaac-me-cluster</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Capacity providers</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  fargate_capacity_providers</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    FARGATE</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      default_capacity_provider_strategy</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        weight</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 100</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h4 id="the-log-groups-and-iam-roles"><a class="header-anchor no-hover-padding" href="#the-log-groups-and-iam-roles" aria-label="Anchor link for: the-log-groups-and-iam-roles"><span class="link-icon" aria-hidden="true"></span></a>
+The log groups and IAM roles</h4>
+<p>Next, we set up the log groups and IAM Roles that our task will need. Nothing revolutionary here, we use the managed policies and allow ECS access to perform actions on our behalf.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #51597D;font-style: italic;"># CloudWatch Logs Group for ECS Task</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_cloudwatch_log_group&quot; &quot;spire&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">              = &quot;</span><span style="color: #9ECE6A;">/ecs/misaac-me-spire</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  retention_in_days</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 30</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># IAM Role for ECS Task Execution</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_iam_role&quot; &quot;ecs_execution_role&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">ecs-execution-role</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  assume_role_policy</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> jsonencode</span><span style="color: #9ABDF5;">({</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">2012-10-17</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Statement</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Action</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">sts:AssumeRole</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Effect</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Allow</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Principal</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          Service</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">ecs-tasks.amazonaws.com</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    ]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  })</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Attach required policies for ECS Task Execution Role</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_iam_role_policy_attachment&quot; &quot;ecs_execution_role_policy&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  role</span><span style="color: #89DDFF;">       =</span><span style="color: #9ABDF5;"> aws_iam_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs_execution_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  policy_arn</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># IAM Role for ECS Task</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_iam_role&quot; &quot;ecs_task_role&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">ecs-task-role</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  assume_role_policy</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> jsonencode</span><span style="color: #9ABDF5;">({</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">2012-10-17</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Statement</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Action</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">sts:AssumeRole</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Effect</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Allow</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Principal</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          Service</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">ecs-tasks.amazonaws.com</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    ]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  })</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h4 id="the-iam-policies"><a class="header-anchor no-hover-padding" href="#the-iam-policies" aria-label="Anchor link for: the-iam-policies"><span class="link-icon" aria-hidden="true"></span></a>
+The IAM Policies</h4>
+<p>With our roles setup, we can define the IAM policies that should be attached, namely:</p>
+<ol>
+<li>Grant our SPIRE server read access to the PKI info we stored in AWS secret manager</li>
+<li>Grant our SPIRE server read access to AWS Parameter Store to read its config (we'll set this up later in the post)</li>
+<li>Set permissions to allow for <a rel="external" href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-exec.html">ECS Exec</a> as we'll be using this to run some SPIRE server commands.</li>
+<li>Grant our SPIRE server the ability to update an AWS IAM Roles Anywhere trust anchor.</li>
+</ol>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #51597D;font-style: italic;"># ECS Task policy for reading configuration</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_iam_policy&quot; &quot;spire_server_policy&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">        = &quot;</span><span style="color: #9ECE6A;">spire-server-policy</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Allow reading from Secret Manager</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  policy</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> jsonencode</span><span style="color: #9ABDF5;">({</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">2012-10-17</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Statement</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Action</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">ssm:GetParameter*</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        ]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Effect</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">Allow</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        Resource</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">arn:aws:ssm:us-east-1:*:parameter/misaac-me/*</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Effect</span><span style="color: #89DDFF;">&quot; : &quot;</span><span style="color: #9ECE6A;">Allow</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Action</span><span style="color: #89DDFF;">&quot; :</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">ssmmessages:CreateControlChannel</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">ssmmessages:CreateDataChannel</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">ssmmessages:OpenControlChannel</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">ssmmessages:OpenDataChannel</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        ],</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Resource</span><span style="color: #89DDFF;">&quot; : &quot;</span><span style="color: #9ECE6A;">*</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Sid</span><span style="color: #89DDFF;">&quot; : &quot;</span><span style="color: #9ECE6A;">IAMRolesAnywhere</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Effect</span><span style="color: #89DDFF;">&quot; : &quot;</span><span style="color: #9ECE6A;">Allow</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Action</span><span style="color: #89DDFF;">&quot; :</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">rolesanywhere:UpdateTrustAnchor</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        ],</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Resource</span><span style="color: #89DDFF;">&quot; : &quot;</span><span style="color: #9ECE6A;">*</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Sid</span><span style="color: #89DDFF;">&quot;: &quot;</span><span style="color: #9ECE6A;">ReadSpecificSecrets</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Effect</span><span style="color: #89DDFF;">&quot;: &quot;</span><span style="color: #9ECE6A;">Allow</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Action</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">secretsmanager:GetSecretValue</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">secretsmanager:DescribeSecret</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        ],</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">Resource</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">            aws_secretsmanager_secret.upstream_authority_cert_file.arn,</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">            aws_secretsmanager_secret.upstream_authority_key_file.arn,</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">          ]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    ]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  })</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Attach the Parameter Store policy to the task role</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_iam_role_policy_attachment&quot; &quot;task_parameter_store&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  role</span><span style="color: #89DDFF;">       =</span><span style="color: #9ABDF5;"> aws_iam_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs_task_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  policy_arn</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_iam_policy</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">parameter_store_read</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h4 id="the-spire-server-config"><a class="header-anchor no-hover-padding" href="#the-spire-server-config" aria-label="Anchor link for: the-spire-server-config"><span class="link-icon" aria-hidden="true"></span></a>
+The SPIRE Server Config</h4>
+<p>Before we setup the ECS Task definition that will run our SPIRE Server, we need to populate our SPIRE server configuration file. The SPIRE documentation provides a <a rel="external" href="https://spiffe.io/docs/latest/deploying/spire_server/">handy reference</a> which goes into detail regarding all the knobs available. SPIRE is built to be readily extensible and has a thriving <a rel="external" href="https://spiffe.io/docs/latest/planning/extending/">plugin ecosystem</a>.</p>
+<p>We'll make use of a number of plugins below, and set up our config as a terraform template file, so we can interpolate our <code>UpstreamAuthority</code> and AWS IAM Roles Anywhere trust anchor. For our purposes, the following settings and plugins shall suffice:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span># server.conf.tftpl</span></span>
+<span class="giallo-l"><span>server {</span></span>
+<span class="giallo-l"><span>    bind_address = &quot;0.0.0.0&quot;</span></span>
+<span class="giallo-l"><span>    bind_port = &quot;8081&quot;</span></span>
+<span class="giallo-l"><span>    socket_path = &quot;/tmp/spire-server/private/api.sock&quot;</span></span>
+<span class="giallo-l"><span>    trust_domain = &quot;misaac.me&quot;</span></span>
+<span class="giallo-l"><span>    data_dir = &quot;./.data&quot;</span></span>
+<span class="giallo-l"><span>    log_level = &quot;DEBUG&quot;</span></span>
+<span class="giallo-l"><span>    ca_key_type = &quot;rsa-2048&quot;</span></span>
+<span class="giallo-l"><span>    ca_subject {</span></span>
+<span class="giallo-l"><span>        country = [&quot;US&quot;]</span></span>
+<span class="giallo-l"><span>        organization = [&quot;SPIRE&quot;]</span></span>
+<span class="giallo-l"><span>        common_name = &quot;misaacspireissued&quot;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>plugins {</span></span>
+<span class="giallo-l"><span>    DataStore &quot;sql&quot; {</span></span>
+<span class="giallo-l"><span>        plugin_data {</span></span>
+<span class="giallo-l"><span>            database_type = &quot;sqlite3&quot;</span></span>
+<span class="giallo-l"><span>            connection_string = &quot;./.data/datastore.sqlite3&quot;</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    NodeAttestor &quot;join_token&quot; {</span></span>
+<span class="giallo-l"><span>        plugin_data {</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    KeyManager &quot;disk&quot; {</span></span>
+<span class="giallo-l"><span>        plugin_data {</span></span>
+<span class="giallo-l"><span>            keys_path = &quot;/tmp/spire-server/private/keys.json&quot;</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    UpstreamAuthority &quot;awssecret&quot; {</span></span>
+<span class="giallo-l"><span>        plugin_data {</span></span>
+<span class="giallo-l"><span>            region = &quot;us-east-1&quot;,</span></span>
+<span class="giallo-l"><span>            # Use template variables for ARNs</span></span>
+<span class="giallo-l"><span>            cert_file_arn = &quot;${cert_arn}&quot;,</span></span>
+<span class="giallo-l"><span>            key_file_arn = &quot;${key_arn}&quot;        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    BundlePublisher &quot;aws_rolesanywhere_trustanchor&quot; {</span></span>
+<span class="giallo-l"><span>    plugin_data {</span></span>
+<span class="giallo-l"><span>        region = &quot;us-east-1&quot;</span></span>
+<span class="giallo-l"><span>        trust_anchor_id = &quot;${trust_anchor_id}&quot;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>health_checks {</span></span>
+<span class="giallo-l"><span>    listener_enabled = true</span></span>
+<span class="giallo-l"><span>    bind_address = &quot;0.0.0.0&quot;</span></span>
+<span class="giallo-l"><span>    # bind_port = &quot;80&quot; # Default is 80, uncomment if needed</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>We store this config file as an AWS SSM Parameter and we'll load in into a volume attached to our SPIRE server during our ECS task startup.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ssm_parameter&quot; &quot;server_config&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">        = &quot;</span><span style="color: #9ECE6A;">/misaac-me/server-config</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">SPIRE server configuration for misaac.me</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  type</span><span style="color: #89DDFF;">        = &quot;</span><span style="color: #9ECE6A;">SecureString</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  value</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> templatefile</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&quot;${</span><span style="color: #C0CAF5;">path</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/server.conf.tftpl</span><span style="color: #89DDFF;">&quot;,</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    cert_arn</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> aws_secretsmanager_secret.upstream_authority_cert_file.arn</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    key_arn</span><span style="color: #89DDFF;">  =</span><span style="color: #7AA2F7;"> aws_secretsmanager_secret.upstream_authority_key_file.arn</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    trust_anchor_id</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> aws_rolesanywhere_trust_anchor.iamra.id</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  })</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Its worth pointing out a few technical choices made. One is to set <code>ca_key_type</code> to 2048. This ensures that the keys we're issued are compatible with the largest swath of AWS services we'd like to integrate in the future. For example, AWS Client VPN endpoints <a rel="external" href="https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/mutual.html">only</a> support 1024-bit and 2048-bit RSA key sizes.</p>
+<p>Another is the choice of sql lite as our data store. In a production environment, you'd certainly want to use a managed database via the <a rel="external" href="https://github.com/spiffe/spire/blob/v1.12.0/doc/plugin_server_datastore_sql.md"><code>sql</code></a> plugin.</p>
+<p>Similarly, we use the disk <code>KeyManager</code> which means a set of private keys are persisted to disk. In a production enviroment, you'd also want to switch over to using the <a rel="external" href="https://github.com/spiffe/spire/blob/v1.12.0/doc/plugin_server_keymanager_aws_kms.md"><code>aws_kms</code></a> key manager plugin instead which ensures your private key never leaves KMS.</p>
+<br>
+<h4 id="the-spire-server-ecs-task-definition"><a class="header-anchor no-hover-padding" href="#the-spire-server-ecs-task-definition" aria-label="Anchor link for: the-spire-server-ecs-task-definition"><span class="link-icon" aria-hidden="true"></span></a>
+The SPIRE Server ECS Task Definition</h4>
+<p>As mentioned earlier, we will need to provide the SPIRE server the config file. We create a shared config volume where we will place the config and attach both our init container and the SPIRE server container to it. We use the <a rel="external" href="https://hub.docker.com/r/amazon/aws-cli">aws-cli</a> docker image as our init container's image and instruct it to fetch the SPIRE server config and save it to the volume. When starting the SPIRE server up, we pass it the location of the config file, so it can initialize properly.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ecs_task_definition&quot; &quot;spire&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  family</span><span style="color: #89DDFF;">                   = &quot;</span><span style="color: #9ECE6A;">misaac-me-spire</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  requires_compatibilities</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">FARGATE</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  network_mode</span><span style="color: #89DDFF;">             = &quot;</span><span style="color: #9ECE6A;">awsvpc</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cpu</span><span style="color: #89DDFF;">                      =</span><span style="color: #FF9E64;"> 256</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  memory</span><span style="color: #89DDFF;">                   =</span><span style="color: #FF9E64;"> 512</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  execution_role_arn</span><span style="color: #89DDFF;">       =</span><span style="color: #9ABDF5;"> aws_iam_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs_execution_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  task_role_arn</span><span style="color: #89DDFF;">            =</span><span style="color: #9ABDF5;"> aws_iam_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs_task_role</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Add volume for sharing configuration between containers</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  volume</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">config-volume</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  container_definitions</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> jsonencode</span><span style="color: #9ABDF5;">([</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      name</span><span style="color: #89DDFF;">       = &quot;</span><span style="color: #9ECE6A;">config-init</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      image</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">amazon/aws-cli:latest</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      essential</span><span style="color: #89DDFF;">  =</span><span style="color: #FF9E64;"> false</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      entryPoint</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">sh</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">, </span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">-c</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      command</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &lt;&lt;-</span><span style="color: #BB9AF7;">EOF</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">          set -e</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">          echo &quot;Ensuring target directory exists on volume...&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">          mkdir -p /opt/spire/conf/server</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">          echo &quot;Fetching SPIRE server config...&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">          aws ssm get-parameter --name &quot;/misaac-me/server-config&quot; --with-decryption --query &quot;Parameter.Value&quot; --output text &gt; /opt/spire/conf/server/server.conf</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">          echo &quot;All configuration files fetched successfully to the shared volume.&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        EOF</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      logConfiguration</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        logDriver</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">awslogs</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        options</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">awslogs-group</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">         = aws_cloudwatch_log_group.spire.name</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">awslogs-region</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">        = </span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">us-east-1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">awslogs-stream-prefix</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;"> = </span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">config-init</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      mountPoints</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          sourceVolume</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">config-volume</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          containerPath</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">/opt/spire/conf/server</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          readOnly</span><span style="color: #89DDFF;">      =</span><span style="color: #FF9E64;"> false</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      name</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">app</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      image</span><span style="color: #89DDFF;">     = &quot;</span><span style="color: #9ECE6A;">ghcr.io/spiffe/spire-server:nightly</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      essential</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      dependsOn</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          containerName</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">config-init</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          condition</span><span style="color: #89DDFF;">     = &quot;</span><span style="color: #9ECE6A;">SUCCESS</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">      # Command to run SPIRE server with our config</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      command</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">sh</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">-c</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #9ECE6A;">mkdir -p /tmp/spire-server/private &amp;&amp; chmod 777 /tmp/spire-server/private &amp;&amp; spire-server run --config /opt/spire/conf/server/server.conf</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      environment</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      user</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      linuxParameters</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        initProcessEnabled</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      portMappings</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">          # Update port mapping to use SPIRE server port from config</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          containerPort</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          hostPort</span><span style="color: #89DDFF;">      =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          protocol</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">          # Update port mapping to use SPIRE server port from config</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          containerPort</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 80</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          hostPort</span><span style="color: #89DDFF;">      =</span><span style="color: #FF9E64;"> 80</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          protocol</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      mountPoints</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          sourceVolume</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">config-volume</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          containerPath</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">/opt/spire/conf/server</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          readOnly</span><span style="color: #89DDFF;">      =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span><span style="color: #7AA2F7;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          sourceVolume</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">config-volume</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          containerPath</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">/tmp/spire-server/private</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          readOnly</span><span style="color: #89DDFF;">      =</span><span style="color: #FF9E64;"> false</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      logConfiguration</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        logDriver</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">awslogs</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        options</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">awslogs-group</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">         = aws_cloudwatch_log_group.spire.name</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">awslogs-region</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;">        = </span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">us-east-1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">          &quot;</span><span style="color: #9ECE6A;">awslogs-stream-prefix</span><span style="color: #89DDFF;">&quot;</span><span style="color: #7AA2F7;"> = </span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">spire</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    </span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  ])</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  depends_on</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">aws_secretsmanager_secret</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">upstream_authority_cert_file</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> aws_secretsmanager_secret</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">upstream_authority_key_file</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> aws_secretsmanager_secret</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">upstream_authority_bundle_file</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h4 id="the-security-groups"><a class="header-anchor no-hover-padding" href="#the-security-groups" aria-label="Anchor link for: the-security-groups"><span class="link-icon" aria-hidden="true"></span></a>
+The security groups</h4>
+<p>We need to set up the rules for traffic flow. Below, we allow SPIRE traffic into the ALB, and allow traffic from the ALB to our ECS task. We also allow the usual 80 and 443 ports (these are useful if we decide to setup healtchecks in the future), as well as outbound traffic to anywhere.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Security group for ALB</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_security_group&quot; &quot;alb_sg&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">        = &quot;</span><span style="color: #9ECE6A;">alb-security-group</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Allow HTTP and HTTPS inbound traffic for ALB</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vpc_id</span><span style="color: #89DDFF;">      =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  tags</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">alb-sg</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_ingress_rule&quot; &quot;allow_spire&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_ipv4</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">0.0.0.0/0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  from_port</span><span style="color: #89DDFF;">         =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;">       = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  to_port</span><span style="color: #89DDFF;">           =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_ingress_rule&quot; &quot;allow_http&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_ipv4</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">0.0.0.0/0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  from_port</span><span style="color: #89DDFF;">         =</span><span style="color: #FF9E64;"> 80</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;">       = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  to_port</span><span style="color: #89DDFF;">           =</span><span style="color: #FF9E64;"> 80</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_ingress_rule&quot; &quot;allow_https&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_ipv4</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">0.0.0.0/0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  from_port</span><span style="color: #89DDFF;">         =</span><span style="color: #FF9E64;"> 443</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;">       = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  to_port</span><span style="color: #89DDFF;">           =</span><span style="color: #FF9E64;"> 443</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_egress_rule&quot; &quot;alb_allow_all_outbound&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_ipv4</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">0.0.0.0/0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;">       = &quot;</span><span style="color: #9ECE6A;">-1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Security group for ECS tasks</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_security_group&quot; &quot;ecs_tasks_sg&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">        = &quot;</span><span style="color: #9ECE6A;">ecs-tasks-security-group</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Allow inbound traffic from ALB to ECS tasks</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vpc_id</span><span style="color: #89DDFF;">      =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  tags</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">ecs-tasks-sg</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_ingress_rule&quot; &quot;allow_alb_to_ecs&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;">            =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs_tasks_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  referenced_security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  from_port</span><span style="color: #89DDFF;">                    =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;">                  = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  to_port</span><span style="color: #89DDFF;">                      =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_egress_rule&quot; &quot;ecs_allow_all_outbound&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs_tasks_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_ipv4</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">0.0.0.0/0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;">       = &quot;</span><span style="color: #9ECE6A;">-1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h4 id="the-ecs-service"><a class="header-anchor no-hover-padding" href="#the-ecs-service" aria-label="Anchor link for: the-ecs-service"><span class="link-icon" aria-hidden="true"></span></a>
+The ECS Service</h4>
+<p>We place our service in our private subnets, and assign it the ecs security group we created above. The other key thing here is that we reference the target group, <code>spire_ip</code> which we created earlier in the <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-route53-and-the-network-load-balancer">route 53/load balancer</a> section. This tells ECS to wire the task up to that listener once it is ready to receive requests. We also set up our terraform to redeploy this service anytime we run a new apply with a redeployment trigger. This is optional but proved utterly useful while iterating on this.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ecs_service&quot; &quot;spire&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">                   = &quot;</span><span style="color: #9ECE6A;">misaac-me-spire</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cluster</span><span style="color: #89DDFF;">                =</span><span style="color: #C0CAF5;"> module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cluster_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  task_definition</span><span style="color: #89DDFF;">        =</span><span style="color: #9ABDF5;"> aws_ecs_task_definition</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">spire</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  desired_count</span><span style="color: #89DDFF;">          =</span><span style="color: #FF9E64;"> 1</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  launch_type</span><span style="color: #89DDFF;">            = &quot;</span><span style="color: #9ECE6A;">FARGATE</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  enable_execute_command</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  network_configuration</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    subnets</span><span style="color: #89DDFF;">         =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">aws_subnet</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">subnet_a</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> aws_subnet</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">subnet_b</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    security_groups</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ecs_tasks_sg</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  load_balancer</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    target_group_arn</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">target_groups</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">spire_ip</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    container_name</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">app</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    container_port</span><span style="color: #89DDFF;">   =</span><span style="color: #FF9E64;"> 8081</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  depends_on</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">alb</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  force_new_deployment</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  triggers</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    redeployment</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> plantimestamp</span><span style="color: #9ABDF5;">()</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h3 id="verifiying-the-deployment"><a class="header-anchor no-hover-padding" href="#verifiying-the-deployment" aria-label="Anchor link for: verifiying-the-deployment"><span class="link-icon" aria-hidden="true"></span></a>
+Verifiying the deployment</h3>
+<p>After hitting <code>terraform plan</code> and <code>terraform apply</code>, head over to your the ECS page on AWS and drill down into the now running task. Select the logs tab to view the startup logs. Because we set the log level to <code>DEBUG</code> in our <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-spire-server-config">server config</a>, you'll see detailed startup information as the SPIRE server tries to setup all the plugins we enabled.</p>
+<p>The best way to be sure things are all good to go however is to run the health check command. For this and further interactions with the SPIRE server, we'll rely on the ECS Exec functionality that we enabled. Grab the ECS task ID and run the healtcheck command. You should see output similar to below.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> aws ecs execute-command</span><span style="color: #E0AF68;"> --cluster</span><span style="color: #9ECE6A;"> misaac-me-cluster</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --task</span><span style="color: #9ECE6A;"> 7a1c81dd127448f6aad9b9c8064efa54</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --container</span><span style="color: #9ECE6A;"> app</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --interactive</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --command</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">/opt/spire/bin/spire-server healthcheck</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">The</span><span style="color: #9ECE6A;"> Session Manager plugin was installed successfully. Use the AWS CLI to start a session.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Starting</span><span style="color: #9ECE6A;"> session with SessionId: ecs-execute-command-dztjl3tojo6pgpcv5be5vs42x8</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Server</span><span style="color: #9ECE6A;"> is healthy.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Exiting</span><span style="color: #9ECE6A;"> session with sessionId: ecs-execute-command-dztjl3tojo6pgpcv5be5vs42x8.</span></span></code></pre>
+<p>The line <strong>Server is healthy</strong> indicates that we're good to go. At this point, we are ready to try to get an SVID. For this, we'll need to setup the SPIRE agent.</p>
+<br>
+<h2 id="setting-up-the-spire-agent"><a class="header-anchor no-hover-padding" href="#setting-up-the-spire-agent" aria-label="Anchor link for: setting-up-the-spire-agent"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up the SPIRE Agent</h2>
+<p>Follow the instruction on <a rel="external" href="https://spiffe.io/docs/latest/try/getting-started-linux-macos-x/">Quickstart for Linux and MacOSX</a> to install the SPIRE Agent on your device. If you're on Windows, you can find Windows binaries for SPIRE on the <a rel="external" href="https://github.com/spiffe/spire/releases">GitHub Releases page</a>. The SPIRE team <a rel="external" href="https://www.cncf.io/blog/2022/05/18/spire-now-runs-on-windows/">has worked hard</a> to ensure the user experience is consistent accross platforms so the rest of the instructions should work as described.</p>
+<h3 id="the-agent-config"><a class="header-anchor no-hover-padding" href="#the-agent-config" aria-label="Anchor link for: the-agent-config"><span class="link-icon" aria-hidden="true"></span></a>
+The Agent Config</h3>
+<p>Just like the server, the SPIRE agent needs a config file to tell it how to run. Here's an example where we provide the SPIRE server address the agent should use, as well as set it up to attest using a join token. The SPIRE agent expects this config to be located at <code>./conf/agent/agent.conf</code>.</p>
+<p>Another production note is that below, we set the <code>insecure_bootstrap</code> flag. Insecure bootstrap is <strong>NOT</strong> appropriate for production use. We only use it here to make things slightly easier as we evaluate. To turn this off and connect the ideal way remove the <code>insecure_bootstrap</code> line, provide your agent with the CA trust bundle, placing it in the same location as the config file, and uncomment the <code>trust_bundle_path</code> line. With the bundle, the SPIRE agent will verify the server chain, rather than perform just the soft verification of the server URI.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>agent {</span></span>
+<span class="giallo-l"><span>    data_dir = &quot;./.data&quot;</span></span>
+<span class="giallo-l"><span>    log_level = &quot;DEBUG&quot;</span></span>
+<span class="giallo-l"><span>    server_address = &quot;spire.misaac.me&quot;</span></span>
+<span class="giallo-l"><span>    server_port = &quot;8081&quot;</span></span>
+<span class="giallo-l"><span>    socket_path =&quot;/tmp/spire-agent/public/api.sock&quot;</span></span>
+<span class="giallo-l"><span>    # trust_bundle_path = &quot;./conf/agent/dummy_root_ca.crt&quot;</span></span>
+<span class="giallo-l"><span>    trust_domain = &quot;misaac.me&quot;</span></span>
+<span class="giallo-l"><span>    insecure_bootstrap = true</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>plugins {</span></span>
+<span class="giallo-l"><span>    NodeAttestor &quot;join_token&quot; {</span></span>
+<span class="giallo-l"><span>        plugin_data {</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    KeyManager &quot;disk&quot; {</span></span>
+<span class="giallo-l"><span>        plugin_data {</span></span>
+<span class="giallo-l"><span>            directory = &quot;./.data&quot;</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    WorkloadAttestor &quot;unix&quot; {</span></span>
+<span class="giallo-l"><span>        plugin_data {</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><br>
+<h3 id="node-attestation-with-a-join-token"><a class="header-anchor no-hover-padding" href="#node-attestation-with-a-join-token" aria-label="Anchor link for: node-attestation-with-a-join-token"><span class="link-icon" aria-hidden="true"></span></a>
+Node Attestation with a join token</h3>
+<p>With your agent installed, and your agent config all set up, our next step is to request a <a rel="external" href="https://spiffe.io/docs/latest/deploying/configuring/#join-token">join token</a> from the SPIRE server. This will allow us to prove our agents identity to the SPIRE server, a process known as <a rel="external" href="https://spiffe.io/docs/latest/spire-about/spire-concepts/#node-attestation">Node Attestation</a>. Note that for your workloads running on cloud compute, you should prefer any of the other <code>NodeAttestor</code> <a rel="external" href="https://spiffe.io/docs/latest/deploying/spire_agent/#built-in-plugins">plugins</a> which use things like AWS instance identity or Kubernetes service tokens.</p>
+<p>You may be wondering, "hey, you told me that <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#preamble">no secrets</a> are required!" And you're right to wonder - a join token does technically function as a secret during the initial bootstrapping of the SPIRE Agent.</p>
+<p>Note however, that our argument was that the <strong>workload</strong> does not need to hold a secret. Remember, that with a traditional secret such as an API key, database password, TLS private key or other long-lived credential, the problem is in their lifecycle and distribution. They need to be provisioned <strong>to</strong> the workload <strong>before</strong> it can authenticate - which is what leads to the "secret zero problem" - how do you securely get that first secret to the workload?</p>
+<p>Our join token however is <em><strong>not</strong></em> held by the workload. The <em>workload itself</em>, (i.e a specific application instance running in a pod or VM) does not possess this join token. Instead, the SPIRE Agent does, and only uses it for its <strong>initial</strong> authentication to the SPIRE server. Also, unlike most secrets, the join token expires immediately after use and is only used by the agent to perform node attestation.</p>
+<p>The key takeway then is the shift in trust boundary. Instead of each individual workload needing a unique, pre-provisioned secret, you now have a controlled, temporary secret, (the join token), that is used <em>once</em> by the SPIRE agent to establish a secure channel to the SPIRE server. This shifts the "secret zero" problem from potentially thousands of workloads to a single, tightly controlled initial authentication for the SPIRE agent.</p>
+<p>Here's the command to run, and the output to expect.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> aws ecs execute-command</span><span style="color: #E0AF68;"> --cluster</span><span style="color: #9ECE6A;"> misaac-me-cluster</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --task</span><span style="color: #9ECE6A;"> 7a1c81dd127448f6aad9b9c8064efa54</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --container</span><span style="color: #9ECE6A;"> app</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --interactive</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --command</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">/opt/spire/bin/spire-server token generate -spiffeID spiffe://misaac.me/myagent</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">The</span><span style="color: #9ECE6A;"> Session Manager plugin was installed successfully. Use the AWS CLI to start a session.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Starting</span><span style="color: #9ECE6A;"> session with SessionId: ecs-execute-command-gg5fgucsodxjrjz5netervpkce</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Token:</span><span style="color: #9ECE6A;"> c31f79f2-3462-11f0-8be1-06e43f96721d</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Exiting</span><span style="color: #9ECE6A;"> session with sessionId: ecs-execute-command-gg5fgucsodxjrjz5netervpkce.</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Armed with this join token, we can now perform node attestation. Run the spire agent run command, passing in the join token:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> ./bin/spire-agent run</span><span style="color: #E0AF68;"> -joinToken</span><span style="color: #9ECE6A;"> c31f79f2-3462-11f0-8be1-06e43f96721d</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">WARN[0000]</span><span style="color: #9ECE6A;"> Current umask</span><span style="color: #FF9E64;"> 0022</span><span style="color: #9ECE6A;"> is too permissive</span><span style="color: #89DDFF;">;</span><span style="color: #C0CAF5;"> setting</span><span style="color: #9ECE6A;"> umask</span><span style="color: #FF9E64;"> 0027</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Starting agent                                data_dir=./.data version=1.12.0-dev-unk</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Plugin loaded                                 external=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> plugin_name=join_token plugin_type=NodeAttestor subsystem_name=catalog</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Configured plugin                             external=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> plugin_name=disk plugin_type=KeyManager reconfigurable=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> subsystem_name=catalog</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Plugin loaded                                 external=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> plugin_name=disk plugin_type=KeyManager subsystem_name=catalog</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Configured plugin                             external=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> plugin_name=unix plugin_type=WorkloadAttestor reconfigurable=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> subsystem_name=catalog</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Plugin loaded                                 external=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> plugin_name=unix plugin_type=WorkloadAttestor subsystem_name=catalog</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Bundle is not found                           subsystem_name=attestor</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">DEBU[0000]</span><span style="color: #9ECE6A;"> No pre-existing agent SVID found. Will perform node attestation  subsystem_name=attestor</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">WARN[0000]</span><span style="color: #9ECE6A;"> Keys recovered, but no SVID found. Generating new keypair  subsystem_name=attestor</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> SVID is not found. Starting node attestation  subsystem_name=attestor</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">WARN[0000]</span><span style="color: #9ECE6A;"> Insecure bootstrap enabled</span><span style="color: #89DDFF;">;</span><span style="color: #C0CAF5;"> skipping</span><span style="color: #9ECE6A;"> server certificate verification  subsystem_name=attestor</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">WARN[0000]</span><span style="color: #9ECE6A;"> Insecure bootstrap enabled</span><span style="color: #89DDFF;">;</span><span style="color: #C0CAF5;"> skipping</span><span style="color: #9ECE6A;"> server certificate verification  subsystem_name=attestor</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">INFO[0000]</span><span style="color: #9ECE6A;"> Node attestation was successful               reattestable=</span><span style="color: #FF9E64;">false</span><span style="color: #9ECE6A;"> spiffe_id=</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">spiffe://misaac.me/spire/agent/join_token/c31f79f2-3462-11f0-8be1-06e43f96721d</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;"> subsystem_name=attestor</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">DEBU[0000]</span><span style="color: #9ECE6A;"> Entry created                                 entry=b3be6f38-e411-4ff8-a872-3285c54d290a selectors_added=</span><span style="color: #FF9E64;">1</span><span style="color: #9ECE6A;"> spiffe_id=</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">spiffe://misaac.me/myagent</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;"> subsystem_name=cache_manager</span></span></code></pre><br>
+<h3 id="creating-a-registration-entry"><a class="header-anchor no-hover-padding" href="#creating-a-registration-entry" aria-label="Anchor link for: creating-a-registration-entry"><span class="link-icon" aria-hidden="true"></span></a>
+Creating a registration entry</h3>
+<p>To allow SPIRE to identify a workload, you need to register it with the SPIRE Server using registration entries. These entries specify how SPIRE should recognize the workload and the corresponding SPIFFE ID it should be assigned. The set of properties by which SPIRE is to recognize a workload as valid are known as selectors.</p>
+<p>The following command creates a registration entry based on the current user's UID (<code>$(id -u)</code>). In other words, the UID is our only selector.  Open a new terminal window side-by-side with the one running the SPIRE agent and run the command below. You should see output similar to:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> aws ecs execute-command</span><span style="color: #E0AF68;"> --cluster</span><span style="color: #9ECE6A;"> misaac-me-cluster</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --task</span><span style="color: #9ECE6A;"> 7a1c81dd127448f6aad9b9c8064efa54</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --container</span><span style="color: #9ECE6A;"> app</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --interactive</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --command</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">/opt/spire/bin/spire-server entry create -dns m.misaac.me -parentID spiffe://misaac.me/myagent </span><span style="color: #89DDFF;">\</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    -spiffeID spiffe://misaac.me/myservice -selector unix:uid:501</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">The</span><span style="color: #9ECE6A;"> Session Manager plugin was installed successfully. Use the AWS CLI to start a session.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Starting</span><span style="color: #9ECE6A;"> session with SessionId: ecs-execute-command-sgji2gulvqv9qnvxiuabrzztjy</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Entry</span><span style="color: #9ECE6A;"> ID         : 0892eada-63ff-4d22-9762-2a348bdde7c7</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SPIFFE</span><span style="color: #9ECE6A;"> ID        : spiffe://misaac.me/myservice</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Parent</span><span style="color: #9ECE6A;"> ID        : spiffe://misaac.me/myagent</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Revision</span><span style="color: #9ECE6A;">         :</span><span style="color: #FF9E64;"> 0</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">X509-SVID</span><span style="color: #9ECE6A;"> TTL    : default</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">JWT-SVID</span><span style="color: #9ECE6A;"> TTL     : default</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Selector</span><span style="color: #9ECE6A;">         : unix:uid:501</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">DNS</span><span style="color: #9ECE6A;"> name         : m.misaac.me</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Exiting</span><span style="color: #9ECE6A;"> session with sessionId: ecs-execute-command-sgji2gulvqv9qnvxiuabrzztjy.</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Over on the spire agent terminal, you should also see that the agent
+<span id="informed-workload">got informed about this new workload</span>:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>DEBU[0083] Entry created                                 entry=0892eada-63ff-4d22-9762-2a348bdde7c7 selectors_added=1 spiffe_id=&quot;spiffe://misaac.me/myservice&quot; subsystem_name=cache_manager</span></span>
+<span class="giallo-l"><span>DEBU[0083] Renewing stale entries                        cache_type=workload count=1 limit=500 subsystem_name=manager</span></span>
+<span class="giallo-l"><span>INFO[0083] Creating X509-SVID                            entry_id=0892eada-63ff-4d22-9762-2a348bdde7c7 spiffe_id=&quot;spiffe://misaac.me/myservice&quot; subsystem_name=manager</span></span>
+<span class="giallo-l"><span>DEBU[0083] SVID updated                                  entry=0892eada-63ff-4d22-9762-2a348bdde7c7 spiffe_id=&quot;spiffe://misaac.me/myservice&quot; subsystem_name=cache_manager</span></span></code></pre>
+<p>It then updated its local store of workload entries, and created the SVID for the workload. This does not mean that the workload will receive this SVID, the receipt will only occur after the workload requests the SVID, and the agent successfully verifies it via workload attestation.</p>
+<br>
+<h2 id="requesting-a-spiffe-svid-a-k-a-certificate"><a class="header-anchor no-hover-padding" href="#requesting-a-spiffe-svid-a-k-a-certificate" aria-label="Anchor link for: requesting-a-spiffe-svid-a-k-a-certificate"><span class="link-icon" aria-hidden="true"></span></a>
+Requesting a SPIFFE SVID, a.k.a certificate</h2>
+<p>We are finally ready to request an SVID from our SPIRE agent. This is also when workload attestation will occur. Workload attestation asks the question "Who is this process and do I have an SVID for it?" To attest the workload, the SPIRE agent verifies the workload's identity by comparing its observed attributes against the registration entries.</p>
+<p>In our case, we specified a UID of 501 as the selector when creating the registration entry and as you <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#informed-workload">saw above</a>, the SPIRE server sent that information and the corresponding SVID down to the agent for caching. This means that we are trusting the environment itself to confirm the workloads identity.</p>
+<p>We'll <span id="fetch">simulate</span> the act of a workload requesting an SVID by running <code>bin/spire-agent api fetch x509 -write /tmp/</code>. When this happens, our SPIRE agent will compare our calling process information to the registration entries it has cached, and then if everything checks out, return the correct SVID to us from its cache.</p>
+<p>Here's what that would look like:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> bin/spire-agent api fetch x509</span><span style="color: #E0AF68;"> -write</span><span style="color: #9ECE6A;"> /tmp/</span><span>          </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Received</span><span style="color: #FF9E64;"> 1</span><span style="color: #9ECE6A;"> svid after 254.053709ms</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SPIFFE</span><span style="color: #9ECE6A;"> ID:              spiffe://misaac.me/myservice</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SVID</span><span style="color: #9ECE6A;"> Valid After:       2025-05-19 11:06:54 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SVID</span><span style="color: #9ECE6A;"> Valid Until:       2025-05-19 12:07:04 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Intermediate</span><span style="color: #51597D;font-style: italic;"> #1 Valid After:    2025-05-18 21:04:32 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Intermediate</span><span style="color: #51597D;font-style: italic;"> #1 Valid Until:    2025-05-19 21:04:42 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">CA</span><span style="color: #51597D;font-style: italic;"> #1 Valid After:      2025-04-29 01:29:07 +0000 UTC</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">CA</span><span style="color: #51597D;font-style: italic;"> #1 Valid Until:      2035-04-27 01:29:07 +0000 UTC</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Writing</span><span style="color: #9ECE6A;"> SVID</span><span style="color: #51597D;font-style: italic;"> #0 to file /tmp/svid.0.pem.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Writing</span><span style="color: #9ECE6A;"> key</span><span style="color: #51597D;font-style: italic;"> #0 to file /tmp/svid.0.key.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Writing</span><span style="color: #9ECE6A;"> bundle</span><span style="color: #51597D;font-style: italic;"> #0 to file /tmp/bundle.0.pem.</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Using <code>openssl</code> shows us the contents of the SVID:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> openssl x509</span><span style="color: #E0AF68;"> -in</span><span style="color: #9ECE6A;"> /tmp/svid.0.pem</span><span style="color: #E0AF68;"> -text -noout</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">Certificate:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Data:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        Version:</span><span style="color: #FF9E64;"> 3</span><span> (0x2)</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        Serial</span><span style="color: #9ECE6A;"> Number:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            56:fe:78:15:73:a6:7f:ce:c8:34:14:2a:23:eb:42:0a</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        Signature</span><span style="color: #9ECE6A;"> Algorithm: sha256WithRSAEncryption</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        Issuer:</span><span style="color: #9ECE6A;"> C=US, O=SPIRE, CN=misaacspireissued, serialNumber=</span><span style="color: #FF9E64;">110299478376811626996927807267782596616</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        Validity</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            Not</span><span style="color: #9ECE6A;"> Before: May</span><span style="color: #FF9E64;"> 19</span><span style="color: #9ECE6A;"> 11:06:54</span><span style="color: #FF9E64;"> 2025</span><span style="color: #9ECE6A;"> GMT</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            Not</span><span style="color: #9ECE6A;"> After : May</span><span style="color: #FF9E64;"> 19</span><span style="color: #9ECE6A;"> 12:07:04</span><span style="color: #FF9E64;"> 2025</span><span style="color: #9ECE6A;"> GMT</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        Subject:</span><span style="color: #9ECE6A;"> C=US, O=SPIRE, CN=m.misaac.me</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        Subject</span><span style="color: #9ECE6A;"> Public Key Info:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            Public</span><span style="color: #9ECE6A;"> Key Algorithm: id-ecPublicKey</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                Public-Key:</span><span> (256</span><span style="color: #9ECE6A;"> bit</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                pub:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                    04:ca:48:c7:a6:c3:70:bd:36:cd:bb:61:d5:f0:cb:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                    fe:ed:6c:10:e5:a8:50:ac:1b:6c:72:77:68:ab:12:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                    bd:3b:b5:0b:4c:ee:b0:06:ea:2f:54:70:54:66:2c:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                    0b:b5:a3:b8:7f:08:b7:3a:1c:c3:cc:7c:65:02:64:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                    cb:aa:90:68:f2</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                ASN1</span><span style="color: #9ECE6A;"> OID: prime256v1</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                NIST</span><span style="color: #9ECE6A;"> CURVE: P-256</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        X509v3</span><span style="color: #9ECE6A;"> extensions:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            X509v3</span><span style="color: #9ECE6A;"> Key Usage: critical</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                Digital</span><span style="color: #9ECE6A;"> Signature, Key Encipherment, Key Agreement</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            X509v3</span><span style="color: #9ECE6A;"> Extended Key Usage:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                TLS</span><span style="color: #9ECE6A;"> Web Server Authentication, TLS Web Client Authentication</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            X509v3</span><span style="color: #9ECE6A;"> Basic Constraints: critical</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                CA:FALSE</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            X509v3</span><span style="color: #9ECE6A;"> Subject Key Identifier:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                0D:76:40:09:70:2D:1F:DA:95:AD:CF:8A:37:21:F3:87:43:BE:80:0E</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            X509v3</span><span style="color: #9ECE6A;"> Authority Key Identifier:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                6D:88:0B:FF:20:6C:AA:0E:E5:FB:CF:21:0A:A2:D5:16:33:55:77:3A</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">            X509v3</span><span style="color: #9ECE6A;"> Subject Alternative Name:</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                DNS:m.misaac.me,</span><span style="color: #9ECE6A;"> URI:spiffe://misaac.me/myservice</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Signature</span><span style="color: #9ECE6A;"> Algorithm: sha256WithRSAEncryption</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Signature</span><span style="color: #9ECE6A;"> Value:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        84:d2:b6:e6:d1:b0:3d:b3:a5:33:4e:23:f5:55:ec:3f:7f:7b:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        9c:5e:18:b3:db:ce:cc:f7:aa:e3:27:18:b6:4e:cf:65:06:05:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        71:6d:48:43:fe:66:24:91:49:80:c5:b0:5d:6e:c0:0f:92:32:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        0f:a8:4c:f8:5b:18:20:1e:8d:bb:e9:80:a3:74:50:42:95:a9:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        e9:2f:e1:59:7d:7f:48:03:04:94:58:e0:87:de:25:7a:d2:d1:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        b1:f0:9d:d5:e1:b7:44:51:64:a5:e8:ef:9e:5e:47:59:ae:da:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        44:ba:0b:9e:4c:68:9f:1f:38:3e:fe:00:af:47:a2:8d:69:fd:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        29:50:26:fe:4c:65:5e:0e:ba:ac:10:34:18:8b:e0:d1:54:8d:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        8e:24:73:0d:db:5f:a3:81:2d:a3:46:a3:c1:ef:96:86:ba:92:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        d8:e5:d3:1b:a4:a4:e2:f8:cf:2b:3c:ba:80:0e:24:ff:5b:db:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        ef:79:1a:40:65:e1:df:60:6c:4c:f6:f5:b0:06:9e:82:0b:88:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        6c:2d:b4:f9:c5:a6:c5:5b:89:be:a9:4d:eb:32:a7:b3:3c:4f:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        33:da:76:d5:18:93:b6:62:d6:e4:97:7a:24:6f:77:c0:01:c8:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        45:0c:1e:bd:ac:85:33:ce:30:e8:a2:05:93:5d:88:5d:40:21:</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">        2b:0d:aa:bf</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Notice the short duration of the SVID. Although the short SVID duration might seem alarming, the SPIRE agent handles renewals automatically. This design choice is a security feature. By forcing frequent re-attestation, SPIRE continuously verifies the workload's identity (e.g., the uid remains 501) and its registration status (the SVID is still valid) before issuing a new, short-lived SVID.</p>
+<p>That said, your workload now needs to grapple with tracking the SVID expiration and continually requesting renewals. Does this mean you have to go re-architect your legacy apps? Fortunately no, the <a rel="external" href="https://github.com/spiffe/spiffe-helper">spiffe-helper</a> project is designed to help you solve this problem without code changes. The handy utility takes care of fetching X.509 SVID certificates from the SPIFFE agent, launching a process to use them, and automatically renewing and reloading certificates as needed.</p>
+<p>We cover this process <a rel="external" href="http://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/">here</a>, but for now, we don't have to worry about this at the moment as we'll be using our SVID only once, so let's go authenticate to AWS!</p>
+<br>
+<h2 id="use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere"><a class="header-anchor no-hover-padding" href="#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere" aria-label="Anchor link for: use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere"><span class="link-icon" aria-hidden="true"></span></a>
+Use a SPIFFE SVID to obtain AWS credentials via IAM Roles Anywhere</h2>
+<p>To obtain temporary credentials using IAM Roles Anywhere, you need all of the following:</p>
+<ul>
+<li>
+<p>A Profile configured in IAM Roles Anywhere</p>
+</li>
+<li>
+<p>A Role ARN from IAM</p>
+</li>
+<li>
+<p>A trust anchor configured in IAM Roles Anywhere</p>
+</li>
+<li>
+<p>An end-entity certificate from your certificate authority</p>
+</li>
+<li>
+<p>The certificate associated private key is required in most cases, except when inferred. For example when using OS certificate stores.</p>
+</li>
+<li>
+<p>The credential helper tool provided by AWS</p>
+</li>
+</ul>
+<p>We setup the first three in <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-iam-roles-anywhere">setting up iam roles anywhere</a> and we just obtained our end-entity certificate along with its private key.</p>
+<p>To get the credential helper, head over to the <a rel="external" href="https://github.com/aws/rolesanywhere-credential-helper">rolesanywhere-credential-helper</a> GitHub repository and follow the instructions to build your binary. Alternatively, you could use the Download links on the AWS documentation page <a rel="external" href="https://docs.aws.amazon.com/rolesanywhere/latest/userguide/credential-helper.html">here</a>.</p>
+<p>Once you have the binary built or downloaded, if you're on a unix or unix-like OS, you might need to <code>chmod+x</code> it so that you can execute it. Verify that you can run it with <code>./aws_signing_helper -h</code>. You should see:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> ./aws_signing_helper</span><span style="color: #E0AF68;"> -h</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">A</span><span style="color: #9ECE6A;"> tool that utilizes certificates and their associated private keys to</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sign</span><span style="color: #9ECE6A;"> requests to AWS IAM Roles Anywhere</span><span style="color: #89DDFF;">&#39;</span><span style="color: #9ECE6A;">s CreateSession API and retrieve temporary </span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">AWS security credentials. This tool exposes multiple commands to make credential </span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">retrieval and rotation more convenient.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Usage:</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  aws_signing_helper [command] [flags]</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  aws_signing_helper [command]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Available Commands:</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  completion            Generate the autocompletion script for the specified shell</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  credential-process    Retrieve AWS credentials in the appropriate format for external credential processes</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  help                  Help about any command</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  read-certificate-data Diagnostic command to read certificate data</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  serve                 Serve AWS credentials through a local endpoint</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  sign-string           Signs a fixed string using the passed-in private key (or reference to private key)</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  update                Updates a profile in the AWS credentials file with new AWS credentials</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  version               Prints the version number of the credential helper</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Flags:</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">  -h, --help   help for aws_signing_helper</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Use &quot;aws_signing_helper [command] --help&quot; for more information about a command.</span></span></code></pre>
+<p>Before we use the <code>aws_signing_helper</code> to request our certificate, there's one more thing we need to do. The SPIRE agent does not include SPIRE's intermediate CA in the bundle it issues when we ran <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#fetch">fetch</a>. Instead, it places that in the end-entity certificate stored in <code>/tmp/svid.0.pem</code>. So we'll use a one-liner to copy that into the bundle.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>echo -e &quot;\n$(awk &#39;/-----BEGIN CERTIFICATE-----/{i++}i==2{print}&#39; /tmp/svid.0.pem)&quot; &gt;&gt; /tmp/bundle.0.pem</span></span></code></pre>
+<p>With our bundle ready, we can now call <code>aws_signing_helper</code> and request an AWS credential.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> eval</span><span style="color: #89DDFF;"> $(</span><span style="color: #C0CAF5;">./aws_signing_helper</span><span style="color: #9ECE6A;"> credential-process</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">      --certificate</span><span style="color: #9ECE6A;"> /tmp/svid.0.pem</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">      --private-key</span><span style="color: #9ECE6A;"> /tmp/svid.0.key</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">      --intermediates</span><span style="color: #9ECE6A;"> /tmp/bundle.0.pem</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">      --trust-anchor-arn</span><span style="color: #9ECE6A;"> arn:aws:rolesanywhere:us-east-1:012345678901:trust-anchor/9f455be1-f25f-495b-9e99-f6a630d62cbb</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">      --profile-arn</span><span style="color: #9ECE6A;"> arn:aws:rolesanywhere:us-east-1:012345678901:profile/737869f1-ffd0-4674-ac2b-f3d6895b4499</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">      --role-arn</span><span style="color: #9ECE6A;"> arn:aws:iam::012345678901:role/test</span><span style="color: #89DDFF;"> |</span><span style="color: #C0CAF5;"> jq</span><span style="color: #E0AF68;"> -r</span><span style="color: #89DDFF;"> &#39;</span><span style="color: #9ECE6A;">with_entries(select(.key | match(&quot;^(AccessKeyId|SecretAccessKey|SessionToken)$&quot;))) | &quot;export AWS_ACCESS_KEY_ID=\(.AccessKeyId)\nexport AWS_SECRET_ACCESS_KEY=\(.SecretAccessKey)\nexport AWS_SESSION_TOKEN=\(.SessionToken)&quot;</span><span style="color: #89DDFF;">&#39;)</span></span></code></pre>
+<p>Now that we have our credentials, let's do something with it, let's run <code>whoami</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> aws sts get-caller-identity</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    &quot;UserId&quot;</span><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">AROADBQP57FF2AEXAMPLE:30a7fe7d714958787f6075c9904ce642</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    &quot;Account&quot;</span><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">012345678901</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    &quot;Arn&quot;</span><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">arn:aws:sts::012345678901:assumed-role/test/30a7fe7d714958787f6075c9904ce642</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>And there we have it - we've obtained AWS access using an SVID issued by SPIRE. In our next article, we'll use the same SVID to connect to AWS VPN.</p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</p></div>
+                <div><a href="https://misaac.me/blog/spiffe-spire-secret-sprawl-fix/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Solving Secret Sprawl with SPIFFE</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#preamble">Preamble</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#what-s-our-goal">What&#x27;s our goal?</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki">Setting up our Public Key Infrastructure (PKI)</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-iam-roles-anywhere">Setting up IAM Roles Anywhere</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-the-spire-server">Setting up the SPIRE Server</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#architecture">Architecture</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#prerequisites">Prerequisites</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-route53-and-the-network-load-balancer">Setting up Route53 and the Network Load Balancer</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-ecs-service">Setting up our ECS Service</a>
+                                        
+                                            <ul>
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-cluster">The cluster</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-log-groups-and-iam-roles">The log groups and IAM roles</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-iam-policies">The IAM Policies</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-spire-server-config">The SPIRE Server Config</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-spire-server-ecs-task-definition">The SPIRE Server ECS Task Definition</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-security-groups">The security groups</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-ecs-service">The ECS Service</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                            </ul>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#verifiying-the-deployment">Verifiying the deployment</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-the-spire-agent">Setting up the SPIRE Agent</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-agent-config">The Agent Config</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#node-attestation-with-a-join-token">Node Attestation with a join token</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#creating-a-registration-entry">Creating a registration entry</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#requesting-a-spiffe-svid-a-k-a-certificate">Requesting a SPIFFE SVID, a.k.a certificate</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere">Use a SPIFFE SVID to obtain AWS credentials via IAM Roles Anywhere</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

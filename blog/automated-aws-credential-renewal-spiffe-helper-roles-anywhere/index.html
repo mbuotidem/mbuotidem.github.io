@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Learn how to combine SPIFFE Helper&#x27;s SVID management with IAM Roles Anywhere&#x27;s credential helper to achieve automated AWS credential renewal" />
+        <meta property="og:description" content="Learn how to combine SPIFFE Helper&#x27;s SVID management with IAM Roles Anywhere&#x27;s credential helper to achieve automated AWS credential renewal" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere
+        </h1>
+
+        <ul class="meta">
+                <li>24th May 2025</li>
+                <li title="613 words"><span class='separator' aria-hidden='true'>•</span>4 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/spiffe-spire/">spiffe-spire</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/identity/">identity</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/secrets-management/">secrets management</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/zero-trust/">zero trust</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iam/">iam</a></li>
+        </ul>
+
+        <section class="body"><p>In <a rel="external" href="http://127.0.0.1:1111/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere">Grant AWS Access to GitHub Codespaces via SPIFFE/SPIRE &amp; IAM Roles Anywhere</a>, we demonstrated how to authenticate to AWS using SPIRE-issued X.509 certificates and IAM Roles Anywhere.</p>
+<p>While it works, this approach requires manual intervention: you need to repeatedly request new SVIDs when they expire after an hour, as well as manually call the Roles Anywhere credential helper each time to obtain AWS credentials. But what if we could automate this entire process?</p>
+<p>Enter <a rel="external" href="https://github.com/spiffe/spiffe-helper">spiffe-helper</a>. It takes care of fetching X.509 SVID certificates from the SPIFFE agent, launching a process to use them, and automatically renewing and reloading certificates as needed. Let's combine these two to good use.</p>
+<p>We'll use the <code>serve</code> command of the rolesanywhere credential helper which vends temporary security credentials from IAM Roles Anywhere through a local endpoint. We'll invoke this via spiffe-helper and if all goes to plan, never need to lift a finger.</p>
+<h3 id="set-up-the-aws-rolesanywhere-credential-helper"><a class="header-anchor no-hover-padding" href="#set-up-the-aws-rolesanywhere-credential-helper" aria-label="Anchor link for: set-up-the-aws-rolesanywhere-credential-helper"><span class="link-icon" aria-hidden="true"></span></a>
+Set up the aws rolesanywhere credential helper</h3>
+<p>You can download the roles anywhere credential helper from the AWS docs page <a rel="external" href="https://docs.aws.amazon.com/rolesanywhere/latest/userguide/credential-helper.html">here</a> but if you encounter issues running the executable like I did, you could also just build from source.</p>
+<ol>
+<li>
+<p>Clone the repo</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">git</span><span style="color: #9ECE6A;"> clone https://github.com/aws/rolesanywhere-credential-helper.git</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">cd</span><span style="color: #9ECE6A;"> rolesanywhere-credential-helper</span><span> </span></span></code></pre></li>
+<li>
+<p>Follow the instructions in the <a rel="external" href="https://github.com/aws/rolesanywhere-credential-helper/tree/main?tab=readme-ov-file#dependencies">readme</a> to download the build dependencies for your OS. Basically, you need <code>git</code>, <code>gcc</code>, <code>GNU make</code>, and <code>golang</code>.</p>
+</li>
+<li>
+<p>Build the executable</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">make</span><span style="color: #9ECE6A;"> release</span></span></code></pre></li>
+<li>
+<p>Copy the executable and test it by running the help menu</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">cp</span><span style="color: #9ECE6A;"> build/bin/aws_signing_helper ~/aws_signing_helper</span><span style="color: #89DDFF;"> &amp;&amp;</span><span style="color: #C0CAF5;"> ./aws_signing_helper</span><span style="color: #E0AF68;"> -h</span></span></code></pre>
+<p>You should see :</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> ~/aws_signing_helper</span><span style="color: #E0AF68;"> -h</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">A</span><span style="color: #9ECE6A;"> tool that utilizes certificates and their associated private keys to</span><span> </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sign</span><span style="color: #9ECE6A;"> requests to AWS IAM Roles Anywhere</span><span style="color: #89DDFF;">&#39;</span><span style="color: #9ECE6A;">s CreateSession API and retrieve temporary </span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">AWS security credentials. This tool exposes multiple commands to make credential </span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">retrieval and rotation more convenient.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Usage:</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">aws_signing_helper [command] [flags]</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">aws_signing_helper [command]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Available Commands:</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">completion            Generate the autocompletion script for the specified shell</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">credential-process    Retrieve AWS credentials in the appropriate format for external credential processes</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">help                  Help about any command</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">read-certificate-data Diagnostic command to read certificate data</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">serve                 Serve AWS credentials through a local endpoint</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">sign-string           Signs a fixed string using the passed-in private key (or reference to private key)</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">update                Updates a profile in the AWS credentials file with new AWS credentials</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">version               Prints the version number of the credential helper</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Flags:</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">-h, --help   help for aws_signing_helper</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">Use &quot;aws_signing_helper [command] --help&quot; for more information about a command.</span></span></code></pre></li>
+</ol>
+<br>
+<h3 id="set-up-spiffe-helper"><a class="header-anchor no-hover-padding" href="#set-up-spiffe-helper" aria-label="Anchor link for: set-up-spiffe-helper"><span class="link-icon" aria-hidden="true"></span></a>
+Set up spiffe-helper</h3>
+<p>If you're on a linux machine, you're in luck - you can just grab the binaries from the <a rel="external" href="https://github.com/spiffe/spiffe-helper/releases">releases page</a> and move on to the next section. The rest of us have to build it ourselves, but since its a <code>go</code> project, this is pretty straightforward.</p>
+<ol>
+<li>
+<p>Clone the repo</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">git</span><span style="color: #9ECE6A;"> clone https://github.com/spiffe/spiffe-helper.git</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">cd</span><span style="color: #9ECE6A;"> spiffe-helper</span></span></code></pre></li>
+<li>
+<p>Build the executable</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">go</span><span style="color: #9ECE6A;"> build</span><span style="color: #E0AF68;"> -o</span><span style="color: #9ECE6A;"> spiffe-helper cmd/spiffe-helper/main.go</span></span></code></pre></li>
+<li>
+<p>Test the executable by running the help menu</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">./spiffe-helper</span><span style="color: #E0AF68;"> -h</span></span></code></pre>
+<p>You should see :</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>$ ./spiffe-helper -h</span></span>
+<span class="giallo-l"><span>Usage of ./spiffe-helper:</span></span>
+<span class="giallo-l"><span>-config string</span></span>
+<span class="giallo-l"><span>        &lt;configFile&gt; Configuration file path (default &quot;helper.conf&quot;)</span></span>
+<span class="giallo-l"><span>-daemon-mode</span></span>
+<span class="giallo-l"><span>        Toggle running as a daemon </span></span></code></pre></li>
+<li>
+<p>Configure SPIFFE Helper</p>
+<p>The repository includes a <code>helper.conf</code> configuration file that needs customization. Make these essential changes:</p>
+<ul>
+<li>Set the command to be executed (<code>cmd</code>)</li>
+<li>Specify the command arguments (<code>cmd_args</code>)</li>
+<li>Enable <code>add_intermediates_to_bundle</code> by setting it to <code>true</code></li>
+</ul>
+<p>The last setting is particularly important - it ensures the SPIRE intermediate CA certificate is included in the bundle file after the Root CA certificate. Without this, you'll encounter an <code>AccessDeniedException: Untrusted signing certificate</code> error when trying to authenticate.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>agent_address = &quot;/tmp/spire-agent/public/api.sock&quot;</span></span>
+<span class="giallo-l"><span>cmd = &quot;~/aws_signing_helper&quot;</span></span>
+<span class="giallo-l"><span>cmd_args = &quot;serve --certificate /tmp/svid.0.pem --private-key /tmp/svid.0.key --intermediates /tmp/bundle.0.pem --trust-anchor-arn arn:aws:rolesanywhere:us-east-1:012345678901:trust-anchor/9f455be1-f25f-495b-9e99-f6a630d62cbb --profile-arn arn:aws:rolesanywhere:us-east-1:012345678901:profile/737869f1-ffd0-4674-ac2b-f3d6895b4499 --role-arn arn:aws:iam::012345678901:role/test&quot;</span></span>
+<span class="giallo-l"><span>cert_dir = &quot;/tmp&quot;</span></span>
+<span class="giallo-l"><span>renew_signal = &quot;SIGUSR1&quot;</span></span>
+<span class="giallo-l"><span>svid_file_name = &quot;svid.0.pem&quot;</span></span>
+<span class="giallo-l"><span>svid_key_file_name = &quot;svid.0.key&quot;</span></span>
+<span class="giallo-l"><span>svid_bundle_file_name = &quot;bundle.0.pem&quot;</span></span>
+<span class="giallo-l"><span># Add CA with intermediates into Bundle file instead of SVID file,</span></span>
+<span class="giallo-l"><span># it is the expected behavior in some scenarios like MySQL.</span></span>
+<span class="giallo-l"><span># Default: false</span></span>
+<span class="giallo-l"><span>add_intermediates_to_bundle = true</span></span></code></pre></li>
+<li>
+<p>Run the helper</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">./spiffe-helper</span><span style="color: #E0AF68;"> -config</span><span style="color: #9ECE6A;"> helper.conf</span></span></code></pre>
+<p>You should see the following:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>$ ./spiffe-helper -config helper.conf</span></span>
+<span class="giallo-l"><span>INFO[0000] Using configuration file: &quot;helper.conf&quot;       system=spiffe-helper</span></span>
+<span class="giallo-l"><span>INFO[0000] Launching daemon                              system=spiffe-helper</span></span>
+<span class="giallo-l"><span>INFO[0000] Watching for X509 Context                     system=spiffe-helper</span></span>
+<span class="giallo-l"><span>INFO[0000] Received update                               spiffe_id=&quot;spiffe://misaac.me/myservice&quot; system=spiffe-helper</span></span>
+<span class="giallo-l"><span>INFO[0000] X.509 certificates updated                    system=spiffe-helper</span></span>
+<span class="giallo-l"><span>2025/05/24 09:19:18 Local server started on port: 9911</span></span>
+<span class="giallo-l"><span>2025/05/24 09:19:18 Make it available to the sdk by running:</span></span>
+<span class="giallo-l"><span>2025/05/24 09:19:18 export AWS_EC2_METADATA_SERVICE_ENDPOINT=http://127.0.0.1:9911/</span></span></code></pre></li>
+</ol>
+<br>
+<h3 id="profit"><a class="header-anchor no-hover-padding" href="#profit" aria-label="Anchor link for: profit"><span class="link-icon" aria-hidden="true"></span></a>
+Profit</h3>
+<p>The final steps are simple. Open a terminal and set the <code>AWS_EC2_METADATA_SERVICE_ENDPOINT</code> environment variable to point to your local endpoint:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> AWS_EC2_METADATA_SERVICE_ENDPOINT</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">http</span><span>://</span><span style="color: #C0CAF5;">127</span><span>.</span><span style="color: #C0CAF5;">0</span><span>.</span><span style="color: #C0CAF5;">0</span><span>.</span><span style="color: #C0CAF5;">1</span><span>:</span><span style="color: #C0CAF5;">9911</span></span></code></pre>
+<p>Then delete any existing credentials:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;"> rm</span><span style="color: #E0AF68;"> -rf</span><span style="color: #9ECE6A;"> ~/.aws/cli/cache/</span><span style="color: #F7768E;">*</span><span>    </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;"> rm</span><span style="color: #E0AF68;"> -rf</span><span style="color: #9ECE6A;"> ~/.aws/sso/cache/</span><span style="color: #F7768E;">*</span><span>             </span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;"> mv</span><span style="color: #9ECE6A;"> ~/.aws/config aws-config-backup</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Now, simply run your application or any AWS CLI command as usual. The AWS SDKs and CLI will automatically detect the <code>AWS_EC2_METADATA_SERVICE_ENDPOINT</code> environment variable and fetch credentials from the local endpoint provided by the credential helper. No changes to your application code are required as credential renewal and retrieval are handled transparently in the background.</p>
+<p>Let's run <code>whoami</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">$</span><span style="color: #9ECE6A;"> aws sts get-caller-identity</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    &quot;UserId&quot;</span><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">AROADBQP57FF2AEXAMPLE:30a7fe7d714958787f6075c9904ce642</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    &quot;Account&quot;</span><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">012345678901</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    &quot;Arn&quot;</span><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">arn:aws:sts::012345678901:assumed-role/test/30a7fe7d714958787f6075c9904ce642</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span></code></pre><br>
+<h2 id="wrapping-up"><a class="header-anchor no-hover-padding" href="#wrapping-up" aria-label="Anchor link for: wrapping-up"><span class="link-icon" aria-hidden="true"></span></a>
+Wrapping Up</h2>
+<p>By integrating the SPIFFE Helper with IAM Roles Anywhere’s credential helper, we’ve removed the need for manual SVID renewals and AWS credential refreshes. This approach is especially useful for legacy applications that need certificates but can't natively support SPIFFE authentication.</p>
+<p>A natural next step is deploying this setup on Kubernetes with the spiffe-helper and the rolesanywhere helper running as sidecars alongside another application. In a future post, we’ll walk through exactly that.</p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</p></div>
+                <div><a href="https://misaac.me/blog/connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/#set-up-the-aws-rolesanywhere-credential-helper">Set up the aws rolesanywhere credential helper</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/#set-up-spiffe-helper">Set up spiffe-helper</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/#profit">Profit</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/#wrapping-up">Wrapping Up</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

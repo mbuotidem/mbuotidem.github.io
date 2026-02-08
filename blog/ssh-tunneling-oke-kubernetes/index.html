@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Using SSH tunneling to connect to private OKE kubernetes clusters</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="How to connect to your private Kubernetes Clusters on Oracle Cloud OKE" />
+        <meta property="og:description" content="How to connect to your private Kubernetes Clusters on Oracle Cloud OKE" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Using SSH tunneling to connect to private OKE kubernetes clusters" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ssh-tunneling-oke-kubernetes&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ssh-tunneling-oke-kubernetes&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Using SSH tunneling to connect to private OKE kubernetes clusters
+        </h1>
+
+        <ul class="meta">
+                <li>2nd Mar 2025</li>
+                <li title="729 words"><span class='separator' aria-hidden='true'>•</span>4 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/k8s/">k8s</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/kubernetes/">kubernetes</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/ssh/">ssh</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/oke/">OKE</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">IaC</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a></li>
+        </ul>
+
+        <section class="body"><h3 id="preamble"><a class="header-anchor no-hover-padding" href="#preamble" aria-label="Anchor link for: preamble"><span class="link-icon" aria-hidden="true"></span></a>
+Preamble</h3>
+<p>This post is about using an OCI instance as a jump box to access your private kubernetes running on Oracle cloud. As such, I assume you already have a private OKE cluster you need to interact with. If you don't have one, see the prerequisites section below for a ready-to-go terraform repo which we will be adding on to.</p>
+<blockquote>
+<p><strong>Note:</strong>
+You can also do this with the OCI bastion service, Oracle cloud's fully managed service providing ephemeral SSH access to private resources in OCI. <a rel="external" href="https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengsettingupbastion.htm">Here</a> is the full documentation for that approach. If you're curious about the differences between that and the approach used here, this <a rel="external" href="https://www.ateam-oracle.com/post/simplify-secure-access-to-oracle-workloads-using-bastions">article</a> has an excellent breakdown.</p>
+</blockquote>
+<h3 id="prerequisites"><a class="header-anchor no-hover-padding" href="#prerequisites" aria-label="Anchor link for: prerequisites"><span class="link-icon" aria-hidden="true"></span></a>
+Prerequisites</h3>
+<ul>
+<li>
+<p>OKE <a rel="external" href="https://github.com/oracle-devrel/terraform-oci-arch-oke/tree/main/examples/oke-public-lb-private-api-endpoint-and-workers-no-existing-network">Private Cluster</a> with Private Kubernetes API Endpoint, Private Worker Nodes, and Public Load Balancers. Read <a rel="external" href="https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengnetworkconfigexample.htm#example-flannel-cni-privatek8sapi_privateworkers_publiclb">this</a> for an explainer</p>
+</li>
+<li>
+<p>OKE Cluster compartment id</p>
+</li>
+<li>
+<p>OKE CLI <a rel="external" href="https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm#InstallingCLI">installed</a> and <a rel="external" href="https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm#configfile">configured</a></p>
+</li>
+<li>
+<p>An SSH key. You'll need the public key to setup the instance, and the private key to connect to the bastion. If you need a primer on how to generate an SSH key, <a rel="external" href="https://docs.oracle.com/en/cloud/cloud-at-customer/occ-get-started/generate-ssh-key-pair.html">Generate an SSH Key Pair</a> or <a rel="external" href="https://docs.oracle.com/en/learn/generate_ssh_keys/index.html#introduction">Generate SSH keys</a> should help.</p>
+</li>
+<li>
+<p>Kubectl <a rel="external" href="https://kubernetes.io/docs/tasks/tools/#kubectl">installed</a></p>
+</li>
+</ul>
+<h3 id="adding-a-bastion-subnet"><a class="header-anchor no-hover-padding" href="#adding-a-bastion-subnet" aria-label="Anchor link for: adding-a-bastion-subnet"><span class="link-icon" aria-hidden="true"></span></a>
+Adding a bastion subnet</h3>
+<p>Since we've decided to do things the old school way, we need a public subnet to place our bastion jump box. A public subnet is a subnet that has a route to an internet gateway in its route table. This allows resources within the subnet to send and receive traffic from the internet. We'll be connecting to our bastion using SSH so we'll need rules that allow ingress SSH traffic (port 22) from trusted IPs. Let's add the terraform required.</p>
+<p>First, our security list:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;oci_core_security_list&quot; &quot;bastion&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  compartment_id</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">compartment_ocid</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  display_name</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">bastion_subnet_sec_list</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vcn_id</span><span style="color: #89DDFF;">         =</span><span style="color: #9ABDF5;"> oci_core_vcn</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">oke_vcn</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  defined_tags</span><span style="color: #89DDFF;">   =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">defined_tags</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  egress_security_rules</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    protocol</span><span style="color: #89DDFF;">    = &quot;</span><span style="color: #9ECE6A;">all</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    destination</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">0.0.0.0/0</span><span style="color: #89DDFF;">&quot;</span><span style="color: #51597D;font-style: italic;"> # You can make this more restrictive depending on your security posture</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  /* This entry is used for DNS resolving (open UDP traffic). */</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  ingress_security_rules</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    protocol</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">17</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    source</span><span style="color: #89DDFF;">   =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">vcn_cidrs</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  ingress_security_rules</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    stateless</span><span style="color: #89DDFF;">   =</span><span style="color: #FF9E64;"> false</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    source</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">203.0.113.0/24</span><span style="color: #89DDFF;">&quot;</span><span style="color: #51597D;font-style: italic;"> # replace with your own ip - you also probably want a /32</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    source_type</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">CIDR_BLOCK</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    protocol</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">6</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">    tcp_options</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      min</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 22</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      max</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 22</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Get protocol numbers from https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    </span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Next, we'll add the subnet. The subnets created by the terraform <a rel="external" href="https://github.com/oracle-devrel/terraform-oci-arch-oke/blob/main/variables.tf#L36-L55">used</a> <code>10.0.1.0/24</code>, <code>10.0.2.0/24</code> and <code>10.0.3.0/24</code> so we can take <code>10.0.4.0/24</code> for our bastion.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">variable</span><span style="color: #7AA2F7;"> &quot;bastion_subnet_cidr&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  default</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">10.0.4.0/24</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;oci_core_subnet&quot; &quot;bastion&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_block</span><span style="color: #89DDFF;">     =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">bastion_subnet_cidr</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  compartment_id</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">compartment_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vcn_id</span><span style="color: #89DDFF;">         =</span><span style="color: #9ABDF5;"> oci_core_vcn</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">oke_vcn</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  display_name</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">bastion_subnet</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_list_ids</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">oci_core_vcn</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">oke_vcn</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">default_security_list_id</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> oci_core_security_list</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">bastion</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  route_table_id</span><span style="color: #89DDFF;">    =</span><span style="color: #9ABDF5;"> oci_core_route_table</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">oke_rt_via_igw</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><h3 id="adding-a-bastion-instance"><a class="header-anchor no-hover-padding" href="#adding-a-bastion-instance" aria-label="Anchor link for: adding-a-bastion-instance"><span class="link-icon" aria-hidden="true"></span></a>
+Adding a bastion instance</h3>
+<p>With the subnet in place, we can launch our jump box. You'll likely need to change the source id based on your region. See <a rel="external" href="https://docs.oracle.com/en-us/iaas/images/ubuntu-2204/">here</a> for a list of Ubuntu instances and their corresponding ocids. This is also where we'll use the SSH public key you either already have, or created following the guides in the prerequisites. To add it to the instance, pass its location to <code>ssh_authorized_keys</code>. We also add an output that will give us the public ip which we'll use to connect via SSH.</p>
+<p>Here's the terraform:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;oci_core_instance&quot; &quot;ubuntu_bastion_instance&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Required</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  availability_domain</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">oci_identity_availability_domains</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ADs</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">availability_domains</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  compartment_id</span><span style="color: #89DDFF;">      =</span><span style="color: #C0CAF5;"> var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">compartment_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  shape</span><span style="color: #89DDFF;">               = &quot;</span><span style="color: #9ECE6A;">VM.Standard.A1.Flex</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  source_details</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    source_id</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">ocid1.image.oc1.us-chicago-1.aaaaaaaa64e73jfbns5ivnphb2oqyfqvuumbghlfouvudebolh4yev6gckdq</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;"> </span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    source_type</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">image</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Optional</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  display_name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">bastion</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  create_vnic_details</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    assign_public_ip</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    subnet_id</span><span style="color: #89DDFF;">        =</span><span style="color: #9ABDF5;"> oci_core_subnet</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">bastion</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  metadata</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    ssh_authorized_keys</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> file</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">bastion_public_key_path</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  preserve_boot_volume</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> false</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  shape_config</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    ocpus</span><span style="color: #89DDFF;">         =</span><span style="color: #FF9E64;"> 1</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    memory_in_gbs</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 1</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Outputs for compute instance</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">output</span><span style="color: #7AA2F7;"> &quot;public-ip-for-compute-instance&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  value</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> oci_core_instance</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">ubuntu_bastion_instance</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">public_ip</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span></code></pre><h3 id="connecting-to-the-jump-box-via-ssh"><a class="header-anchor no-hover-padding" href="#connecting-to-the-jump-box-via-ssh" aria-label="Anchor link for: connecting-to-the-jump-box-via-ssh"><span class="link-icon" aria-hidden="true"></span></a>
+Connecting to the jump box via ssh</h3>
+<p>Before we try to connect to our OKE cluster, we need to verify that basic SSH works. Here are the steps:</p>
+<ol>
+<li>
+<p>Make sure that your private key is in your ssh directory, usually</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>~/.ssh</span></span></code></pre></li>
+<li>
+<p>Refresh or start your ssh agent with</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>eval &quot;$(ssh-agent -s)&quot;</span></span></code></pre></li>
+<li>
+<p>Add your private key to your local ssh agent. Enter your passphrase if/when asked</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>ssh-add ~/.ssh/private-key-file-name</span></span></code></pre></li>
+<li>
+<p>SSH in, replacing this IP with the IP from the terraform output. Accept the remote fingerprint and voila!</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>ssh ubuntu@203.0.113.255</span></span></code></pre></li>
+</ol>
+<h3 id="connecting-to-the-oke-cluster"><a class="header-anchor no-hover-padding" href="#connecting-to-the-oke-cluster" aria-label="Anchor link for: connecting-to-the-oke-cluster"><span class="link-icon" aria-hidden="true"></span></a>
+Connecting to the OKE cluster</h3>
+<p>Now that we've established that we can ssh to our bastion host, all we need to hit the Kubernetes API is to create our kubeconfig, edit the kubeconfig file to change the server IP address to point to our localhost, and then start a port fowarding session via our bastion. To begin:</p>
+<ol>
+<li>
+<p>Use the oci cli to create your kubeconfig, replacing <code>cluster-id</code> and <code>region</code> with your details</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.phx.aaaaaaaaae... --file $HOME/.kube/config  --region us-chicago-1 --token-version 2.0.0 --kube-endpoint PRIVATE_ENDPOINT</span></span></code></pre></li>
+<li>
+<p>Change the server ip with this regex</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>sed -i.bak &#39;s|server: https://[0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}:6443|server: https://127.0.0.1:6443|&#39; ~/.kube/config</span></span></code></pre></li>
+<li>
+<p>Grab your cluster API endpoint</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>CLUSTER_API=$(oci ce cluster list --compartment-id ocid1.compartment.oc1..aaaaaaaah...a | jq --raw-output &#39;.data[0].endpoints[&quot;private-endpoint&quot;]&#39;)</span></span></code></pre></li>
+<li>
+<p>Launch the port forwarding session. Note that this terminal window must stay open.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>ssh -L 6443:$CLUSTER_API ubuntu@203.0.113.255</span></span></code></pre></li>
+<li>
+<p>Get the kubernetes context name with</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>kubectl config get-contexts -o name</span></span></code></pre></li>
+<li>
+<p>Set the current kubernetes context with</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>kubectl config use-context context-name-of-your-context</span></span></code></pre></li>
+<li>
+<p>Connect to the cluster</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>kubectl cluster-info</span></span></code></pre></li>
+</ol>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/aws-client-vpn-terraform/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Creating an AWS Client VPN with Terraform and Serverless CA</p></div>
+                <div><a href="https://misaac.me/blog/bootstraping-new-mac-with-ansible/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Bootstraping my mac with ansible</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/#preamble">Preamble</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/#prerequisites">Prerequisites</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/#adding-a-bastion-subnet">Adding a bastion subnet</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/#adding-a-bastion-instance">Adding a bastion instance</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/#connecting-to-the-jump-box-via-ssh">Connecting to the jump box via ssh</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/#connecting-to-the-oke-cluster">Connecting to the OKE cluster</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

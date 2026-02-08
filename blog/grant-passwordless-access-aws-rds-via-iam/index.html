@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Learn how to securely grant passwordless access to Amazon RDS by leveraging Okta, AWS IAM database authentication, and Terraform" />
+        <meta property="og:description" content="Learn how to securely grant passwordless access to Amazon RDS by leveraging Okta, AWS IAM database authentication, and Terraform" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform
+        </h1>
+
+        <ul class="meta">
+                <li>5th Jul 2025</li>
+                <li title="2402 words"><span class='separator' aria-hidden='true'>•</span>13 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">AWS</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/rds/">RDS</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/okta/">Okta</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iam/">IAM</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">Terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">IaC</a></li>
+        </ul>
+
+        <section class="body"><h3 id="introduction"><a class="header-anchor no-hover-padding" href="#introduction" aria-label="Anchor link for: introduction"><span class="link-icon" aria-hidden="true"></span></a>
+Introduction</h3>
+<p>Developers often find themselves needing direct database access. It might be to debug slow queries, check migrations, or push a last resort data fix. But granting secure, individualized, developer access without leaving long-term credentials lying around can quickly become an unmanageable operational burden.</p>
+<p>In this post, we'll replace native DB credentials with <a rel="external" href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html">IAM Database authentication</a>. We'll also automate the entire lifecycle with Terraform, from DB creation to granting IAM-based database access to developers sourced from Okta. Once we're done, our devs can use their short-lived IAM credentials to connect. You can find the complete code for this solution on <a rel="external" href="https://github.com/mbuotidem/passwordless-aws-rds-iam-okta-terraform">GitHub</a>.</p>
+<h3 id="prerequisites"><a class="header-anchor no-hover-padding" href="#prerequisites" aria-label="Anchor link for: prerequisites"><span class="link-icon" aria-hidden="true"></span></a>
+Prerequisites</h3>
+<p>Keep an open mind as we'll be breaking some rules of Terraform automation. In addition, make sure you have:</p>
+<ul>
+<li>An Okta admin account</li>
+<li>Okta integrated with AWS IAM Identity Center</li>
+<li>A VPC with private and public subnets</li>
+<li>A Terraform runner with network access to your RDS subnet</li>
+<li>The runner should be using HashiCorp Terraform 1.11.0 and above</li>
+<li>The Terraform runner must also have <code>psql</code> and <code>jq</code> installed</li>
+</ul>
+<p>Although we use Okta as our IdP here, note that if you strip away the Okta specific parts, this will still work with other IdP's including the native IAM Identity Center. And if you don't already have a Terraform runner with the required access, consider using <a rel="external" href="https://docs.aws.amazon.com/codebuild/latest/userguide/action-runner.html">Codebuild's</a> GitHub integration.</p>
+<h3 id="architecture"><a class="header-anchor no-hover-padding" href="#architecture" aria-label="Anchor link for: architecture"><span class="link-icon" aria-hidden="true"></span></a>
+Architecture</h3>
+<p><img src="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/rdsiam.drawio.png" alt="Figure showing a potential architecture for the solution we&#39;re building" /></p>
+<ol>
+<li>Users are managed in Okta Identity Cloud</li>
+<li>Terraform deploys the RDS database within a private subnet</li>
+<li>Terraform creates <code>rds-db:connect</code> IAM policy using db identifier and policy variable</li>
+<li>Terraform retrieves user and group information from Okta and creates roles for said users in DB</li>
+<li>Terraform attaches policy to corresponding Okta groups in IAM Identity Center</li>
+<li>Users obtain temporary database credentials using IAM Identity Center</li>
+<li>Users connect to the RDS database via AWS Client VPN and temporary database credentials</li>
+</ol>
+<blockquote>
+<p>Note: While we use a VPN here, you can still achieve the same using <a rel="external" href="https://aws.amazon.com/blogs/database/securely-connect-to-amazon-rds-for-postgresql-with-aws-session-manager-and-iam-authentication/">SSM Port Forwarding</a> via an EC2 instance or ECS Fargate task.</p>
+</blockquote>
+<h3 id="setup-okta"><a class="header-anchor no-hover-padding" href="#setup-okta" aria-label="Anchor link for: setup-okta"><span class="link-icon" aria-hidden="true"></span></a>
+Setup Okta</h3>
+<h4 id="obtain-okta-api-credentials"><a class="header-anchor no-hover-padding" href="#obtain-okta-api-credentials" aria-label="Anchor link for: obtain-okta-api-credentials"><span class="link-icon" aria-hidden="true"></span></a>
+Obtain Okta API Credentials</h4>
+<p>Since we'll be accessing the Okta API from Terraform, we need to setup an Okta application that will provide the credentials. Follow the guide at <a rel="external" href="https://developer.okta.com/docs/guides/terraform-enable-org-access/main/">Enable Terraform access for your Okta org</a> to get setup. The steps abbreviated are:</p>
+<ol>
+<li>
+<p>Create an API service app
+<img src="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/api-services-app.png" alt="Image showing Okta UI for creating an API services app" /></p>
+</li>
+<li>
+<p>Assign your app an admin role
+<img src="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/api-services-app-roles.png" alt="Image showing role assignment page for Okta API services app with Organization Adminstrator role assigned" /></p>
+</li>
+<li>
+<p>Grant your app API scopes
+<img src="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/okta-api-scopes.png" alt="Image showing Okta UI for adding scopes to an API services app" /></p>
+</li>
+<li>
+<p>Create access credentials using PEM format
+<img src="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/create-credentials.png" alt="Image showing Okta UI for creating credentials for an API services app" /></p>
+<blockquote>
+<p>Caution: The private key appears in this dialog only once. Losing the private key requires generating a new key pair.</p>
+</blockquote>
+</li>
+</ol>
+<br>
+<h4 id="add-credentials-to-terraform"><a class="header-anchor no-hover-padding" href="#add-credentials-to-terraform" aria-label="Anchor link for: add-credentials-to-terraform"><span class="link-icon" aria-hidden="true"></span></a>
+Add credentials to Terraform</h4>
+<ol>
+<li>
+<p>Next, lets create an AWS secret manager resource to store this credential.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_secretsmanager_secret&quot; &quot;okta_private_key&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">okta-private-key</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Private key for Okta API access</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>We don't create an <code>aws_secretsmanager_secret_version</code> resource here intentionally as we'll be creating and managing it manually via the web console. This is sometimes done for compliance reasons where secret creation for certain high value secrets most involve a manual auditable step.</p>
+</li>
+<li>
+<p>Next add the okta provider to the <code>required_providers</code>. Update the version to the latest available version on the <a rel="external" href="https://registry.terraform.io/providers/okta/okta/latest/docs">Okta Provider</a> page.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">terraform</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">    required_providers</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        okta</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">            source</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">okta/okta</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">            version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">~&gt; 4.19.0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre></li>
+<li>
+<p>Then, add the provider to your <code>providers.tf</code>.</p>
+<p>Note our usage of the <code>ephemeral</code> resource to retrieve and pass the okta private key to the Okta provider. <a rel="external" href="https://developer.hashicorp.com/terraform/language/resources/ephemeral">Ephemeral resources</a> in Terraform are <strong>not persisted to the state file</strong> which is ideal for a secret of this nature.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #73DACA;">ephemeral</span><span style="color: #7AA2F7;"> &quot;aws_secretsmanager_secret_version&quot; &quot;okta_private_key&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_secretsmanager_secret</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_private_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">provider</span><span style="color: #7AA2F7;"> &quot;okta&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # org_name is first part of orgs&#39;s Okta domain before .okta.com</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  org_name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">{yourOktaOrg}</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  base_url</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">okta.com</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  client_id</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">{yourClientID}</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  scopes</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">okta.groups.manage</span><span style="color: #89DDFF;">&quot;,&quot;</span><span style="color: #9ECE6A;">okta.users.manage</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  private_key</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> ephemeral</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_secretsmanager_secret_version</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_private_key</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">secret_string</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre></li>
+<li>
+<p>Finally, test access with a resource and output</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">data</span><span style="color: #7AA2F7;"> &quot;okta_group&quot; &quot;admins&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Admins</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">output</span><span style="color: #7AA2F7;"> &quot;okta_group&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  value</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">admins</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Running <code>terraform plan</code> should show the group id.</p>
+</li>
+</ol>
+<p>If you hate the idea of doing anything in the web console, or your compliance environment allows for it,  you could create the okta credential using <code>aws_secretsmanager_secret_version</code> with the value passed via a <code>TF_VAR_name</code> environment variable and <code>secret_string_wo</code>. The <code>wo</code> refers to <code>write-only</code>, a <a rel="external" href="https://developer.hashicorp.com/terraform/language/resources/ephemeral/write-only">new argument</a> that tells terraform that we don't want it <strong>storing the value in the state file, now, or ever</strong>.</p>
+<h3 id="provision-the-amazon-rds-postgres-database"><a class="header-anchor no-hover-padding" href="#provision-the-amazon-rds-postgres-database" aria-label="Anchor link for: provision-the-amazon-rds-postgres-database"><span class="link-icon" aria-hidden="true"></span></a>
+Provision the Amazon RDS Postgres Database</h3>
+<p>Let's use the modules from <a rel="external" href="https://github.com/terraform-aws-modules">Terraform AWS modules</a> to setup our DB. IAM database authentication works with MariaDB, MySQL, and PostgreSQL, but for this guide, we'll focus on PostgreSQL.</p>
+<p>First, we'll create a security group.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">module</span><span style="color: #7AA2F7;"> &quot;security_group&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  source</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">terraform-aws-modules/security-group/aws</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">~&gt; 5.0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">        =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Complete PostgreSQL example security group</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vpc_id</span><span style="color: #89DDFF;">      =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # ingress</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ingress_with_cidr_blocks</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      from_port</span><span style="color: #89DDFF;">   =</span><span style="color: #FF9E64;"> 5432</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      to_port</span><span style="color: #89DDFF;">     =</span><span style="color: #FF9E64;"> 5432</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      protocol</span><span style="color: #89DDFF;">    = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">PostgreSQL access from within VPC</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      cidr_blocks</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_vpc.main.cidr_block</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  tags</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">tags</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Next, let's setup the db.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">module</span><span style="color: #7AA2F7;"> &quot;db&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  source</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">terraform-aws-modules/rds/aws</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  identifier</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  engine</span><span style="color: #89DDFF;">                   = &quot;</span><span style="color: #9ECE6A;">postgres</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  engine_version</span><span style="color: #89DDFF;">           = &quot;</span><span style="color: #9ECE6A;">14</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  engine_lifecycle_support</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">open-source-rds-extended-support-disabled</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  family</span><span style="color: #89DDFF;">                   = &quot;</span><span style="color: #9ECE6A;">postgres14</span><span style="color: #89DDFF;">&quot;</span><span style="color: #51597D;font-style: italic;"> # DB parameter group</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  major_engine_version</span><span style="color: #89DDFF;">     = &quot;</span><span style="color: #9ECE6A;">14</span><span style="color: #89DDFF;">&quot;</span><span style="color: #51597D;font-style: italic;">         # DB option group</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  instance_class</span><span style="color: #89DDFF;">           = &quot;</span><span style="color: #9ECE6A;">db.t4g.large</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  allocated_storage</span><span style="color: #89DDFF;">     =</span><span style="color: #FF9E64;"> 20</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  max_allocated_storage</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 100</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  db_name</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">completePostgresql</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  username</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">complete_postgresql</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  port</span><span style="color: #89DDFF;">     =</span><span style="color: #FF9E64;"> 5432</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  iam_database_authentication_enabled</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span><span style="color: #51597D;font-style: italic;"> #--&gt; needed for IAM auth</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  manage_master_user_password_rotation</span><span style="color: #89DDFF;">              =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  master_user_password_rotate_immediately</span><span style="color: #89DDFF;">           =</span><span style="color: #FF9E64;"> false</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  master_user_password_rotation_schedule_expression</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">rate(15 days)</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>The essential options here are <code>iam_database_authentication_enabled = true</code>, which enables IAM authentication for the database, and <code>manage_master_user_password_rotation = true</code>, which lets AWS automatically manage and rotate the master password using Secrets Manager.</p>
+<h3 id="grant-iam-database-access"><a class="header-anchor no-hover-padding" href="#grant-iam-database-access" aria-label="Anchor link for: grant-iam-database-access"><span class="link-icon" aria-hidden="true"></span></a>
+Grant IAM database access</h3>
+<p>As mentioned earlier, IAM Database access relies on the <code>rds-db:connect</code> permission. The <code>rds-db:</code> prefix and <code>rds-db:connect</code> actions are only valid in the context of IAM database authentication.</p>
+<p>While you can assign this permission with a wildcard, granting access to any database in the account, we're going to do the right thing™ and use least privilege. To do this, we'll take advantage of a neat little trick, <a rel="external" href="https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_variables.html">IAM policy variables</a>.</p>
+<h4 id="write-db-access-iam-policy"><a class="header-anchor no-hover-padding" href="#write-db-access-iam-policy" aria-label="Anchor link for: write-db-access-iam-policy"><span class="link-icon" aria-hidden="true"></span></a>
+Write DB access IAM policy</h4>
+<p>You use IAM  policy variables as placeholders when you don't know the exact value of a resource or condition key when you write the policy.</p>
+<p>Without this, we'd have to create a policy statement for each user that needs access in a group. Beyond being unwieldy and inelegant, this approach doesn't scale because we'll quickly run into IAM policy <a rel="external" href="https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_iam-quotas.html#reference_iam-quotas-entity-length">character limits</a>.</p>
+<p>Instead, we'll lean on the <code>saml:sub</code> policy variable, one of the ways to <a rel="external" href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_saml.html#CreatingSAML-userid">uniquely identify users in SAML-based federation</a>. <code>saml:sub</code> is the subject of the claim, which includes a value that uniquely identifies an individual user within an organization. At most orgs, this is the user's email, e.g. <code>you@yourcompany.com</code>. In other words, the effectiveness of the <code>saml:sub</code> policy hinges on the SAML assertion from Okta mapping the user's subject field to the email.</p>
+<p>Here's the policy - the <code>join</code> function is only used to allow display of the full arn in the code snippet.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">data</span><span style="color: #7AA2F7;"> &quot;aws_iam_policy_document&quot; &quot;db_access&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  statement</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    sid</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    actions</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">      &quot;</span><span style="color: #9ECE6A;">rds-db:connect</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    resources</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">        join</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;&quot;,</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">            [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                &quot;</span><span style="color: #9ECE6A;">arn:aws:rds-db:</span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">region</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">:</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_caller_identity</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">current</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">account_id</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                &quot;</span><span style="color: #9ECE6A;">:dbuser:</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">                module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_instance_resource_id</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                &quot;</span><span style="color: #9ECE6A;">/</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                &quot;</span><span style="color: #9ECE6A;">$${saml:sub}</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">            ]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        )</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    ]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">    condition</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      test</span><span style="color: #89DDFF;">     = &quot;</span><span style="color: #9ECE6A;">StringEquals</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      variable</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">saml:sub_type</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      values</span><span style="color: #89DDFF;">   =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">persistent</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_iam_policy&quot; &quot;db_access_policy&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">rds-db-access-policy</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  path</span><span style="color: #89DDFF;">   = &quot;</span><span style="color: #9ECE6A;">/</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  policy</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_iam_policy_document</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_access</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">json</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Notice that we have to escape the literal <code>${</code> in <code>$${saml:sub}</code> that would otherwise introduce a template sequence.</p>
+<p>TODO: Add note about <code>saml:sub_type</code> being set to persistent condition check.</p>
+<h4 id="create-permission-set"><a class="header-anchor no-hover-padding" href="#create-permission-set" aria-label="Anchor link for: create-permission-set"><span class="link-icon" aria-hidden="true"></span></a>
+Create permission set</h4>
+<p>A permission set in AWS IAM Identity Center is analagous to an IAM Role in classic IAM. It defines the permissions that a federated user will get during their short-lived session.</p>
+<p>We'll create a permission set that will be assumed by our users when they want to connect to the DB. This permission set doesn't have to be solely used for db access, it could just as well be a permission set that grants other permissions in addition to db access.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">data</span><span style="color: #7AA2F7;"> &quot;aws_ssoadmin_instances&quot; &quot;sso&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ssoadmin_permission_set&quot; &quot;db_access_permission_set&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">             = &quot;</span><span style="color: #9ECE6A;">db_access_permission_set</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;">      = &quot;</span><span style="color: #9ECE6A;">Permission set for RDS DB access via IAM</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  instance_arn</span><span style="color: #89DDFF;">     =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_ssoadmin_instances</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">sso</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arns</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  session_duration</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">PT1H</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  tags</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    Purpose</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">RDS DB Access</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><h4 id="attach-iam-db-access-policy-to-permission-set"><a class="header-anchor no-hover-padding" href="#attach-iam-db-access-policy-to-permission-set" aria-label="Anchor link for: attach-iam-db-access-policy-to-permission-set"><span class="link-icon" aria-hidden="true"></span></a>
+Attach IAM DB access policy to permission set</h4>
+<p>For the permission set to grant access, it needs a policy attachment. That's what we're doing here:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ssoadmin_customer_managed_policy_attachment&quot; &quot;db_access_policy_attachment&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  instance_arn</span><span style="color: #89DDFF;">       =</span><span style="color: #9ABDF5;"> aws_ssoadmin_permission_set</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_access_permission_set</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">instance_arn</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  permission_set_arn</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_ssoadmin_permission_set</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_access_permission_set</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  customer_managed_policy_reference</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    name</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_iam_policy</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_access_policy</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    path</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">/</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><h4 id="assign-permission-set-to-account-where-db-resides"><a class="header-anchor no-hover-padding" href="#assign-permission-set-to-account-where-db-resides" aria-label="Anchor link for: assign-permission-set-to-account-where-db-resides"><span class="link-icon" aria-hidden="true"></span></a>
+Assign permission set to account where DB resides</h4>
+<p>Account assignment is where you assign a permission set to a user or group for a specific AWS account. IAM Identity Center then provisions an IAM Role in that account with policies attached that reflect the permissions defined in the permission set.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">data</span><span style="color: #7AA2F7;"> &quot;aws_identitystore_group&quot; &quot;admins&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  identity_store_id</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> tolist</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_ssoadmin_instances</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">sso</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">identity_store_ids</span><span style="color: #9ABDF5;">)[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  alternate_identifier</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">    unique_attribute</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      attribute_path</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">DisplayName</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      attribute_value</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">admins</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ssoadmin_account_assignment&quot; &quot;assign_admins&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  instance_arn</span><span style="color: #89DDFF;">       =</span><span style="color: #0DB9D7;"> tolist</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_ssoadmin_instances</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">sso</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arns</span><span style="color: #9ABDF5;">)[</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  permission_set_arn</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_ssoadmin_permission_set</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_access_permission_set</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  principal_id</span><span style="color: #89DDFF;">   =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_identitystore_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">admins</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">group_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  principal_type</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">GROUP</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  target_id</span><span style="color: #89DDFF;">   =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">aws_caller_identity</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">current</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">account_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  target_type</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">AWS_ACCOUNT</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span></code></pre><br>
+<h3 id="provision-users-in-the-db"><a class="header-anchor no-hover-padding" href="#provision-users-in-the-db" aria-label="Anchor link for: provision-users-in-the-db"><span class="link-icon" aria-hidden="true"></span></a>
+Provision users in the DB</h3>
+<p>IAM DB authentication requires the users to have DB users that are mapped to an IAM user or role. Our users already exist as IAM Identity Center users via the Okta/IAM Identity Center integration, and above, we just granted them the IAM permissions to access the DB. What's left is to create the equivalent users in the DB.</p>
+<p>When granting access however, it's crucial to also plan for revocation. We'll tackle this DB user provisioning and revocation here, starting with revocation.</p>
+<h4 id="planning-for-user-revocation"><a class="header-anchor no-hover-padding" href="#planning-for-user-revocation" aria-label="Anchor link for: planning-for-user-revocation"><span class="link-icon" aria-hidden="true"></span></a>
+Planning for User Revocation</h4>
+<p>When users leave the organization or lose access permissions, we need to both remove their database roles AND terminate any active sessions they might have.</p>
+<p>You should have this project run as part of both your onboarding and offboarding. With Okta <a rel="external" href="https://developer.okta.com/docs/concepts/event-hooks/">Event hooks</a> you can trigger the GitHub pipeline using the <code>repository_dispatch</code> <a rel="external" href="https://docs.github.com/en/webhooks/webhook-events-and-payloads#repository_dispatch">event</a>. This will update the roles in the database, ensuring that it matches the state in Okta.</p>
+<p>For our revocation mechanism, we'll create a bash script that is responsible for revoking active user sessions. The <code>postgresql_role</code> resource we'll create shortly handles the declarative removal of the role from the database. Our script serves a different, specific purpose: to terminate active connections, which would otherwise persist until the user manually disconnects. Note that for this to work your Terraform runner environment must have <code>psql</code> and <code>jq</code> installed.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #51597D;font-style: italic;">#manage_all_user_sessions.sh</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">#!/bin/bash</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">set</span><span style="color: #E0AF68;"> -euo</span><span style="color: #9ECE6A;"> pipefail</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">DB_HOST</span><span style="color: #9ECE6A;">?</span><span style="color: #89DDFF;">}&quot;</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">DB_ADMIN_USER</span><span style="color: #9ECE6A;">?</span><span style="color: #89DDFF;">}&quot;</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">DB_NAME</span><span style="color: #9ECE6A;">?</span><span style="color: #89DDFF;">}&quot;</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">OKTA_USERS_JSON</span><span style="color: #9ECE6A;">?</span><span style="color: #89DDFF;">}&quot;</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">:</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">PGPASSWORD</span><span style="color: #9ECE6A;">?</span><span style="color: #89DDFF;">}&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">OUTPUT_FILE</span><span style="color: #89DDFF;">=&quot;</span><span style="color: #9ECE6A;">terminated_sessions.json</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Initialize/create the output file with an empty JSON array.</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># This ensures the file exists even if the script exits prematurely later.</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">echo</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">[]</span><span style="color: #89DDFF;">&quot; &gt; &quot;</span><span style="color: #C0CAF5;">$OUTPUT_FILE</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Convert Okta users JSON to SQL array</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">OKTA_USERS_SQL_ARRAY</span><span style="color: #89DDFF;">=$(</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">  echo</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C0CAF5;">$OKTA_USERS_JSON</span><span style="color: #89DDFF;">&quot; |</span><span style="color: #C0CAF5;"> jq</span><span style="color: #E0AF68;"> -r --arg</span><span style="color: #9ECE6A;"> q</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">&#39;</span><span style="color: #89DDFF;">&quot; &#39;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    if length &gt; 0 then &quot;ARRAY[&quot; + $q + join($q + &quot;,&quot; + $q) + $q + &quot;]&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    else &quot;ARRAY[]::text[]&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    end</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">  &#39;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># SQL query to find and terminate sessions for non-superusers not in the Okta list,</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># and return a JSON array of the terminated usernames.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">SQL_QUERY</span><span style="color: #89DDFF;">=&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">SELECT COALESCE(json_agg(usename), &#39;[]&#39;::json)</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">FROM (</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    SELECT usename, pg_terminate_backend(pid)</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    FROM pg_stat_activity psa</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    JOIN pg_roles pr ON psa.usesysid = pr.oid</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">    WHERE</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">      psa.pid &lt;&gt; pg_backend_pid()</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">      AND psa.usename ~ &#39;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+</span><span style="color: #89DDFF;">\\</span><span style="color: #9ECE6A;">.[a-zA-Z]{2,}$&#39;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">      AND psa.usename &lt;&gt; ALL (</span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">OKTA_USERS_SQL_ARRAY</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">)</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">      AND pr.rolname &lt;&gt; &#39;rdsadmin&#39;</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">      AND pr.rolcanlogin</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">      AND NOT pr.rolsuper</span></span>
+<span class="giallo-l"><span style="color: #9ECE6A;">) t;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Execute the query and capture the resulting JSON array.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">TERMINATED_USERS_JSON</span><span style="color: #89DDFF;">=$(</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">  psql</span><span style="color: #E0AF68;"> -v</span><span style="color: #9ECE6A;"> ON_ERROR_STOP=</span><span style="color: #FF9E64;">1</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    -h</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C0CAF5;">$DB_HOST</span><span style="color: #89DDFF;">&quot; \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    -U</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C0CAF5;">$DB_ADMIN_USER</span><span style="color: #89DDFF;">&quot; \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    -d</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C0CAF5;">$DB_NAME</span><span style="color: #89DDFF;">&quot; \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    -tAc</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">SQL_QUERY</span><span style="color: #89DDFF;">}&quot;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Write the JSON array of terminated users to the output file.</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># If the query returned nothing, write an empty array.</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">echo</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">TERMINATED_USERS_JSON</span><span style="color: #89DDFF;">:-</span><span style="color: #9ECE6A;">[]</span><span style="color: #89DDFF;">}&quot; &gt; &quot;</span><span style="color: #C0CAF5;">$OUTPUT_FILE</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Our SQL query uses the most recent user list from Okta to determine which active user sessions in the DB should be terminated. It takes advantage of <code>pg_terminate_backend</code> and <code>pg_stat_activity</code> to figure out the active sessions, and terminate those that belong to users that are no longer authorized.</p>
+<h4 id="running-the-revocation-script"><a class="header-anchor no-hover-padding" href="#running-the-revocation-script" aria-label="Anchor link for: running-the-revocation-script"><span class="link-icon" aria-hidden="true"></span></a>
+Running the revocation script</h4>
+<p>We begin breaking some rules of proper Terraform automation here. Many consider writing directly to a database during a <code>terraform apply</code> to be an anti-pattern. This is because it moves us away from simply provisioning resources, to mutating data or application state that it is argued should ideally be managed outside of the declarative infrastructure lifecycle.</p>
+<p>However, the real world is messy, and sometimes a sparing and conscious hack like this is a perfectly reasonable compromise. Just be sure to document it and understand the risks.</p>
+<p>Lets grab the users we intend to grant access to. We're using <code>Admins</code> here, but it could as well be <code>Developers</code>, <code>DBAs</code>, <code>Data Analysts</code> or whatever group needs access. Note also that what we're about to do, writing to the database, only works if your Terraform runner also has network access to the just created DB.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">data</span><span style="color: #7AA2F7;"> &quot;okta_users&quot; &quot;admins&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">admins</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Next we'll call our revocation script using the list of <code>okta_users</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #73DACA;">ephemeral</span><span style="color: #7AA2F7;"> &quot;aws_secretsmanager_secret_version&quot; &quot;secret-version&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  secret_id</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_instance_master_user_secret_arn</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">locals</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  host</span><span style="color: #89DDFF;">     =</span><span style="color: #0DB9D7;"> substr</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_instance_endpoint</span><span style="color: #89DDFF;">,</span><span style="color: #FF9E64;"> 0</span><span style="color: #89DDFF;">,</span><span style="color: #0DB9D7;"> length</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db_instance_endpoint</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;"> -</span><span style="color: #FF9E64;"> 5</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  username</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">complete_postgresql</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  database</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">completePostgresql</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  terminated_sessions_file</span><span style="color: #89DDFF;"> = &quot;${</span><span style="color: #C0CAF5;">path</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/terminated_sessions.json</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;terraform_data&quot; &quot;terminate_stale_sessions&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # This ensures the script re-runs whenever the list of Okta users changes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  triggers_replace</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_users</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">admins</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">users</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">*</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">email</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  provisioner</span><span style="color: #7AA2F7;"> &quot;local-exec&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    command</span><span style="color: #89DDFF;">     = &quot;</span><span style="color: #9ECE6A;">bash </span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">path</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/manage_all_user_sessions.sh</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    interpreter</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">/bin/bash</span><span style="color: #89DDFF;">&quot;, &quot;</span><span style="color: #9ECE6A;">-c</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # Pass all parameters as environment variables</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    environment</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      PGPASSWORD</span><span style="color: #89DDFF;">        =</span><span style="color: #C0CAF5;"> local</span><span style="color: #9ABDF5;">.password</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      DB_HOST</span><span style="color: #89DDFF;">           =</span><span style="color: #C0CAF5;"> local</span><span style="color: #9ABDF5;">.host</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      DB_ADMIN_USER</span><span style="color: #89DDFF;">     =</span><span style="color: #C0CAF5;"> local</span><span style="color: #9ABDF5;">.username</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      DB_NAME</span><span style="color: #89DDFF;">           =</span><span style="color: #C0CAF5;"> local</span><span style="color: #9ABDF5;">.database</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      OKTA_USERS_JSON</span><span style="color: #89DDFF;">   =</span><span style="color: #0DB9D7;"> jsonencode</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_users</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">admins</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">users</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">*</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">email</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  lifecycle</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    create_before_destroy</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  depends_on</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Data source to read the file generated by the script</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">data</span><span style="color: #7AA2F7;"> &quot;local_file&quot; &quot;terminated_sessions_report&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  filename</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">terminated_sessions_file</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Ensure this runs after the script has potentially (re)created the file</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  depends_on</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">terraform_data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">terminate_stale_sessions</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">output</span><span style="color: #7AA2F7;"> &quot;terminated_sessions_info&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Information about terminated database sessions based on Okta user list.</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  value</span><span style="color: #89DDFF;">       =</span><span style="color: #0DB9D7;"> jsondecode</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">local_file</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">terminated_sessions_report</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">content</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>We use the <code>terraform_data</code> resource, the native successor to <code>null_resource</code>, because it doesn't require a provider to be configured.</p>
+<h4 id="provision-the-user-roles-in-the-db"><a class="header-anchor no-hover-padding" href="#provision-the-user-roles-in-the-db" aria-label="Anchor link for: provision-the-user-roles-in-the-db"><span class="link-icon" aria-hidden="true"></span></a>
+Provision the user roles in the DB</h4>
+<p>Next, we'll use the latest Okta user list to create matching roles in the database. For this, we'll leverage a Terraform <a rel="external" href="https://registry.terraform.io/providers/cyrilgdn/postgresql/latest/docs">PostgreSQL provider</a>. To configure the provider, we'll retrieve the AWS-managed master password from the RDS module and use it to authenticate. Once again, we'll use the <code>ephemeral</code> resource type.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">terraform</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  required_providers</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # other providers omitted</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    postgresql</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          source</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">cyrilgdn/postgresql</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">          version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">1.25.0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">provider</span><span style="color: #7AA2F7;"> &quot;postgresql&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  host</span><span style="color: #89DDFF;">            =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">host</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  database</span><span style="color: #89DDFF;">        =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">database</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  username</span><span style="color: #89DDFF;">        =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">username</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  password</span><span style="color: #89DDFF;">        =</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">password</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  sslmode</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">require</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  connect_timeout</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 15</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  superuser</span><span style="color: #89DDFF;">       =</span><span style="color: #FF9E64;"> false</span><span style="color: #51597D;font-style: italic;"> # required for RDS users. AWS doesn&#39;t grant us superser, but instead `rds_superuser`</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>We can now use the <code>postgresql_role</code> resource to create our users, making sure to grant them the <a rel="external" href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.DBAccounts.html#UsingWithRDS.IAMDBAuth.DBAccounts.PostgreSQL"><code>rds_iam</code></a> permission. IAM authentication <strong>takes precedence over password authentication</strong>, so any users granted <code>rds_iam</code> must log in as an IAM user.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;postgresql_role&quot; &quot;okta_users&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  for_each</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> toset</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">okta_users</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">admins</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">users</span><span style="color: #9ABDF5;">[</span><span style="color: #89DDFF;">*</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">email</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;">     =</span><span style="color: #9ABDF5;"> each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  login</span><span style="color: #89DDFF;">    =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  roles</span><span style="color: #89DDFF;">    =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">rds_iam</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #51597D;font-style: italic;"> # needed for IAM auth</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  depends_on</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">db</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> module</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">security_group</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><h3 id="profit"><a class="header-anchor no-hover-padding" href="#profit" aria-label="Anchor link for: profit"><span class="link-icon" aria-hidden="true"></span></a>
+Profit</h3>
+<p>We now have everything needed to connect to our AWS RDS DB via IAM. To do so, we obtain an IAM authentication token using the AWS CLI, and then use said token as our password. Here are the steps:</p>
+<ol>
+<li>
+<p>Set AWS environment variables - this could be via <a rel="external" href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html#cli-configure-sso-login"><code>aws sso login</code></a> directly or using a tool like <a rel="external" href="https://github.com/fwdcloudsec/granted">granted</a></p>
+</li>
+<li>
+<p>Download the required SSL certificate from <a rel="external" href="https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem">https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem</a></p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">curl</span><span style="color: #E0AF68;"> -O</span><span style="color: #9ECE6A;"> https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem</span></span></code></pre></li>
+<li>
+<p>Export your DB host address to your current terminal:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> RDSHOST</span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;">complete-postgresql</span><span>.</span><span style="color: #C0CAF5;">randomstring</span><span>.</span><span style="color: #C0CAF5;">us-east-1</span><span>.</span><span style="color: #C0CAF5;">rds</span><span>.</span><span style="color: #C0CAF5;">amazonaws</span><span>.</span><span style="color: #C0CAF5;">com</span></span></code></pre></li>
+<li>
+<p>Generate the IAM token using your Okta email:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> PGPASSWORD</span><span style="color: #89DDFF;">=&quot;$(</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">  aws</span><span style="color: #9ECE6A;"> rds generate-db-auth-token</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">  --hostname</span><span style="color: #C0CAF5;"> $RDSHOST</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">  --port</span><span style="color: #FF9E64;"> 5432</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">  --region</span><span style="color: #9ECE6A;"> your-region</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">  --username</span><span style="color: #9ECE6A;"> you@yourcompany.com</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)&quot;</span></span></code></pre></li>
+<li>
+<p>Connect to your DB using the IAM token and the SSL certificate:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">  psql</span><span style="color: #E0AF68;"> -h</span><span style="color: #C0CAF5;"> $RDSHOST</span><span style="color: #E0AF68;"> -p</span><span style="color: #FF9E64;"> 5432</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --dbname=completePostgresql</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --username=you@yourcompany.com</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --password=</span><span style="color: #C0CAF5;">$PGPASSWORD</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --set=sslmode=verify-full</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">    --set=sslrootcert=global-bundle.pem</span></span></code></pre>
+<p>If everything worked out, you should see your psql prompt:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>psql (17.5, server 14.17)</span></span>
+<span class="giallo-l"><span>SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384, compression: off, ALPN: none)</span></span>
+<span class="giallo-l"><span>Type &quot;help&quot; for help.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>completePostgresql=&gt;</span></span></code></pre></li>
+</ol>
+<p>Note that the generated token works <a rel="external" href="https://aws.amazon.com/blogs/database/using-iam-authentication-to-connect-with-pgadmin-amazon-aurora-postgresql-or-amazon-rds-for-postgresql/">just as well</a> in pgAdmin, DataGrip, or your favorite database IDE.
+<br></p>
+<h3 id="wrapping-up"><a class="header-anchor no-hover-padding" href="#wrapping-up" aria-label="Anchor link for: wrapping-up"><span class="link-icon" aria-hidden="true"></span></a>
+Wrapping up</h3>
+<p>Now that our developers can access our database using IAM Database authentication, its worth pointing out some key concerns and limitations. First, developers might find the steps needed to obtain the token cumbersome. You should therefore wrap the individual AWS CLI calls in a custom, organization-specific script or CLI tool.</p>
+<p>You'll likely need to grant additional privileges beyond just <code>rds_iam</code> to allow your users query or perform other actions on the database.  When you do this, you must ensure that <strong>you never grant devs the permission to create roles</strong>. This prevents bypassing IAM authentication. Also consider managing schema and sequence privileges using IaC. This keeps all DB user privilege management operations version-controlled and will likely make your security auditors very happy.</p>
+<p>With regards to limitations, perhaps the most important is that CloudWatch and CloudTrail <a rel="external" href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html"><strong>don't log</strong></a> IAM Database authentication events. CloudWatch and CloudTrail do not track the <code>generate-db-auth-token</code> API calls that authorize the IAM role to enable database connection.</p>
+<p>Hence, if you're building this as part of some audit trail infrastructure, you might want to setup your own <a rel="external" href="https://aws.amazon.com/blogs/database/enable-near-real-time-notifications-from-amazon-aurora-postgresql-by-using-database-triggers-aws-lambda-and-amazon-sns/">near real-time</a> notification mechanism using the <code>aws_lambda</code> extension. This works on both <a rel="external" href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/PostgreSQL-Lambda.html">RDS for PostgreSQL</a> and <a rel="external" href="https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/PostgreSQL-Lambda.html">Aurora PostgreSQL</a>. Additionaly, you'll likely want to setup <a rel="external" href="https://repost.aws/knowledge-center/rds-postgresql-pgaudit">pgaudit</a> for comprehensive auditing and <a rel="external" href="https://github.com/pgaudit/pgaudit_analyze">pgAudit Analyze</a> for easier querying of said auditing.</p>
+<p>That said, I find these tradeoffs acceptable. By automating the entire lifecycle with Terraform, from database provisioning to user role management, we reduce the operational burden of supporting engineering teams. Your developers get secure, individualized database access without compromising on security best practices, and your security team gets centralized control over who can access what, when.</p>
+<blockquote>
+<p><em>Thanks to Jason Anderson and Matthew Nichols for their thoughtful feedback and suggestions.</em></p>
+</blockquote>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/ai-apps-in-slack-bedrock/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Build a Slack AI app powered by Amazon Bedrock</p></div>
+                <div><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#introduction">Introduction</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#prerequisites">Prerequisites</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#architecture">Architecture</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#setup-okta">Setup Okta</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#obtain-okta-api-credentials">Obtain Okta API Credentials</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#add-credentials-to-terraform">Add credentials to Terraform</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#provision-the-amazon-rds-postgres-database">Provision the Amazon RDS Postgres Database</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#grant-iam-database-access">Grant IAM database access</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#write-db-access-iam-policy">Write DB access IAM policy</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#create-permission-set">Create permission set</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#attach-iam-db-access-policy-to-permission-set">Attach IAM DB access policy to permission set</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#assign-permission-set-to-account-where-db-resides">Assign permission set to account where DB resides</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#provision-users-in-the-db">Provision users in the DB</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#planning-for-user-revocation">Planning for User Revocation</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#running-the-revocation-script">Running the revocation script</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#provision-the-user-roles-in-the-db">Provision the user roles in the DB</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#profit">Profit</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/#wrapping-up">Wrapping up</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

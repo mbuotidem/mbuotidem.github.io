@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • All posts</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="" />
+        <meta property="og:description" content="" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Isaac on DevSecOps" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;page&#x2F;2&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;page&#x2F;2&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+<main >
+<div id="posts-list">
+        <div>
+            
+<h1 class="title-container section-title bottom-divider">
+    All posts
+</h1>
+
+        </div>
+
+        
+        
+
+    
+
+
+<div class="bloglist-container">
+    
+    
+        
+            
+                
+            
+
+            <section class="bloglist-meta bottom-divider">
+                <ul><li class="date">31st August 2025</li>
+
+                    
+                </ul>
+            </section>
+
+            <section class="bloglist-content bottom-divider">
+                <div>
+                    
+
+                    <h2 class="bloglist-title">
+                        <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                    </h2>
+
+                    
+                        <div class="bloglist-tags">
+                            
+                                <a class="tag" href="https://misaac.me/tags/aws/">aws</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/terraform/">terraform</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/slack/">slack</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/gen-ai/">gen-ai</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iac/">iac</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/bedrock/">bedrock</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/llms/">llms</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/ai/">ai</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/generative-ai/">generative-ai</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/chatops/">chatops</a>
+                            
+                        </div>
+                    
+
+                    <div class="description">
+                        
+                            <p>Build a Slack app with AI features</p>
+                        
+                    </div>
+                    <a class="readmore" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Read more&nbsp;<span class="arrow">→</span></a>
+                </div>
+            </section>
+        
+        
+            
+        
+    
+        
+            
+                
+            
+
+            <section class="bloglist-meta bottom-divider">
+                <ul><li class="date">5th July 2025</li>
+
+                    
+                </ul>
+            </section>
+
+            <section class="bloglist-content bottom-divider">
+                <div>
+                    
+
+                    <h2 class="bloglist-title">
+                        <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                    </h2>
+
+                    
+                        <div class="bloglist-tags">
+                            
+                                <a class="tag" href="https://misaac.me/tags/aws/">AWS</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/rds/">RDS</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/okta/">Okta</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iam/">IAM</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/terraform/">Terraform</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iac/">IaC</a>
+                            
+                        </div>
+                    
+
+                    <div class="description">
+                        
+                            <p>Learn how to securely grant passwordless access to Amazon RDS by leveraging Okta, AWS IAM database authentication, and Terraform</p>
+                        
+                    </div>
+                    <a class="readmore" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Read more&nbsp;<span class="arrow">→</span></a>
+                </div>
+            </section>
+        
+        
+            
+        
+    
+        
+            
+                
+            
+
+            <section class="bloglist-meta bottom-divider">
+                <ul><li class="date">1st June 2025</li>
+
+                    
+                </ul>
+            </section>
+
+            <section class="bloglist-content bottom-divider">
+                <div>
+                    
+
+                    <h2 class="bloglist-title">
+                        <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                    </h2>
+
+                    
+                        <div class="bloglist-tags">
+                            
+                                <a class="tag" href="https://misaac.me/tags/spiffe-spire/">spiffe-spire</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/identity/">identity</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/secrets-management/">secrets management</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/zero-trust/">zero trust</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/aws/">aws</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iam/">iam</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/terraform/">terraform</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iac/">iac</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/kubernetes/">kubernetes</a>
+                            
+                        </div>
+                    
+
+                    <div class="description">
+                        
+                            <p>Learn how to authenticate Kubernetes workloads to AWS using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere</p>
+                        
+                    </div>
+                    <a class="readmore" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Read more&nbsp;<span class="arrow">→</span></a>
+                </div>
+            </section>
+        
+        
+            
+        
+    
+        
+            
+                
+            
+
+            <section class="bloglist-meta bottom-divider">
+                <ul><li class="date">24th May 2025</li>
+
+                    
+                </ul>
+            </section>
+
+            <section class="bloglist-content bottom-divider">
+                <div>
+                    
+
+                    <h2 class="bloglist-title">
+                        <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                    </h2>
+
+                    
+                        <div class="bloglist-tags">
+                            
+                                <a class="tag" href="https://misaac.me/tags/spiffe-spire/">spiffe-spire</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/identity/">identity</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/secrets-management/">secrets management</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/zero-trust/">zero trust</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/aws/">aws</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iam/">iam</a>
+                            
+                        </div>
+                    
+
+                    <div class="description">
+                        
+                            <p>Learn how to combine SPIFFE Helper&#x27;s SVID management with IAM Roles Anywhere&#x27;s credential helper to achieve automated AWS credential renewal</p>
+                        
+                    </div>
+                    <a class="readmore" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Read more&nbsp;<span class="arrow">→</span></a>
+                </div>
+            </section>
+        
+        
+            
+        
+    
+        
+            
+                
+            
+
+            <section class="bloglist-meta ">
+                <ul><li class="date">19th May 2025</li>
+
+                    
+                </ul>
+            </section>
+
+            <section class="bloglist-content ">
+                <div>
+                    
+
+                    <h2 class="bloglist-title">
+                        <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                    </h2>
+
+                    
+                        <div class="bloglist-tags">
+                            
+                                <a class="tag" href="https://misaac.me/tags/spiffe-spire/">spiffe-spire</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/identity/">identity</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/secrets-management/">secrets management</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/zero-trust/">zero trust</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/aws/">aws</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/codespaces/">codespaces</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iam/">iam</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/vpn/">vpn</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/terraform/">terraform</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/github/">github</a>
+                            
+                                <a class="tag" href="https://misaac.me/tags/iac/">iac</a>
+                            
+                        </div>
+                    
+
+                    <div class="description">
+                        
+                            <p>Learn how to authenticate your GitHub Codespace to AWS VPN using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere</p>
+                        
+                    </div>
+                    <a class="readmore" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Read more&nbsp;<span class="arrow">→</span></a>
+                </div>
+            </section>
+        
+        
+    
+</div>
+
+    </div>
+
+    
+    <ul class="pagination">
+        
+            <li class="page-item page-prev">
+                <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;" class="page-link" aria-label="Prev"><span class="arrow">←</span> Prev</a>
+            </li>
+        
+
+        <li class="page-item page-numbers">
+            2 of 4
+        </li>
+
+        
+            <li class="page-item page-next">
+                <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;page&#x2F;3&#x2F;" class="page-link" aria-label="Next">Next <span class="arrow">→</span></a>
+            </li>
+        
+    </ul>
+
+
+</main>
+
+
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

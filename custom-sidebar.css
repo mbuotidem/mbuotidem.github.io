@@ -1,0 +1,327 @@
+/* Custom two-column layout with sidebar */
+
+/* Align navbar with content grid */
+.navbar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.layout-container {
+    display: grid;
+    grid-template-columns: minmax(0, 900px) 280px;
+    gap: 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    justify-content: center;
+}
+
+.main-content {
+    min-width: 0; /* Prevents grid blowout */
+}
+
+/* Remove max-width constraint from articles to match index page width */
+article {
+    max-width: none;
+}
+
+/* Mobile browse section - shows at top */
+.mobile-browse {
+    display: none;
+    margin: 2rem 0;
+    background: var(--background-secondary, #f9f9f9);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.mobile-browse-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: inherit;
+    transition: opacity 0.2s;
+}
+
+.mobile-browse-toggle:hover {
+    opacity: 0.7;
+}
+
+.mobile-browse-toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.mobile-browse-toggle[aria-expanded="true"] .mobile-browse-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.mobile-browse-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    padding: 0 1.5rem;
+}
+
+.mobile-browse-content.expanded {
+    max-height: 2000px;
+    padding: 0 1.5rem 1.5rem;
+    transition: max-height 0.5s ease-in;
+}
+
+.mobile-browse h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.mobile-browse-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.mobile-browse-section h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+}
+
+.mobile-browse-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.mobile-browse-list li {
+    margin-bottom: 0.4rem;
+}
+
+.mobile-browse-list a {
+    text-decoration: none;
+}
+
+.mobile-browse-list a:hover {
+    text-decoration: underline;
+}
+
+.mobile-browse-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.mobile-browse-tags a {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--background-tertiary, #e8e8e8);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.mobile-browse-tags a:hover {
+    background: var(--background-body, #ddd);
+}
+
+/* Sidebar Styles */
+.sidebar {
+    padding: 2rem 0;
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    z-index: 1;
+    margin-bottom: 4rem;
+}
+
+/* Ensure footer appears above sticky sidebar */
+footer {
+    position: relative;
+    z-index: 10;
+    background: var(--background-color);
+}
+
+/* Ensure back to top button appears above footer */
+#button-container {
+    z-index: 100 !important;
+}
+
+/* Ensure article navigation appears above sidebar */
+.article-navigation {
+    position: relative;
+    z-index: 10;
+    background: var(--background-color);
+    /* Override full-width negative margins to prevent sidebar overlap */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.sidebar-section {
+    margin-bottom: 2.5rem;
+}
+
+.sidebar-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+}
+
+.sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-list li {
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.sidebar-list a {
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.sidebar-list a:hover {
+    text-decoration: underline;
+}
+
+.sidebar-date {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: 0.25rem;
+}
+
+.sidebar-count {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin-left: 0.25rem;
+}
+
+/* Tags in sidebar */
+.sidebar-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.sidebar-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--background-secondary, #f0f0f0);
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.sidebar-tag:hover {
+    background: var(--background-tertiary, #e0e0e0);
+}
+
+/* Responsive: Show mobile browse, hide sidebar */
+@media (max-width: 1024px) {
+    .layout-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        max-width: 800px;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .mobile-browse {
+        display: block;
+    }
+}
+
+/* Extra small screens - single column browse */
+@media (max-width: 480px) {
+    .mobile-browse-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Dark mode support */
+[data-theme="dark"] .mobile-browse {
+    background: var(--background-secondary, #2a2a2a);
+}
+
+[data-theme="dark"] .mobile-browse-tags a {
+    background: var(--background-tertiary, #3a3a3a);
+}
+
+[data-theme="dark"] .mobile-browse-tags a:hover {
+    background: var(--background-body, #4a4a4a);
+}
+
+[data-theme="dark"] .sidebar-tag {
+    background: var(--background-secondary, #2a2a2a);
+}
+
+[data-theme="dark"] .sidebar-tag:hover {
+    background: var(--background-tertiary, #3a3a3a);
+}
+
+/* Support for system dark mode preference */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .mobile-browse {
+        background: var(--background-secondary, #2a2a2a);
+    }
+
+    :root:not([data-theme="light"]) .mobile-browse-tags a {
+        background: var(--background-tertiary, #3a3a3a);
+    }
+
+    :root:not([data-theme="light"]) .mobile-browse-tags a:hover {
+        background: var(--background-body, #4a4a4a);
+    }
+
+    :root:not([data-theme="light"]) .sidebar-tag {
+        background: var(--background-secondary, #2a2a2a);
+    }
+
+    :root:not([data-theme="light"]) .sidebar-tag:hover {
+        background: var(--background-tertiary, #3a3a3a);
+    }
+}
+
+/* Scrollbar styling for sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--border-color, #ccc);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary, #999);
+}

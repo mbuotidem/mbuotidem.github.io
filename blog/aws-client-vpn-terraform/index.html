@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Creating an AWS Client VPN with Terraform and Serverless CA</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=30ad9ec7b30a2b23c1a1" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Create a certificate-based AWS Client VPN without AWS Private CA" />
+        <meta property="og:description" content="Create a certificate-based AWS Client VPN without AWS Private CA" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Creating an AWS Client VPN with Terraform and Serverless CA" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-client-vpn-terraform&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-client-vpn-terraform&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+
+
+    <div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Creating an AWS Client VPN with Terraform and Serverless CA
+        </h1>
+
+        <ul class="meta">
+                <li>11th Apr 2025</li>
+                <li title="2845 words"><span class='separator' aria-hidden='true'>•</span>15 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/vpn/">vpn</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/serverless-ca/">serverless-ca</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">iac</a></li>
+        </ul>
+
+        <section class="body"><p>This post guides you through setting up <a rel="external" href="https://aws.amazon.com/vpn/client-vpn/">AWS Client VPN</a> using <a rel="external" href="https://serverlessca.com/">Serverless CA</a>, a secure, cost-effective, open-source certifcate authority.</p>
+<h2 id="problem-statement"><a class="header-anchor no-hover-padding" href="#problem-statement" aria-label="Anchor link for: problem-statement"><span class="link-icon" aria-hidden="true"></span></a>
+Problem Statement</h2>
+<p>You have resources in a private subnet in your AWS VPC - such as an EC2 instance, an RDS or Aurora database, or an MSK Kafka cluster - that are not publicly accessible. You'd like to access these resources from outside your VPC (e.g., from your laptop), without exposing them to the public internet.</p>
+<h2 id="solution"><a class="header-anchor no-hover-padding" href="#solution" aria-label="Anchor link for: solution"><span class="link-icon" aria-hidden="true"></span></a>
+Solution</h2>
+<p>We'll setup an AWS Client VPN to enable you connect to the resources from anywhere. AWS Client VPN is a managed service, which means AWS handles the infrastructure and scaling, so you can focus on access and security.</p>
+<p><img src="https://misaac.me/blog/aws-client-vpn-terraform/./client-vpn.png" alt="Architecture diagram showing the setup involving connecing a GitHub Codespaces to an EC2 in a private subnet via AWS Client VPN" /></p>
+<p>We'll be connecting to a VPC with a private subnet and no internet gateway, A.K.A a <strong>fully private</strong> VPC.</p>
+<h2 id="why-use-a-certificate-authority-ca"><a class="header-anchor no-hover-padding" href="#why-use-a-certificate-authority-ca" aria-label="Anchor link for: why-use-a-certificate-authority-ca"><span class="link-icon" aria-hidden="true"></span></a>
+Why use a Certificate Authority (CA)</h2>
+<p>AWS Client VPN supports several <a rel="external" href="https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html">authentication methods</a> , including mutual authentication (certificate-based), SAML, Active Directory (AD), or a combination of SAML/AD with certificates. For our setup, we’re choosing <strong>certificate-based mutual authentication only</strong>.</p>
+<p>The reasons for this choice are:</p>
+<ul>
+<li>
+<p><strong>Headless access</strong>: I want the ability to connect to the VPN without a GUI, for example, from environments like GitHub Codespaces. SAML requires a browser-based login flow, which doesn’t work well in headless or automated contexts.</p>
+</li>
+<li>
+<p><strong>Reusable CA foundation</strong>: I plan to build on this CA for other identity and authentication use cases down the line, such as <a rel="external" href="https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html">AWS IAM Roles Anywhere</a></p>
+</li>
+</ul>
+<h3 id="downsides-to-using-only-certificate-based-auth-with-aws-client-vpn"><a class="header-anchor no-hover-padding" href="#downsides-to-using-only-certificate-based-auth-with-aws-client-vpn" aria-label="Anchor link for: downsides-to-using-only-certificate-based-auth-with-aws-client-vpn"><span class="link-icon" aria-hidden="true"></span></a>
+Downsides to using only certificate-based auth with AWS Client VPN</h3>
+<p>When using only mutual authentication, you need to have a process for revoking access. AWS Client VPN supports <a rel="external" href="https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html">importing</a> Certificate Revocation Lists (CRLs), but there is currently no Terraform resource for managing CRLs. As a result, you'll need to use either the AWS Management Console or the AWS CLI to manually update your Client VPN endpoint with the CRL. Fortunately, Serverless CA helps <a rel="external" href="https://serverlessca.com/revocation/#enable-certificate-revocation">automate</a> the certificate revocation process.</p>
+<p>Mutual TLS authentication also has a limitation: it doesn’t support user group–based <a rel="external" href="https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-rules.html">authorization rules</a>. This means you can’t assign different levels of network access to different users. To enable group-based access control, you’ll need to use federated authentication with SAML, Active Directory, or combine one of those with certificate authentication.</p>
+<h2 id="prerequisites"><a class="header-anchor no-hover-padding" href="#prerequisites" aria-label="Anchor link for: prerequisites"><span class="link-icon" aria-hidden="true"></span></a>
+Prerequisites</h2>
+<ul>
+<li>
+<p>Route 53 Zone (only required if you're going with public CRL)</p>
+</li>
+<li>
+<p>AWS VPC with a private subnet (i.e subnet with no route to an internet gateway)</p>
+</li>
+<li>
+<p>AWS resource that we'll be connecting to via the VPN, e.g. an EC2 instance</p>
+</li>
+</ul>
+<h2 id="choosing-a-ca"><a class="header-anchor no-hover-padding" href="#choosing-a-ca" aria-label="Anchor link for: choosing-a-ca"><span class="link-icon" aria-hidden="true"></span></a>
+Choosing a CA</h2>
+<p>While AWS offers a managed Certificate Authority through <a rel="external" href="https://docs.aws.amazon.com/privateca/latest/userguide/PcaWelcome.html">AWS Private CA</a>, the version compatible with AWS Client VPN costs $400/month. There is a more affordable <a rel="external" href="https://aws.amazon.com/blogs/security/how-to-use-aws-private-certificate-authority-short-lived-certificate-mode/">$50/month option</a> that issues short-lived certificates, but I couldn’t get it working with Client VPN.</p>
+<p>You can follow <a rel="external" href="https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-auth-mutual-enable.html">these instructions</a> to manually create the required certificates using OpenVPN easy-rsa. However, if you ever need to revoke a certificate, you’ll need access to the original server used to issue it, or you must have securely stored the CA’s private key, certificate, certificate index, and serial file. These are required to generate a certificate revocation list (CRL) that AWS can use to block access.</p>
+<p>Instead, we'll use the excellent <a rel="external" href="https://serverlessca.com/">Serverless CA on AWS</a> project. It’s an open-source CA with an IaC-based <a rel="external" href="https://serverlessca.com/revocation/">revocation</a> mechanism that's available as a Terraform <a rel="external" href="https://registry.terraform.io/modules/serverless-ca/ca/aws/latest">module</a> and  runs on AWS for roughly $50 per year.</p>
+<h3 id="setting-up-serverless-ca"><a class="header-anchor no-hover-padding" href="#setting-up-serverless-ca" aria-label="Anchor link for: setting-up-serverless-ca"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up Serverless CA</h3>
+<p>Create a directory where we'll store our Terraform and other config. Throughout the rest of this post, we'll assume you're working from the root of this directory.</p>
+<p>Serverless CA expects an AWS provider <a rel="external" href="https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations">alias</a> named <code>us-east-1</code> with region set to <code>us-east-1</code>. This is because certificates for CloudFront must be <a rel="external" href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-requirements.html#https-requirements-certificate-issuer">created</a> in <code>us-east-1</code>. Although the CloudFront distribution only applies if you want to have a public CRL, the module requires you to pass one in regardless.</p>
+<p>Note that this doesn’t limit you to actually deploying the rest of Serverless CA to your preferred region. You’re free to configure an additional aws provider and point that to your desired AWS region.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #51597D;font-style: italic;">// Default provider for other resources</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">provider</span><span style="color: #7AA2F7;"> &quot;aws&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  region</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">us-east-1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">// Specific provider required for optional CloudFront Certificate</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">provider</span><span style="color: #7AA2F7;"> &quot;aws&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  alias</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">us-east-1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  region</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">us-east-1</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Make sure to specify both <code>issuing_ca_key_spec</code> and <code>root_ca_key_spec</code> as <code>RSA_2048</code>. This is necessary because in a future step, we'll want to add the generated certificates to AWS ACM and the default <code>ECC_NIST_P256</code> is <a rel="external" href="https://docs.aws.amazon.com/acm/latest/userguide/import-certificate-prerequisites.html">not supported</a> by ACM.</p>
+<p>Once your providers are setup, you can pass them to the CA module as shown below.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">module</span><span style="color: #7AA2F7;"> &quot;certificate_authority&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  source</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">serverless-ca/ca/aws</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">1.8.0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  providers</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    aws</span><span style="color: #89DDFF;">           =</span><span style="color: #9ABDF5;"> aws</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    aws.</span><span style="color: #BB9AF7;">us-east-1</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws.us</span><span style="color: #89DDFF;">-</span><span style="color: #9ABDF5;">east</span><span style="color: #89DDFF;">-</span><span style="color: #FF9E64;">1</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  hosted_zone_domain</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">cert.misaac.me</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  hosted_zone_id</span><span style="color: #89DDFF;">      =</span><span style="color: #9ABDF5;"> aws_route53_zone</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">primary</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">zone_id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  public_crl</span><span style="color: #89DDFF;">          =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  issuing_ca_key_spec</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">RSA_2048</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  root_ca_key_spec</span><span style="color: #89DDFF;">    = &quot;</span><span style="color: #9ECE6A;">RSA_2048</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  env</span><span style="color: #89DDFF;">                 = &quot;</span><span style="color: #9ECE6A;">dev</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cert_info_files</span><span style="color: #89DDFF;">     =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">tls</span><span style="color: #89DDFF;">&quot;, &quot;</span><span style="color: #9ECE6A;">revoked</span><span style="color: #89DDFF;">&quot;, &quot;</span><span style="color: #9ECE6A;">revoked-root-ca</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  csr_files</span><span style="color: #89DDFF;">           =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">vpn.csr</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>If you'd like to customize your Root and Issuing CA certificate information, you can do so by modifying <a rel="external" href="https://serverlessca.com/reference/#input_root_ca_info">root_ca_info</a> and <a rel="external" href="https://serverlessca.com/reference/#input_issuing_ca_info">issuing_ca_info</a>.</p>
+<p>As for <code>cert_info_files</code> and <code>csr_files</code>, we'll be generating them in the next section.</p>
+<br>
+<h3 id="generating-a-server-certificate"><a class="header-anchor no-hover-padding" href="#generating-a-server-certificate" aria-label="Anchor link for: generating-a-server-certificate"><span class="link-icon" aria-hidden="true"></span></a>
+Generating a server certificate</h3>
+<p>You can use Terraform to generate the server certificate via GitOps. The steps are:</p>
+<ul>
+<li>setup subdirectories and required files</li>
+<li>create and upload your CSR</li>
+<li>request the serverAuth extension for the server certificate</li>
+<li>run the generate certificate step function</li>
+</ul>
+<p>Let's tackle these step-by-step.</p>
+<h4 id="setup-subdirectories-and-required-files"><a class="header-anchor no-hover-padding" href="#setup-subdirectories-and-required-files" aria-label="Anchor link for: setup-subdirectories-and-required-files"><span class="link-icon" aria-hidden="true"></span></a>
+Setup subdirectories and required files</h4>
+<p>Run the command below to create the required files and folders. Substitute <code>dev</code> with the environment you set when <a href="https://misaac.me/blog/aws-client-vpn-terraform/#setting-up-serverless-ca">instantiating</a> Serverless CA.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">mkdir</span><span style="color: #E0AF68;"> -p</span><span style="color: #9ECE6A;"> certs/dev/csrs</span><span style="color: #89DDFF;"> &amp;&amp; \</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">for</span><span style="color: #C0CAF5;"> f</span><span style="color: #BB9AF7;"> in</span><span style="color: #9ECE6A;"> revoked-root-ca revoked tls</span><span style="color: #89DDFF;">;</span><span style="color: #BB9AF7;"> do</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">  echo</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">[]</span><span style="color: #89DDFF;">&quot; &gt;</span><span style="color: #9ECE6A;"> certs/dev/</span><span style="color: #C0CAF5;">$f</span><span style="color: #9ECE6A;">.json</span><span style="color: #89DDFF;">; \</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">done</span></span></code></pre>
+<p>This should generate the files structure below.  At this point, each json file currently contains just an empty array <code>[]</code>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>certs</span></span>
+<span class="giallo-l"><span>└── dev</span></span>
+<span class="giallo-l"><span>    ├── csrs</span></span>
+<span class="giallo-l"><span>    ├── revoked-root-ca.json</span></span>
+<span class="giallo-l"><span>    ├── revoked.json</span></span>
+<span class="giallo-l"><span>    └── tls.json</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>3 directories, 3 files</span></span></code></pre><h4 id="create-certificate-signing-request-csr"><a class="header-anchor no-hover-padding" href="#create-certificate-signing-request-csr" aria-label="Anchor link for: create-certificate-signing-request-csr"><span class="link-icon" aria-hidden="true"></span></a>
+Create Certificate Signing Request (CSR)</h4>
+<p>A Certificate Signing Request (CSR) is an encoded file that contains your public key along with information about your organization such as the domain name (Common Name), organization, country, and other metadata. It's submitted to a CA to request an SSL/TLS certificate. Let's use the Terraform <code>tls_cert_request</code> <a rel="external" href="https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/cert_request">resource</a> to create our CSR.</p>
+<p>First, we need to generate our private key. I'm going to change directory and place this in <code>~/.ssh</code> so that we don't accidentally commit it.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">openssl</span><span style="color: #9ECE6A;"> genrsa</span><span style="color: #E0AF68;"> -out</span><span style="color: #9ECE6A;"> ~/.ssh/vpn.key</span><span style="color: #FF9E64;"> 2048</span></span></code></pre>
+<p>Next, we'll populate the <code>tls_cert_request</code> resource and save the generated csr to the <code>csrs</code> directory using the <code>local_file</code> resource. Pass the private key using your preferred method, the <code>.tfvars</code> <a rel="external" href="https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files">method</a> or the <code>TF_VAR_server_cert_private_key</code> enviroment variable <a rel="external" href="https://developer.hashicorp.com/terraform/language/values/variables#environment-variables">method</a>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">variable</span><span style="color: #7AA2F7;"> &quot;server_cert_private_key&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  type</span><span style="color: #89DDFF;">      =</span><span style="color: #BB9AF7;"> string</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  sensitive</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;tls_cert_request&quot; &quot;server&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  private_key_pem</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> chomp</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">server_cert_private_key</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  subject</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    common_name</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">vpn.misaac.me</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    organization</span><span style="color: #89DDFF;">        = &quot;</span><span style="color: #9ECE6A;">Serverless Inc</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    organizational_unit</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Security Operations</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    locality</span><span style="color: #89DDFF;">            = &quot;</span><span style="color: #9ECE6A;">London</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    province</span><span style="color: #89DDFF;">            = &quot;</span><span style="color: #9ECE6A;">England</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    country</span><span style="color: #89DDFF;">             = &quot;</span><span style="color: #9ECE6A;">GB</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  dns_names</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">vpn.misaac.me</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;local_file&quot; &quot;server_csr&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  content</span><span style="color: #89DDFF;">  =</span><span style="color: #9ABDF5;"> tls_cert_request</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">server</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_request_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  filename</span><span style="color: #89DDFF;"> = &quot;${</span><span style="color: #C0CAF5;">path</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/certs/dev/csrs/vpn.csr</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<blockquote>
+<p><strong>Note:</strong>
+By using the <code>tls_cert_request</code> resource, we are choosing to store our private key in the Terraform state file. You'll need to evaluate if this is appropriate for your security posture. If not, you should generate the CSR outside Terraform using <code>openssl</code> or another tool, and then pass only the CSR into Terraform.</p>
+</blockquote>
+<p><strong>Run <code>terraform apply</code> twice</strong>, first to generate the csr and save it to the <code>csrs</code> directory, and second to have the Serverless CA module pickup the just created csr and save it to the destination S3 bucket.</p>
+<h4 id="request-the-serverauth-extension-for-the-server-certificate"><a class="header-anchor no-hover-padding" href="#request-the-serverauth-extension-for-the-server-certificate" aria-label="Anchor link for: request-the-serverauth-extension-for-the-server-certificate"><span class="link-icon" aria-hidden="true"></span></a>
+Request the serverAuth extension for the server certificate</h4>
+<p>By <a rel="external" href="https://serverlessca.com/client-certificates/#purposes">default</a>, certificates issued by Serverless CA include only the <strong>client authentication</strong> <a rel="external" href="https://docs.openssl.org/master/man5/x509v3_config/#extended-key-usage">extension</a>. To perform mutual authentication however, our vpn server certificate needs to have the server authentication extension.</p>
+<p>To achieve this, you'll need to modify <code>certs/dev/tls.json</code> and explicitly set the <code>server_auth</code> purpose. This updates the certificate's Extended Key Usage (EKU) to include <code>serverAuth</code>. You can also define other server-specific settings like lifetime before <strong>running <code>terraform apply</code> twice</strong>.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="json"><span class="giallo-l"><span style="color: #9ABDF5;">[</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #7AA2F7;">common_name</span><span style="color: #89DDFF;">&quot;: &quot;</span><span style="color: #9ECE6A;">vpn.misaac.me</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #7AA2F7;">purposes</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;</span><span style="color: #9ECE6A;">client_auth</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;</span><span style="color: #9ECE6A;">server_auth</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        ]</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #7AA2F7;">sans</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            &quot;</span><span style="color: #9ECE6A;">vpn.misaac.me</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        ]</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #7AA2F7;">lifetime</span><span style="color: #89DDFF;">&quot;:</span><span style="color: #FF9E64;"> 365</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &quot;</span><span style="color: #7AA2F7;">csr_file</span><span style="color: #89DDFF;">&quot;: &quot;</span><span style="color: #9ECE6A;">vpn.csr</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">]</span></span></code></pre><h4 id="run-the-certificate-generation-step-function"><a class="header-anchor no-hover-padding" href="#run-the-certificate-generation-step-function" aria-label="Anchor link for: run-the-certificate-generation-step-function"><span class="link-icon" aria-hidden="true"></span></a>
+Run the certificate generation step function</h4>
+<p>Once applied, we need to run the CA Step Function. The Step Function will have a name similar to <code>serverless-ca-dev</code>, depending on the environment you set when <a href="https://misaac.me/blog/aws-client-vpn-terraform/#setting-up-serverless-ca">instantiating</a> Serverless CA. For the input, use an empty JSON object by typing <code>{}</code> (curly braces).</p>
+<p><img src="https://misaac.me/blog/aws-client-vpn-terraform/./serverlessca-stepfunction.png" alt="AWS Web Console showing executed StepFunction page" /></p>
+<p>Serverless CA will create the certificate based on the information in the CSR as well as the details entered in <code>certs/dev/tls.json</code>. Note that details entered in JSON e.g. Organization, Locality override those included in the CSR.</p>
+<p>On completion, click on the <code>Execution input and output</code> tab, and then copy the output json.</p>
+<h3 id="adding-the-server-certificate-to-acm"><a class="header-anchor no-hover-padding" href="#adding-the-server-certificate-to-acm" aria-label="Anchor link for: adding-the-server-certificate-to-acm"><span class="link-icon" aria-hidden="true"></span></a>
+Adding the server certificate to ACM</h3>
+<p>To import the server certificate into ACM, we need the <code>private_key</code>, <code>certificate_body</code>, and the <code>certificate_chain</code>. We know the <code>private_key</code> as we <a href="https://misaac.me/blog/aws-client-vpn-terraform/#create-certificate-signing-request-csr">generated and supplied it</a>. As for the others, they are present in the output json we copied above. Add the variables <code>cert_body</code> and <code>cert_chain</code> using the values of the json keys <code>Base64Certificate</code> and  <code>Base64CaChain</code> respectively.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">variable</span><span style="color: #7AA2F7;"> &quot;cert_body&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  type</span><span style="color: #89DDFF;">      =</span><span style="color: #BB9AF7;"> string</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  sensitive</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">variable</span><span style="color: #7AA2F7;"> &quot;cert_chain&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  type</span><span style="color: #89DDFF;">      =</span><span style="color: #BB9AF7;"> string</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  sensitive</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Then create your <code>aws_acm_certificate</code> resource.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_acm_certificate&quot; &quot;vpncert&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  private_key</span><span style="color: #89DDFF;">       =</span><span style="color: #0DB9D7;"> chomp</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">server_cert_private_key</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  certificate_body</span><span style="color: #89DDFF;">  =</span><span style="color: #0DB9D7;"> base64decode</span><span style="color: #9ABDF5;">(</span><span style="color: #0DB9D7;">chomp</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_body</span><span style="color: #9ABDF5;">))</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  certificate_chain</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> base64decode</span><span style="color: #9ABDF5;">(</span><span style="color: #0DB9D7;">chomp</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">var</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_chain</span><span style="color: #9ABDF5;">))</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h3 id="generating-a-client-certificate"><a class="header-anchor no-hover-padding" href="#generating-a-client-certificate" aria-label="Anchor link for: generating-a-client-certificate"><span class="link-icon" aria-hidden="true"></span></a>
+Generating a client certificate</h3>
+<p>Since we're performing mutual authentication, our GitHub Codespace will need its own certificate. Let's add the ability to generate client certificates to our Terraform.</p>
+<p>As noted earlier, consider generating the CSR outside Terraform using <code>openssl</code> or another tool, and then passing only the CSR into Terraform if you'd prefer to keep the private keys out of your Terraform state. Just make sure you save it in a secret/password manager as you'll need it later to connect.</p>
+<p>First, we'll create a variable to store the private key for our first vpn client.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">variable</span><span style="color: #7AA2F7;"> &quot;client1_private_key_pem&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">PEM content of the private key for client1.</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  type</span><span style="color: #89DDFF;">        =</span><span style="color: #BB9AF7;"> string</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  sensitive</span><span style="color: #89DDFF;">   =</span><span style="color: #FF9E64;"> true</span><span style="color: #51597D;font-style: italic;"> # &lt;-- Mark the key content itself as sensitive</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # No default - this MUST be provided via environment variable</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>We'll generate that key using <code>openssl</code> as below and then pass it to Terraform at run time via an environment variable.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">openssl</span><span style="color: #9ECE6A;"> genrsa</span><span style="color: #E0AF68;"> -out</span><span style="color: #9ECE6A;"> ~/.ssh/client1.key</span><span style="color: #FF9E64;"> 2048</span></span></code></pre>
+<p>Next, we'll set up a local variable that we can use for this and future client certificate requests.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">locals</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">  # Construct the list using the injected variable and static data</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  client_cert_requests</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      private_key_pem</span><span style="color: #89DDFF;">     =</span><span style="color: #C0CAF5;"> var</span><span style="color: #9ABDF5;">.client1_private_key_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      common_name</span><span style="color: #89DDFF;">         = &quot;</span><span style="color: #9ECE6A;">client1.misaac.me</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      organization</span><span style="color: #89DDFF;">        = &quot;</span><span style="color: #9ECE6A;">Serverless Inc</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      organizational_unit</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Security Operations</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      locality</span><span style="color: #89DDFF;">            = &quot;</span><span style="color: #9ECE6A;">London</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      province</span><span style="color: #89DDFF;">            = &quot;</span><span style="color: #9ECE6A;">England</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      country</span><span style="color: #89DDFF;">             = &quot;</span><span style="color: #9ECE6A;">GB</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # If you had more clients, you&#39;d define more variables (e.g., client2_private_key_pem)</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # and add corresponding objects to this list.</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    #   private_key_pem = var.client2_private_key_pem</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    #   common_name     = &quot;client2.misaac.me&quot;</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    #   ...</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    # }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  ]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Then we'll add the required resources. Note that we don't use the <code>aws_acm_certificate</code> resource here - unlike with the server certificate, importing the client certificates into ACM is optional. Similarly, we don't need to update <code>certs/dev/tls.json</code> as Serverless CA will create our client certificates with the <code>clientAuth</code> EKU by default.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;tls_cert_request&quot; &quot;client_certs&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  for_each</span><span style="color: #89DDFF;">        =</span><span style="color: #9ABDF5;"> {</span><span style="color: #BB9AF7;"> for</span><span style="color: #C0CAF5;"> cert</span><span style="color: #89DDFF;"> in</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">client_cert_requests</span><span style="color: #89DDFF;"> :</span><span style="color: #C0CAF5;"> cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">common_name</span><span style="color: #BB9AF7;"> =&gt;</span><span style="color: #C0CAF5;"> cert</span><span style="color: #9ABDF5;"> }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  private_key_pem</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> chomp</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">private_key_pem</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #73DACA;">  subject</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    common_name</span><span style="color: #89DDFF;">         =</span><span style="color: #9ABDF5;"> each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">common_name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    organization</span><span style="color: #89DDFF;">        =</span><span style="color: #9ABDF5;"> each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">organization</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    organizational_unit</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">organizational_unit</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    locality</span><span style="color: #89DDFF;">            =</span><span style="color: #9ABDF5;"> each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">locality</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    province</span><span style="color: #89DDFF;">            =</span><span style="color: #9ABDF5;"> each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">province</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    country</span><span style="color: #89DDFF;">             =</span><span style="color: #9ABDF5;"> each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">country</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  dns_names</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">value</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">common_name</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;local_file&quot; &quot;client_csrs&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  for_each</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span><span style="color: #BB9AF7;"> for</span><span style="color: #C0CAF5;"> cert</span><span style="color: #89DDFF;"> in</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">client_cert_requests</span><span style="color: #89DDFF;"> :</span><span style="color: #C0CAF5;"> cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">common_name</span><span style="color: #BB9AF7;"> =&gt;</span><span style="color: #C0CAF5;"> cert</span><span style="color: #9ABDF5;"> }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  content</span><span style="color: #89DDFF;">  =</span><span style="color: #9ABDF5;"> tls_cert_request</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">client_certs</span><span style="color: #9ABDF5;">[</span><span style="color: #C0CAF5;">each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">key</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cert_request_pem</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  filename</span><span style="color: #89DDFF;"> = &quot;${</span><span style="color: #C0CAF5;">path</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">module</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/certs/dev/csrs/</span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">each</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">key</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">.csr</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Finally, we'll update the <code>csr_files</code> attribute to read all the csr files from our <code>client_cert_requests</code> variable.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">module</span><span style="color: #7AA2F7;"> &quot;certificate_authority&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  source</span><span style="color: #89DDFF;">  = &quot;</span><span style="color: #9ECE6A;">serverless-ca/ca/aws</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  version</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">1.8.0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">  ...</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  csr_files</span><span style="color: #89DDFF;"> =</span><span style="color: #0DB9D7;"> concat</span><span style="color: #9ABDF5;">([</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">vpn.csr</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">,</span><span style="color: #9ABDF5;"> [</span><span style="color: #BB9AF7;">for</span><span style="color: #C0CAF5;"> cert</span><span style="color: #89DDFF;"> in</span><span style="color: #C0CAF5;"> local</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">client_cert_requests</span><span style="color: #89DDFF;"> : &quot;${</span><span style="color: #C0CAF5;">cert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">common_name</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">.csr</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">])</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Again, we'll <strong>run <code>terraform apply</code> twice</strong>, first to generate the csr and save it to the <code>csrs</code> directory, and second to have the Serverless CA module pickup the just created csr and save it to the destination S3 bucket.</p>
+<p>Then go run the Step Function as we did for the server certificate. Again, copy and save the Step Function execution output into two files, one containing the private key, and the other containing the certificate. Note the paths as we'll be adding them to the vpn config later.
+<br></p>
+<h2 id="setting-up-client-vpn"><a class="header-anchor no-hover-padding" href="#setting-up-client-vpn" aria-label="Anchor link for: setting-up-client-vpn"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up Client VPN</h2>
+<p>To setup an AWS Client VPN endpoint, we need to :</p>
+<ul>
+<li>Set up logging</li>
+<li>Add a security group rule to allow access to your target resource</li>
+<li>Create the VPN endpoint</li>
+<li>Associate a target network</li>
+<li>Add an authorization rule</li>
+</ul>
+<h3 id="setting-up-logging"><a class="header-anchor no-hover-padding" href="#setting-up-logging" aria-label="Anchor link for: setting-up-logging"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up logging</h3>
+<p>Connection logging records client connection requests, outcomes (success or failure), failure reasons, and client
+termination time. Since we care about security, this observability is something we want to have.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_cloudwatch_log_group&quot; &quot;client_vpn&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">aws-client-vpn-logs</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_cloudwatch_log_stream&quot; &quot;client_vpn&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">aws-client-vpn</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  log_group_name</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_cloudwatch_log_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">client_vpn</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><h3 id="add-a-security-group-rule-to-allow-access-to-your-target-resource"><a class="header-anchor no-hover-padding" href="#add-a-security-group-rule-to-allow-access-to-your-target-resource" aria-label="Anchor link for: add-a-security-group-rule-to-allow-access-to-your-target-resource"><span class="link-icon" aria-hidden="true"></span></a>
+Add a security group rule to allow access to your target resource</h3>
+<p>If you create an AWS Client VPN endpoint without specifiying a security group, the VPC's default security group is
+automatically applied to it.</p>
+<p>AWS strongly recommends that default security groups restrict all inbound and outbound traffic, even though they cannot
+be deleted. This is because inadvertently assigning a new AWS resource to the default security group can lead to
+unauthorized access if it has open rules.</p>
+<p>If your are following this best practice (which you should), you'll need to create a security group/security group rule
+to allow access from the VPN to your target resource. Adjust the ingress rules (port, protocol) based on the resource
+you need to access (e.g., port 5432 for PostgreSQL).</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_security_group&quot; &quot;allow_ssh&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">allow_ssh</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">Allow SSH inbound traffic and all outbound traffic</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vpc_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  tags</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  Name</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">allow_ssh</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_ingress_rule&quot; &quot;allow_ssh_ipv4&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">allow_ssh</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_ipv4</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cidr_block</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  from_port</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 22</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">tcp</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  to_port</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> 22</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_vpc_security_group_egress_rule&quot; &quot;allow_all_traffic_ipv4&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">allow_ssh</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cidr_ipv4</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">0.0.0.0/0</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  ip_protocol</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">-1</span><span style="color: #89DDFF;">&quot;</span><span style="color: #51597D;font-style: italic;"> # semantically equivalent to all ports</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h3 id="create-the-client-vpn-endpoint"><a class="header-anchor no-hover-padding" href="#create-the-client-vpn-endpoint" aria-label="Anchor link for: create-the-client-vpn-endpoint"><span class="link-icon" aria-hidden="true"></span></a>
+Create the Client VPN Endpoint</h3>
+<p>This is the central resource you create and manage to enable secure connections between your remote users and your AWS
+resources. It acts as the termination point for all client VPN sessions.</p>
+<blockquote>
+<p><strong>Note:</strong>
+Take care to select a cidr range for your vpn endpoint that does not clash with the cidr range of your VPC.</p>
+</blockquote>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ec2_client_vpn_endpoint&quot; &quot;org&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  description</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">misaac.me VPN</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  server_certificate_arn</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_acm_certificate</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">vpncert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  client_cidr_block</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">172.16.0.0/16</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  authentication_options</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  type</span><span style="color: #89DDFF;"> = &quot;</span><span style="color: #9ECE6A;">certificate-authentication</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  root_certificate_chain_arn</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_acm_certificate</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">vpncert</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arn</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #73DACA;">  connection_log_options</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  enabled</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cloudwatch_log_group</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_cloudwatch_log_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">client_vpn</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  cloudwatch_log_stream</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_cloudwatch_log_stream</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">client_vpn</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">name</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  split_tunnel</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  vpc_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  security_group_ids</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> [</span><span style="color: #C0CAF5;">aws_security_group</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">allow_ssh</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span><span style="color: #9ABDF5;">]</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Notice how we reference the server certificate issued which we previously imported into ACM in both
+<code>server_certificate_arn</code> and <code>root_certificate_chain_arn</code>.</p>
+<p>Since our client certificates will also be issued by the same CA, we can use the same certificate ARN as
+the trust anchor for both server and client authentication. This allows any client certificate signed by the same CA to
+be accepted during mutual TLS authentication.</p>
+<p>We're also setting <code>split_tunnel</code> to <code>true</code>. This ensures that only traffic destined for resources inside the VPN is
+routed through the VPN tunnel, while all other internet traffic continues to go through the user's local network.</p>
+<p>If we left <code>split_tunnel</code> set to its default value of <code>false</code>, all traffic including internet-bound requests would be
+routed through the VPN. Because the our fully-private VPC has no public internet access, this would effectively break
+the user's connection, blackholing their traffic the moment they connect.</p>
+<p>If you're reading this and you intend to set this up with an internet-connected vpc, note that <code>split_tunnel</code> might
+still be useful for you if your security posture allows and you'd like to save on data transfer costs by only routing
+AWS-bound traffic through the VPN.</p>
+<h3 id="associate-the-vpn-endpoint-with-the-vpc-and-subnet"><a class="header-anchor no-hover-padding" href="#associate-the-vpn-endpoint-with-the-vpc-and-subnet" aria-label="Anchor link for: associate-the-vpn-endpoint-with-the-vpc-and-subnet"><span class="link-icon" aria-hidden="true"></span></a>
+Associate the VPN endpoint with the VPC and subnet</h3>
+<p>To route VPN traffic into your VPC, you need to associate the endpoint with a <strong>target network</strong>. A target network is just a
+subnet in your VPC. This tells AWS where to send traffic from connected clients.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ec2_client_vpn_network_association&quot; &quot;subnet_b&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  client_vpn_endpoint_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_ec2_client_vpn_endpoint</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">org</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  subnet_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_subnet</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">subnet_b</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><h3 id="add-an-authorization-rule-for-the-vpc"><a class="header-anchor no-hover-padding" href="#add-an-authorization-rule-for-the-vpc" aria-label="Anchor link for: add-an-authorization-rule-for-the-vpc"><span class="link-icon" aria-hidden="true"></span></a>
+Add an authorization rule for the VPC</h3>
+<p>Even after associating a subnet, clients can’t access anything yet. You need to explicitly allow it with an
+authorization rule.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="terraform"><span class="giallo-l"><span style="color: #C0CAF5;">resource</span><span style="color: #7AA2F7;"> &quot;aws_ec2_client_vpn_authorization_rule&quot; &quot;subnet_b&quot;</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  client_vpn_endpoint_id</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_ec2_client_vpn_endpoint</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">org</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">id</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  target_network_cidr</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> aws_vpc</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">main</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">cidr_block</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">  authorize_all_groups</span><span style="color: #89DDFF;"> =</span><span style="color: #FF9E64;"> true</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><br>
+<h2 id="connecting-to-client-vpn"><a class="header-anchor no-hover-padding" href="#connecting-to-client-vpn" aria-label="Anchor link for: connecting-to-client-vpn"><span class="link-icon" aria-hidden="true"></span></a>
+Connecting to Client VPN</h2>
+<p>To connect to the Client VPN, we'll need both the Client VPN endpoint configuration file and our generated client key
+and certificate.</p>
+<h3 id="prepare-the-client-vpn-endpoint-configuration-file"><a class="header-anchor no-hover-padding" href="#prepare-the-client-vpn-endpoint-configuration-file" aria-label="Anchor link for: prepare-the-client-vpn-endpoint-configuration-file"><span class="link-icon" aria-hidden="true"></span></a>
+Prepare the Client VPN endpoint configuration file</h3>
+<ol>
+<li>
+<p>Open the Amazon VPC console at <a rel="external" href="https://console.aws.amazon.com/vpc/">https://console.aws.amazon.com/vpc/</a></p>
+</li>
+<li>
+<p>In the navigation pane, choose <strong>Client VPN Endpoints</strong>.</p>
+</li>
+<li>
+<p>Select the Client VPN endpoint that was just created, and choose <strong>Download client configuration</strong>.</p>
+</li>
+<li>
+<p>Open the Client VPN endpoint configuration file using your preferred text editor. Add <code>&lt;cert&gt;&lt;/cert&gt;</code> and <code>&lt;key&gt; &lt;/key&gt;</code> tags to the file. Place the contents of the client certificate and the contents of the private key between the
+corresponding tags, as such:</p>
+</li>
+</ol>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>&lt;cert&gt;</span></span>
+<span class="giallo-l"><span>path to client certificate (.crt) file</span></span>
+<span class="giallo-l"><span>&lt;/cert&gt;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>&lt;key&gt;</span></span>
+<span class="giallo-l"><span>path to private key (.key) file</span></span>
+<span class="giallo-l"><span>&lt;/key&gt;</span></span></code></pre>
+<ol>
+<li>
+<p>Save and close the Client VPN endpoint configuration file.</p>
+</li>
+<li>
+<p>Add the line <code>pull-filter ignore "redirect-gateway"</code> to the ovpn file.</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>Note:</strong> Step 6 deserves a bit of explanation. During testing on a local device using the AWS-provided VPN client, I
+found that even though <code>split-tunnel</code> was enabled, AWS Client VPN was still routing all traffic through the VPN. The
+culprit was the <code>redirect-gateway</code> flag which the AWS provided client was setting.</p>
+<p>Fortunately, <code>pull-filter</code> is one of the supported <a rel="external" href="https://docs.aws.amazon.com/vpn/latest/clientvpn-user/connect-aws-client-vpn-connect.html#support-openvpn">OpenVPN
+directives</a>
+in the AWS client. By adding <code>pull-filter ignore "redirect-gateway"</code>, we instruct the client to ignore that directive
+and preserve split-tunnel behavior.</p>
+</blockquote>
+<h3 id="connect-to-the-client-vpn-endpoint"><a class="header-anchor no-hover-padding" href="#connect-to-the-client-vpn-endpoint" aria-label="Anchor link for: connect-to-the-client-vpn-endpoint"><span class="link-icon" aria-hidden="true"></span></a>
+Connect to the Client VPN endpoint</h3>
+<p>How you'll connect to the VPN depends on your OS as well as your VPN client. AWS provides its own <a rel="external" href="https://docs.aws.amazon.com/vpn/latest/clientvpn-user/user-getting-started.html#install-client">custom OpenVPN
+client</a> that is designed
+to be compatible with all features of AWS Client VPN. However, since the goal was to use this in an Ubuntu Linux GitHub
+Codespace, we'll just use the bog standard OpenVPN client.</p>
+<p>First we'll install openvpn.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>sudo apt-get update &amp;&amp; sudo apt-get install openvpn</span></span></code></pre>
+<p>Then we can connect using:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>sudo openvpn --config /path/to/config/file</span></span></code></pre>
+<p>If all went well, you should see this:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>@mbuotidem ➜ /workspaces/mbuotidem.github.io (main) $ sudo openvpn --config o.ovpn</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:17 2025 OpenVPN 2.4.12 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO]</span></span>
+<span class="giallo-l"><span>[AEAD] built on Jun 27 2024</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:17 2025 library versions: OpenSSL 1.1.1f 31 Mar 2020, LZO 2.10</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:17 2025 TCP/UDP: Preserving recently used remote address: [AF_INET]3.XXX.XXX.72:443</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:17 2025 Socket Buffers: R=[1048576-&gt;1048576] S=[212992-&gt;212992]</span></span>
+<span class="giallo-l"><span>...</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 Outgoing Data Channel: Cipher &#39;AES-256-GCM&#39; initialized with 256 bit key</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 Incoming Data Channel: Cipher &#39;AES-256-GCM&#39; initialized with 256 bit key</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 ROUTE_GATEWAY 10.0.0.1/255.255.0.0 IFACE=eth0 HWADDR=7c:1e:52:5b:bf:9b</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 TUN/TAP device tun0 opened</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 TUN/TAP TX queue length set to 100</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 /sbin/ip link set dev tun0 up mtu 1500</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 /sbin/ip addr add dev tun0 172.16.0.13/27 broadcast 172.16.0.31</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 /sbin/ip route add 172.31.0.0/16 via 172.16.0.1</span></span>
+<span class="giallo-l"><span>Sat Apr 12 00:40:19 2025 Initialization Sequence Completed</span></span></code></pre>
+<p>You can now leave that terminal window running, open a new one, and ssh, curl, or otherwise connect to the resource in your private subnet!</p>
+<h3 id="wrapping-up"><a class="header-anchor no-hover-padding" href="#wrapping-up" aria-label="Anchor link for: wrapping-up"><span class="link-icon" aria-hidden="true"></span></a>
+Wrapping Up</h3>
+<p>That’s it! You now have a fully functional, certificate-based AWS Client VPN without having to pay AWS Private CA’s hefty price tag. By using Serverless CA, we’ve built a scalable, revocable, IaC-backed certificate authority that runs for under $50 a year.</p>
+<p>From here, we can layer on additional access controls, integrate with IAM Roles Anywhere, or extend the same CA for other use cases.</p>
+<p>You’ll still need to pay for the <a rel="external" href="https://aws.amazon.com/vpn/pricing/">AWS VPN</a> itself including the hourly charge for the VPN endpoint (even when idle), plus any connection and data transfer fees. But at least you're not spending $400/month just to run a CA.</p>
+<!-- https://aws.amazon.com/blogs/security/connect-your-on-premises-kubernetes-cluster-to-aws-apis-using-iam-roles-anywhere/ -->
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/spiffe-spire-secret-sprawl-fix/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Solving Secret Sprawl with SPIFFE</p></div>
+                <div><a href="https://misaac.me/blog/ssh-tunneling-oke-kubernetes/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Using SSH tunneling to connect to private OKE kubernetes clusters</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#problem-statement">Problem Statement</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#solution">Solution</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#why-use-a-certificate-authority-ca">Why use a Certificate Authority (CA)</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#downsides-to-using-only-certificate-based-auth-with-aws-client-vpn">Downsides to using only certificate-based auth with AWS Client VPN</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#prerequisites">Prerequisites</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#choosing-a-ca">Choosing a CA</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#setting-up-serverless-ca">Setting up Serverless CA</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#generating-a-server-certificate">Generating a server certificate</a>
+                                        
+                                            <ul>
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#setup-subdirectories-and-required-files">Setup subdirectories and required files</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#create-certificate-signing-request-csr">Create Certificate Signing Request (CSR)</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#request-the-serverauth-extension-for-the-server-certificate">Request the serverAuth extension for the server certificate</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                                    
+                                                        <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#run-the-certificate-generation-step-function">Run the certificate generation step function</a>
+                                                            
+                                                        </li>
+                                                    
+                                                
+                                            </ul>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#adding-the-server-certificate-to-acm">Adding the server certificate to ACM</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#generating-a-client-certificate">Generating a client certificate</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#setting-up-client-vpn">Setting up Client VPN</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#setting-up-logging">Setting up logging</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#add-a-security-group-rule-to-allow-access-to-your-target-resource">Add a security group rule to allow access to your target resource</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#create-the-client-vpn-endpoint">Create the Client VPN Endpoint</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#associate-the-vpn-endpoint-with-the-vpc-and-subnet">Associate the VPN endpoint with the VPC and subnet</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#add-an-authorization-rule-for-the-vpc">Add an authorization rule for the VPC</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#connecting-to-client-vpn">Connecting to Client VPN</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#prepare-the-client-vpn-endpoint-configuration-file">Prepare the Client VPN endpoint configuration file</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#connect-to-the-client-vpn-endpoint">Connect to the Client VPN endpoint</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/aws-client-vpn-terraform/#wrapping-up">Wrapping Up</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;automated-aws-credential-renewal-spiffe-helper-roles-anywhere&#x2F;">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-24</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;connecting-github-codespaces-to-aws-vpn-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Accessing AWS VPCs from GitHub Codespaces with SPIFFE and IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-05-19</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (12)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (5)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;cloudfront&#x2F;" class="sidebar-tag">
+                                cloudfront (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;codespaces&#x2F;" class="sidebar-tag">
+                                codespaces (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;coding&#x2F;" class="sidebar-tag">
+                                coding (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a rel="external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>
