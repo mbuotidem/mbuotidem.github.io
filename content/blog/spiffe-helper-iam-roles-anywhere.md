@@ -14,7 +14,7 @@ tags = [
 ]
 +++
 
-In [Grant AWS Access to GitHub Codespaces via SPIFFE/SPIRE & IAM Roles Anywhere](http://127.0.0.1:1111/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere), we demonstrated how to authenticate to AWS using SPIRE-issued X.509 certificates and IAM Roles Anywhere. 
+In [Secure AWS API Authentication for GitHub Codespaces using SPIFFE and IAM Roles Anywhere](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere), we demonstrated how to authenticate to AWS using SPIRE-issued X.509 certificates and IAM Roles Anywhere. 
 
 While it works, this approach requires manual intervention: you need to repeatedly request new SVIDs when they expire after an hour, as well as manually call the Roles Anywhere credential helper each time to obtain AWS credentials. But what if we could automate this entire process?
 

@@ -1,2 +1,5 @@
+**/.venv/
 .temp
 .DS_Store
+.vscode/mcp.json
+content/blog/configure-okta-identity-provider-aws-agentcore-gateway/mcp-proxy/package

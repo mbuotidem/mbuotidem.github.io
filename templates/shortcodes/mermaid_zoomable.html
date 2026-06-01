@@ -1,0 +1,25 @@
+{% set invertible = invertible | default(value=true) %}
+{% set full_width = full_width | default(value=false) %}
+<div class="mermaid-zoomable-wrapper" style="position: relative;">
+  <button data-mermaid-open style="
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      z-index: 10;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      opacity: 0.6;
+      border: 1px solid currentColor;
+      border-radius: 4px;
+      background: transparent;
+      line-height: 1.4;
+    " title="Open diagram in new tab">open full size ↗</button>
+  <noscript>
+    <strong>⚠️ JavaScript is required to render the diagram.</strong>
+  </noscript>
+  <pre class="mermaid{% if full_width %} full-width{% endif %}{% if invertible %} invertible-image{% endif %}">
+    {{ body | safe }}
+  </pre>
+</div>
+<script src="/js/mermaid-zoomable.js"></script>
