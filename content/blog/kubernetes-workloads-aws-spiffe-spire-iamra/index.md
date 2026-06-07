@@ -35,8 +35,8 @@ We'll accomplish this in three key steps: First, we'll update our SPIRE server c
 
 Before diving into the implementation, make sure you have the following components already configured and operational:
 
-- Public Key Infrastructure [(PKI)](http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki) established.
-- IAM Roles Anywhere [configured](http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-iam-roles-anywhere) to use that PKI.
+- Public Key Infrastructure [(PKI)](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki) established.
+- IAM Roles Anywhere [configured](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-iam-roles-anywhere) to use that PKI.
 - A SPIRE Server [configured](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-the-spire-server) to use the PKI.
 - A Kubernetes cluster whose API is reachable from your SPIRE server.
 

@@ -3,3 +3,7 @@
 .DS_Store
 .vscode/mcp.json
 content/blog/configure-okta-identity-provider-aws-agentcore-gateway/mcp-proxy/package
+**/.terraform/
+**/.venv/
+**/package/
+**/__pycache__/

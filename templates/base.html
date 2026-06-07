@@ -34,7 +34,15 @@ This variable will hold all the text strings for the language #}
 <body{% if lang in rtl_languages %} dir="rtl"{% endif %}{% if config.extra.override_serif_with_sans %} class="use-sans-serif"{% endif %}>
     {% include "partials/nav.html" %}
 
-    <div class="layout-container">
+    {%- if lang == config.default_language -%}
+        {%- set expected_root = "/" -%}
+    {%- else -%}
+        {%- set expected_root = "/" ~ lang ~ "/" -%}
+    {%- endif -%}
+    {%- set current_path_value = current_path | default(value="") -%}
+    {%- set is_root_section = current_path_value == expected_root -%}
+
+    <div class="layout-container{% if is_root_section %} home-layout{% endif %}">
         {# Mobile browse section - appears at top on mobile #}
         <div class="mobile-browse">
             <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">

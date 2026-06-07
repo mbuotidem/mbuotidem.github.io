@@ -6,11 +6,13 @@ compile_sass = true
 
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = false
+generate_robots_txt = false
 
 theme = "tabi"
 title = "Isaac on DevSecOps"
 author = "Isaac Mbuotidem"
 taxonomies = [{ name = "tags", feed = true }]
+ignored_content = ["**/.terraform/**", "**/.venv/**", "**/__pycache__/**", "**/package/**"]
 
 [markdown]
 # Syntax highlighting configuration
@@ -32,6 +34,7 @@ stylesheets = ["custom-sidebar.css"]
 menu = [
     { name = "blog", url = "blog", trailing_slash = true },
     { name = "archive", url = "archive", trailing_slash = true },
+    { name = "about", url = "about", trailing_slash = true },
     { name = "linkedin", external_url = "https://www.linkedin.com/in/miisaac/", trailing_slash = false },
     { name = "github", external_url = "https://github.com/mbuotidem/", trailing_slash = false },
     { name = "tags", url = "tags", trailing_slash = true },

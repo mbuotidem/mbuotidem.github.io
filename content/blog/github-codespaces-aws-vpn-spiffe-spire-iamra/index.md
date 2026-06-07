@@ -33,7 +33,7 @@ In this post, we'll be building on that work, with the goal of using the same ce
 
 ## Setup the VPN Server Certificate
 
-This builds off the PKI we built in [Setting up our Public Key Infrastructure](http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki). We create a certificate signing request for our vpn server and have it signed by our Root CA. Then we add said certificate to AWS ACM so that we can reference it later when we setup our AWS Cient VPN endpoint.
+This builds off the PKI we built in [Setting up our Public Key Infrastructure](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki). We create a certificate signing request for our vpn server and have it signed by our Root CA. Then we add said certificate to AWS ACM so that we can reference it later when we setup our AWS Cient VPN endpoint.
 
 ```terraform
 # 3. VPN Server Private Key
@@ -142,6 +142,6 @@ On the AWS Side, you can see the connection info if you visit your VPN endpoint'
 
 ## Wrapping Up
 
-That’s it! You've now used your SPIRE issued SVID twice, first to [grab](http://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere) AWS credentials, via AWS IAM Anywhere, and now, to connect to AWS Client VPN. 
+That’s it! You've now used your SPIRE issued SVID twice, first to [grab](https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#use-a-spiffe-svid-to-obtain-aws-credentials-via-iam-roles-anywhere) AWS credentials, via AWS IAM Anywhere, and now, to connect to AWS Client VPN. 
 
 In our next post, we'll move beyond the local developer machine context and explore using SPIFFE/SPIRE to grant Kubernetes clusters not running on AWS access to AWS API's via IAM Roles Anywhere. 

@@ -1,7 +1,4 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://mbuotidem.github.io/sitemap-index.xml
+Sitemap: https://misaac.me/sitemap.xml
 
 User-agent: Amazonbot
 Disallow: /

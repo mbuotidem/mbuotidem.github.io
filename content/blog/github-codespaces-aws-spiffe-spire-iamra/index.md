@@ -980,7 +980,7 @@ Notice the short duration of the SVID. Although the short SVID duration might se
 
 That said, your workload now needs to grapple with tracking the SVID expiration and continually requesting renewals. Does this mean you have to go re-architect your legacy apps? Fortunately no, the [spiffe-helper](https://github.com/spiffe/spiffe-helper) project is designed to help you solve this problem without code changes. The handy utility takes care of fetching X.509 SVID certificates from the SPIFFE agent, launching a process to use them, and automatically renewing and reloading certificates as needed. 
 
-We cover this process [here](http://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/), but for now, we don't have to worry about this at the moment as we'll be using our SVID only once, so let's go authenticate to AWS!
+We cover this process [here](https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/), but for now, we don't have to worry about this at the moment as we'll be using our SVID only once, so let's go authenticate to AWS!
 
 <br>
 
