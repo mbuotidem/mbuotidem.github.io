@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Grant AWS Access to Kubernetes Workloads via SPIFFE/SPIRE & IAM Roles Anywhere</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=6dc2751e6027f4c372a9" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Learn how to authenticate Kubernetes workloads to AWS using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere" />
+        <meta property="og:description" content="Learn how to authenticate Kubernetes workloads to AWS using SPIRE-issued X.509 certificates and AWS IAM Roles Anywhere" />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Grant AWS Access to Kubernetes Workloads via SPIFFE/SPIRE & IAM Roles Anywhere" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/about/">
+                                
+                                about
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+<div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere
+        </h1>
+
+        <ul class="meta">
+                <li>1st Jun 2025</li>
+                <li title="1979 words"><span class='separator' aria-hidden='true'>•</span>10 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/spiffe-spire/">spiffe-spire</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/identity/">identity</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/secrets-management/">secrets management</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/zero-trust/">zero trust</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iam/">iam</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">iac</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/kubernetes/">kubernetes</a></li>
+        </ul>
+
+        <section class="body"><h2 id="preamble"><a class="header-anchor no-hover-padding" href="#preamble" aria-label="Anchor link for: preamble"><span class="link-icon" aria-hidden="true"></span></a>
+Preamble</h2>
+<p>In our <a href="https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/">last post</a>, we used the <a href="https://github.com/spiffe/spiffe-helper">spiffe-helper</a> along with the <a href="https://github.com/aws/rolesanywhere-credential-helper">IAM Roles Anywhere credential helper</a> to connect to AWS from our local machine. This solved the manual SVID renewal and AWS credential refresh problem. Specifically, it eliminated the tedious cycle of manually requesting new X.509 certificates from SPIRE every hour, and then manually exchanging those certificates for fresh AWS temporary credentials through IAM Roles Anywhere.</p>
+<p>In this post, we'll build on that work, deploying both the spiffe-helper and the rolesanywhere helper to serve a Kubernetes application. Along the way, we'll learn how to deploy a SPIRE agent on a Kubernetes cluster. This approach - using the spiffe-helper - makes it possible to integrate SPIFFE with applications that need certficates but can't be easily refactored to support SPIFFE.</p>
+<h2 id="what-s-our-goal"><a class="header-anchor no-hover-padding" href="#what-s-our-goal" aria-label="Anchor link for: what-s-our-goal"><span class="link-icon" aria-hidden="true"></span></a>
+What's our goal?</h2>
+<p>Our goal is to gain access to AWS from our Kubernetes pod using a SPIRE issued X.509 certificate, also known as an <a href="https://spiffe.io/docs/latest/spire-about/spire-concepts/#a-day-in-the-life-of-an-svid">SVID</a>.</p>
+<p>We'll accomplish this in three key steps: First, we'll update our SPIRE server configuration to enable communication with our Kubernetes cluster. Next, we'll deploy a SPIRE agent on the cluster that will automatically register itself with the SPIRE server. Finally, once the agent and server are communicating, we'll launch a workload that obtains AWS credentials through the spiffe-helper and IAM Roles Anywhere helper, with both operating seamlessly in the background.</p>
+<h3 id="prerequisites"><a class="header-anchor no-hover-padding" href="#prerequisites" aria-label="Anchor link for: prerequisites"><span class="link-icon" aria-hidden="true"></span></a>
+Prerequisites</h3>
+<p>Before diving into the implementation, make sure you have the following components already configured and operational:</p>
+<ul>
+<li>Public Key Infrastructure <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-our-public-key-infrastructure-pki">(PKI)</a> established.</li>
+<li>IAM Roles Anywhere <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-iam-roles-anywhere">configured</a> to use that PKI.</li>
+<li>A SPIRE Server <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-the-spire-server">configured</a> to use the PKI.</li>
+<li>A Kubernetes cluster whose API is reachable from your SPIRE server.</li>
+</ul>
+<br>
+<h2 id="update-spire-server-config-to-talk-to-kubernetes"><a class="header-anchor no-hover-padding" href="#update-spire-server-config-to-talk-to-kubernetes" aria-label="Anchor link for: update-spire-server-config-to-talk-to-kubernetes"><span class="link-icon" aria-hidden="true"></span></a>
+Update SPIRE server config to talk to Kubernetes</h2>
+<h3 id="verify-kubernetes-cluster-reachability"><a class="header-anchor no-hover-padding" href="#verify-kubernetes-cluster-reachability" aria-label="Anchor link for: verify-kubernetes-cluster-reachability"><span class="link-icon" aria-hidden="true"></span></a>
+Verify kubernetes cluster reachability</h3>
+<p>First verify that we can communicate with the K8's API from our SPIRE server. An easy check is to run a curl against the <code>version</code> endpoint of your Kubernetes cluster from your SPIRE server.</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">$ curl https:&#x2F;&#x2F;192.168.194.129:443&#x2F;version
+{
+  &quot;kind&quot;: &quot;Status&quot;,
+  &quot;apiVersion&quot;: &quot;v1&quot;,
+  &quot;metadata&quot;: {},
+  &quot;status&quot;: &quot;Failure&quot;,
+  &quot;message&quot;: &quot;Unauthorized&quot;,
+  &quot;reason&quot;: &quot;Unauthorized&quot;,
+  &quot;code&quot;: 401
+}$ 
+</code></pre>
+<p>An ‘Unauthorized’ response is fine, at this point all we care about is network reachability as we'll be creating a token for our SPIRE server shortly.</p>
+<h3 id="create-backing-kubernetes-resources-for-the-spire-server"><a class="header-anchor no-hover-padding" href="#create-backing-kubernetes-resources-for-the-spire-server" aria-label="Anchor link for: create-backing-kubernetes-resources-for-the-spire-server"><span class="link-icon" aria-hidden="true"></span></a>
+Create backing Kubernetes resources for the SPIRE Server</h3>
+<p>Our SPIRE server needs several Kubernetes resources to operate effectively within the cluster environment. We'll start by creating the <code>spire</code> namespace, which provides logical separation for our SPIRE components.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: v1
+kind: Namespace
+metadata:
+  name: spire
+</code></pre>
+<p>The SPIRE server requires its own service account to authenticate with the Kubernetes API. This service account will be the identity our server uses when interacting with cluster resources.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spire-server
+  namespace: spire
+</code></pre>
+<p>To enable the SPIRE server's node attestor to function properly, we need to grant it specific permissions through a ClusterRole. This role allows the server to read pods and nodes, update configmaps, and query the Token Review API, steps that are all essential for the node attestation process.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io&#x2F;v1
+metadata:
+  name: spire-server-trust-role
+rules:
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods&quot;, &quot;nodes&quot;]
+    verbs: [&quot;get&quot;]
+  - apiGroups: [&quot;authentication.k8s.io&quot;]
+    resources: [&quot;tokenreviews&quot;]
+    verbs: [&quot;create&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;configmaps&quot;]
+    verbs: [&quot;patch&quot;, &quot;get&quot;, &quot;list&quot;]
+</code></pre>
+<p>We then bind this cluster role to our SPIRE server service account, establishing the necessary permissions for the server to operate within the cluster.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io&#x2F;v1
+metadata:
+  name: spire-server-trust-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
+roleRef:
+  kind: ClusterRole
+  name: spire-server-trust-role
+  apiGroup: rbac.authorization.k8s.io
+</code></pre>
+<p>Finally, we create a ConfigMap named <code>spire-bundle</code>. This ConfigMap will hold the SPIRE server's trust bundle (CA certificates). SPIRE agents need this bundle during their startup to securely bootstrap and authenticate to the SPIRE server. Since we'll be deploying our SPIRE agent to the default namespace, we will also create this ConfigMap in the default namespace for easy access by the agent. The SPIRE server's <a href="https://github.com/spiffe/spire/blob/main/doc/plugin_server_notifier_k8sbundle.md">k8sbundle notifier plugin</a> (which we'll configure shortly) will populate and keep this ConfigMap updated.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spire-bundle
+  namespace: default
+</code></pre>
+<h3 id="prepare-the-kubeconfig-file"><a class="header-anchor no-hover-padding" href="#prepare-the-kubeconfig-file" aria-label="Anchor link for: prepare-the-kubeconfig-file"><span class="link-icon" aria-hidden="true"></span></a>
+Prepare the kubeconfig file</h3>
+<p>With our Kubernetes resources in place, we need to prepare a kubeconfig file that our server plugins will use to authenticate with the cluster. We'll extract the current cluster configuration, stripping it down to only the essential information using the --minify flag.</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">kubectl config view --minify --flatten --raw &gt; kubeconfig.yaml
+</code></pre>
+<p>Check the kubeconfig file - if it has the <code>client-certificate-data</code> and <code>client-key-data</code> fields, you should be good to go.</p>
+<p>Now that our kubeconfig is ready, we need to make it accessible to our SPIRE server. Since my SPIRE server runs on ECS, I'll store the kubeconfig as an SSM parameter for secure retrieval.</p>
+<pre data-lang="terraform" class="language-terraform "><code class="language-terraform" data-lang="terraform">resource &quot;aws_ssm_parameter&quot; &quot;kubeconfig&quot; {
+  name        = &quot;&#x2F;misaac-me&#x2F;kubeconfig&quot;
+  description = &quot;Kubernetes configuration for misaac.me&quot;
+  type        = &quot;SecureString&quot;
+  value       = file(&quot;${path.module}&#x2F;kubeconfig.yaml&quot;)
+
+  tags = {
+    Environment = &quot;production&quot;
+    Project     = &quot;misaac.me&quot;
+  }
+}
+</code></pre>
+<p>To retrieve this configuration at runtime, I've modified my <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-spire-server-ecs-task-definition">ECS task</a> command to include an AWS CLI call that pulls the kubeconfig and saves it to the attached volume.</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">aws ssm get-parameter --name &quot;&#x2F;misaac-me&#x2F;kubeconfig&quot; --with-decryption --query &quot;Parameter.Value&quot; --output text &gt; &#x2F;opt&#x2F;spire&#x2F;conf&#x2F;server&#x2F;kubeconfig.yaml
+</code></pre>
+<h3 id="configure-the-k8s-psat-server-plugin"><a class="header-anchor no-hover-padding" href="#configure-the-k8s-psat-server-plugin" aria-label="Anchor link for: configure-the-k8s-psat-server-plugin"><span class="link-icon" aria-hidden="true"></span></a>
+Configure the k8s_psat server plugin</h3>
+<p>With the kubeconfig in place, we can now update the <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#the-spire-server-config">SPIRE server configuration</a> to include the <a href="https://github.com/spiffe/spire/blob/main/doc/plugin_server_nodeattestor_k8s_psat.md">k8s_psat</a> plugin. This plugin handles the server-side node attestation for Kubernetes workloads.</p>
+<pre data-lang="text" class="language-text "><code class="language-text" data-lang="text">NodeAttestor &quot;k8s_psat&quot; {
+  plugin_data {
+    clusters = {
+      &quot;orbstack&quot; = {
+        service_account_allow_list = [&quot;default:spire-agent&quot;]
+        kube_config_file = &quot;&#x2F;opt&#x2F;spire&#x2F;conf&#x2F;server&#x2F;kubeconfig.yaml&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="configure-k8sbundle-the-kubernetes-notifier-plugin"><a class="header-anchor no-hover-padding" href="#configure-k8sbundle-the-kubernetes-notifier-plugin" aria-label="Anchor link for: configure-k8sbundle-the-kubernetes-notifier-plugin"><span class="link-icon" aria-hidden="true"></span></a>
+Configure "k8sbundle" - the Kubernetes Notifier plugin</h3>
+<p>Notifiers are specialized plugins that receive updates from the SPIRE server and can act on those changes. We'll configure the <a href="https://github.com/spiffe/spire/blob/main/doc/plugin_server_notifier_k8sbundle.md"><code>k8sbundle</code> notifier</a>, which has the important responsibility of pushing the latest trust bundle contents into a Kubernetes ConfigMap whenever updates occur.</p>
+<pre data-lang="text" class="language-text "><code class="language-text" data-lang="text">Notifier &quot;k8sbundle&quot; {
+  plugin_data {
+      namespace = &quot;default&quot;
+      config_map = &quot;spire-bundle&quot;
+      config_map_key = &quot;bundle.crt&quot;
+      kube_config_file_path = &quot;&#x2F;opt&#x2F;spire&#x2F;conf&#x2F;server&#x2F;kubeconfig.yaml&quot;
+  }
+}
+</code></pre>
+<p>This configuration ensures that once our SPIRE server starts up successfully, it will automatically push the certificate bundle down to our cluster, making it available for agents to use during their initialization process. Next up, our SPIRE agent.</p>
+<h2 id="deploy-spire-agent-on-kubernetes"><a class="header-anchor no-hover-padding" href="#deploy-spire-agent-on-kubernetes" aria-label="Anchor link for: deploy-spire-agent-on-kubernetes"><span class="link-icon" aria-hidden="true"></span></a>
+Deploy SPIRE agent on Kubernetes</h2>
+<p>First, we create a service account for our spire agent in the <code>default</code> namespace.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spire-agent
+  namespace: default
+</code></pre>
+<p>Next, we create the cluster role to allow the spire agent to query the k8s API server.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io&#x2F;v1
+metadata:
+  name: spire-agent-cluster-role
+rules:
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;pods&quot;, &quot;nodes&quot;, &quot;nodes&#x2F;proxy&quot;]
+    verbs: [&quot;get&quot;]
+</code></pre>
+<p>Then we bind the agent cluster role to the spire agent service account.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io&#x2F;v1
+metadata:
+  name: spire-agent-cluster-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: spire-agent
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: spire-agent-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+
+</code></pre>
+<h3 id="configure-the-k8s-psat-agent-plugin"><a class="header-anchor no-hover-padding" href="#configure-the-k8s-psat-agent-plugin" aria-label="Anchor link for: configure-the-k8s-psat-agent-plugin"><span class="link-icon" aria-hidden="true"></span></a>
+Configure the k8s_psat agent plugin</h3>
+<p>As mentioned earlier, SPIRE’s attestation process operates at two levels to secure Kubernetes workloads, node and workload attestation.</p>
+<p><strong>1. Node Attestation (k8s_psat NodeAttestor):</strong>
+The SPIRE agent presents a Projected Service Account Token (PSAT) to the server, which validates it against the Kubernetes API. This confirms the agent is running on an authorized node. This is done by both <code>k8s_psat</code> plugins, server and agent, working together.</p>
+<pre data-lang="text" class="language-text "><code class="language-text" data-lang="text">plugins {
+  NodeAttestor &quot;k8s_psat&quot; {
+    plugin_data {
+      # NOTE: Change this to your cluster name
+      cluster = &quot;orbstack&quot;
+    }
+  }
+}
+</code></pre>
+<h3 id="configure-the-k8s-agent-plugin"><a class="header-anchor no-hover-padding" href="#configure-the-k8s-agent-plugin" aria-label="Anchor link for: configure-the-k8s-agent-plugin"><span class="link-icon" aria-hidden="true"></span></a>
+Configure the k8s agent plugin</h3>
+<p><strong>2. Workload Attestation (k8s WorkloadAttestor):</strong>
+Here, the SPIRE agent authenticates pods by querying the kubelet for pod metadata using the <code>MY_NODE_NAME</code> environment variable and the default service account token for authentication.</p>
+<pre data-lang="text" class="language-text "><code class="language-text" data-lang="text">plugins {
+  WorkloadAttestor &quot;k8s&quot; {
+    plugin_data {
+      node_name_env = &quot;MY_NODE_NAME&quot;
+    }
+  }
+}
+</code></pre>
+<p>This layered design ensures only authorized nodes and workloads receive certificates and enables fine-grained control using Kubernetes selectors in SPIRE registration entries.</p>
+<p>Here's the full config:</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spire-agent
+  namespace: default
+data:
+  agent.conf: |
+    agent {
+      data_dir = &quot;&#x2F;run&#x2F;spire&quot;
+      log_level = &quot;DEBUG&quot;
+      server_address = &quot;spire.misaac.me&quot;
+      server_port = &quot;8081&quot;
+      socket_path = &quot;&#x2F;run&#x2F;spire&#x2F;sockets&#x2F;agent.sock&quot;
+      trust_bundle_path = &quot;&#x2F;run&#x2F;spire&#x2F;bundle&#x2F;bundle.crt&quot;
+      trust_domain = &quot;spire.misaac.me&quot;
+    }
+
+    plugins {
+      NodeAttestor &quot;k8s_psat&quot; {
+        plugin_data {
+          # NOTE: Change this to your cluster name
+          cluster = &quot;orbstack&quot;
+        }
+      }
+
+      WorkloadAttestor &quot;k8s&quot; {
+        plugin_data {
+          node_name_env = &quot;MY_NODE_NAME&quot;
+        }
+      }
+
+      KeyManager &quot;memory&quot; {
+        plugin_data {
+        }
+      }
+    }
+
+    health_checks {
+      listener_enabled = true
+      bind_address = &quot;0.0.0.0&quot;
+      bind_port = &quot;8080&quot;
+      live_path = &quot;&#x2F;live&quot;
+      ready_path = &quot;&#x2F;ready&quot;
+    }
+</code></pre>
+<p>Also make sure that our server address matches the server address we <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-route53-and-the-network-load-balancer">configured</a> for the spire server.</p>
+<h3 id="the-spire-agent-daemonset"><a class="header-anchor no-hover-padding" href="#the-spire-agent-daemonset" aria-label="Anchor link for: the-spire-agent-daemonset"><span class="link-icon" aria-hidden="true"></span></a>
+The SPIRE Agent DaemonSet</h3>
+<p>We can now deploy our agent DaemonSet. The SPIRE agent must run on every node where workloads require SVIDs. A DaemonSet is the ideal Kubernetes construct for this, as it ensures new nodes automatically receive a SPIRE agent to attest both the node and its workloads before issuing SVIDs.</p>
+<p>Here's the configuration for the DaemonSet:</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: apps&#x2F;v1
+kind: DaemonSet
+metadata:
+  name: spire-agent
+  namespace: default
+  labels:
+    app: spire-agent
+spec:
+  selector:
+    matchLabels:
+      app: spire-agent
+  template:
+    metadata:
+      namespace: default
+      labels:
+        app: spire-agent
+    spec:
+      hostPID: false
+      hostNetwork: false
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: spire-agent
+      initContainers:
+        - name: init
+          # This is a small image with wait-for-it, choose whatever image
+          # you prefer that waits for a service to be up. This image is built
+          # from https:&#x2F;&#x2F;github.com&#x2F;lqhl&#x2F;wait-for-it
+          image: cgr.dev&#x2F;chainguard&#x2F;wait-for-it
+          args: [&quot;-t&quot;, &quot;30&quot;, &quot;spire.misaac.me:8081&quot;]
+      containers:
+        - name: spire-agent
+          image: ghcr.io&#x2F;spiffe&#x2F;spire-agent:1.12.2
+          args: [&quot;-config&quot;, &quot;&#x2F;run&#x2F;spire&#x2F;config&#x2F;agent.conf&quot;]
+          env:
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: spire-config
+              mountPath: &#x2F;run&#x2F;spire&#x2F;config
+              readOnly: true
+            - name: spire-bundle
+              mountPath: &#x2F;run&#x2F;spire&#x2F;bundle
+            - name: spire-agent-socket
+              mountPath: &#x2F;run&#x2F;spire&#x2F;sockets
+              readOnly: false
+            - name: spire-token
+              mountPath: &#x2F;var&#x2F;run&#x2F;secrets&#x2F;tokens
+          livenessProbe:
+            httpGet:
+              path: &#x2F;live
+              port: 8080
+            failureThreshold: 2
+            initialDelaySeconds: 15
+            periodSeconds: 60
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: &#x2F;ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: spire-config
+          configMap:
+            name: spire-agent
+        - name: spire-bundle
+          configMap:
+            name: spire-bundle
+        - name: spire-agent-socket
+          hostPath:
+            path: &#x2F;run&#x2F;spire&#x2F;sockets
+            type: DirectoryOrCreate
+        - name: spire-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: spire-agent
+                  expirationSeconds: 7200
+                  audience: spire-server
+
+</code></pre>
+<p>Using hostPath can introduce security risks as it provides access to the underlying node's filesystem. As such, in production, you should use the <a href="https://github.com/spiffe/spiffe-csi">SPIFFE CSI Driver</a>.</p>
+<p>After applying these manifests, check the agent logs to verify successful deployment. You should see output similar to the following:</p>
+<pre data-lang="text" class="language-text "><code class="language-text" data-lang="text">... level=info msg=&quot;Bundle loaded&quot; subsystem_name=attestor trust_domain_id=&quot;spiffe:&#x2F;&#x2F;spire.misaac.me&quot;
+... level=debug msg=&quot;No pre-existing agent SVID found. Will perform node attestation&quot; subsystem_name=attestor
+... level=info msg=&quot;SVID is not found. Starting node attestation&quot; subsystem_name=attestor trust_domain_id=&quot;spiffe:&#x2F;&#x2F;spire.misaac.me&quot;
+... level=info msg=&quot;Node attestation was successful&quot; reattestable=true spiffe_id=&quot;spiffe:&#x2F;&#x2F;spire.misaac.me&#x2F;spire&#x2F;agent&#x2F;k8s_psat&#x2F;orbstack&#x2F;84c43c5a-6219-45b2-a5a4-c56cad474827&quot; subsystem_name=attestor trust_domain_id=&quot;spiffe:&#x2F;&#x2F;spire.misaac.me&quot;
+... level=debug msg=&quot;Bundle added&quot; subsystem_name=svid_store_cache trust_domain_id=spire.misaac.me
+... level=debug msg=&quot;Initializing health checkers&quot; subsystem_name=health
+... level=info msg=&quot;Serving health checks&quot; address=&quot;0.0.0.0:8080&quot; subsystem_name=health
+... level=info msg=&quot;Starting Workload and SDS APIs&quot; address=&#x2F;run&#x2F;spire&#x2F;sockets&#x2F;agent.sock network=unix subsystem_name=endpoints
+</code></pre>
+<h3 id="creating-the-registration-entry"><a class="header-anchor no-hover-padding" href="#creating-the-registration-entry" aria-label="Anchor link for: creating-the-registration-entry"><span class="link-icon" aria-hidden="true"></span></a>
+Creating the registration entry</h3>
+<p>With our agent up and running, we can now create a <a href="https://spiffe.io/docs/latest/deploying/registering/">registration entry</a>. Since our SPIRE server is running on ECS, we can use the ECS Exec feature to run the <code>entry create</code> command.</p>
+<p>Registration requires knowing a parent ID and if you didn't grab it from the logs, you can always run <code>spire-server agent list</code> on the SPIRE server first to retrieve it.</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">aws ecs execute-command --cluster misaac-me-cluster \
+  --task EXAMPLE-TASK-ID \
+  --container app \
+  --interactive \
+  --command &quot;&#x2F;opt&#x2F;spire&#x2F;bin&#x2F;spire-server entry create \
+  -spiffeID spiffe:&#x2F;&#x2F;spire.misaac.me&#x2F;ns&#x2F;default&#x2F;sa&#x2F;default \
+  -parentID spiffe:&#x2F;&#x2F;spire.misaac.me&#x2F;spire&#x2F;agent&#x2F;k8s_psat&#x2F;orbstack&#x2F;84c43c5a-6219-45b2-a5a4-c56cad474827 \
+  -selector k8s:ns:default \
+  -selector k8s:sa:default&quot;
+</code></pre>
+<p>Notice how we specify the <code>parentID</code>. This tells the SPIRE server which agent will be responsible for issuing SVIDs for this workload. This is important because to ensure availability, SVIDs are sent to agents once they are created. This means that when a workload comes alive and requests one, the agent can serve the workload its certificate whether or not it is currently connected to the SPIRE server .</p>
+<p>Here's the result of the <code>entry create</code> command above:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">Starting session with SessionId: ecs-execute-command-o2xbn5vhnhp6ziaectzzsq69vq
+Entry ID         : 6e87aaaf-1f66-46e8-82fb-1aeb5eec9082
+SPIFFE ID        : spiffe:&#x2F;&#x2F;spire.misaac.me&#x2F;ns&#x2F;default&#x2F;sa&#x2F;default
+Parent ID        : spiffe:&#x2F;&#x2F;spire.misaac.me&#x2F;spire&#x2F;agent&#x2F;k8s_psat&#x2F;orbstack&#x2F;84c43c5a-6219-45b2-a5a4-c56cad474827
+Revision         : 0
+X509-SVID TTL    : default
+JWT-SVID TTL     : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:default
+
+
+
+Exiting session with sessionId: ecs-execute-command-o2xbn5vhnhp6ziaectzzsq69vq.
+</code></pre>
+<br>
+<h2 id="profit"><a class="header-anchor no-hover-padding" href="#profit" aria-label="Anchor link for: profit"><span class="link-icon" aria-hidden="true"></span></a>
+Profit</h2>
+<p>We are now ready to run our workload. This deployment has 3 containers. The first is the spiffe-helper, which simply starts up and uses the config to request an SVID from the spire agent. Here's said config:</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: spiffe-helper-config
+data:
+  helper.conf: |
+    agent_address = &quot;&#x2F;run&#x2F;spire&#x2F;sockets&#x2F;agent.sock&quot;
+    cmd = &quot;&quot;
+    cmd_args = &quot;&quot;
+    cert_dir = &quot;&#x2F;mnt&#x2F;credentials&quot;
+    renew_signal = &quot;SIGUSR1&quot;
+    svid_file_name = &quot;svid.0.pem&quot;
+    svid_key_file_name = &quot;svid.0.key&quot;
+    svid_bundle_file_name = &quot;bundle.0.pem&quot;
+    add_intermediates_to_bundle = true
+</code></pre>
+<p>The key line here is <code>add_intermediates_to_bundle</code>, without which you'll run into an <code>AccessDeniedException: Untrusted signing certificate</code> error when trying to authenticate. This is because IAM Roles Anywhere needs to validate the entire chain of the presented SVID up to a CA it knows (from the <a href="https://misaac.me/blog/grant-aws-access-to-codespaces-via-spiffe-spire-iam-roles-anywhere/#setting-up-iam-roles-anywhere">Trust Anchor</a>), and this flag ensures the spiffe-helper provides that chain.</p>
+<p>Next comes the rolesanywhere-helper container. Once it verifies that the SVIDs have been issued, it authenticates with AWS and obtains the AWS credentials. It then spins up a local AWS metadata endpoint that our app container can use to request those credentials. You can build this rolesanywhere helper image using the following Dockerfile.</p>
+<pre data-lang="Dockerfile" class="language-Dockerfile "><code class="language-Dockerfile" data-lang="Dockerfile">ARG BASE_IMAGE=debian:bookworm-slim
+FROM --platform=${TARGETPLATFORM:-linux&#x2F;amd64} ${BASE_IMAGE}
+
+# Optionally, you can set TARGETPLATFORM at build time:
+# docker build --build-arg TARGETPLATFORM=linux&#x2F;arm64 .
+
+# Install ca-certificates and jq packages
+RUN apt-get update &amp;&amp; apt-get install -y ca-certificates jq &amp;&amp; rm -rf &#x2F;var&#x2F;lib&#x2F;apt&#x2F;lists&#x2F;*
+
+# Copy the aws_signing_helper binary from your local machine
+COPY aws_signing_helper &#x2F;usr&#x2F;local&#x2F;bin&#x2F;aws_signing_helper
+
+RUN update-ca-certificates
+RUN chmod +x &#x2F;usr&#x2F;local&#x2F;bin&#x2F;aws_signing_helper
+
+# Set the entrypoint and default command
+ENTRYPOINT [&quot;&#x2F;usr&#x2F;local&#x2F;bin&#x2F;aws_signing_helper&quot;]
+CMD [&quot;serve&quot;, &quot;--certificate&quot;, &quot;&#x2F;mnt&#x2F;credentials&#x2F;tls.crt&quot;, &quot;--private-key&quot;, &quot;&#x2F;mnt&#x2F;credentials&#x2F;tls.key&quot;, &quot;--trust-anchor-arn&quot;, &quot;$(TRUST_ANCHOR_ARN)&quot;, &quot;--profile-arn&quot;, &quot;$(PROFILE_ARN)&quot;, &quot;--role-arn&quot;, &quot;$(ROLE_ARN)&quot;]
+</code></pre>
+<p>This image packages the AWS IAM Roles Anywhere credential helper (which we refer to as aws_signing_helper in the Dockerfile's COPY command). You'll need to download the appropriate binary for your TARGETPLATFORM from the official <a href="https://github.com/aws/rolesanywhere-credential-helper/releases">GitHub Releases page</a> and place it in your Docker build context, naming it aws_signing_helper.</p>
+<p>Finally, our <code>app-container</code> simply runs the AWS CLI to verify that it has received valid credentials. It executes <code>aws sts get-caller-identity</code>, which is the AWS equivalent of a "whoami" command, confirming the pod's authenticated identity within AWS.</p>
+<pre data-lang="yaml" class="language-yaml "><code class="language-yaml" data-lang="yaml">apiVersion: apps&#x2F;v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: client
+  labels:
+    app: client
+spec:
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      hostPID: false
+      hostNetwork: false
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        # Step 1: SPIFFE helper sidecar to fetch and maintain certificates
+        - name: spiffe-helper
+          image: ghcr.io&#x2F;spiffe&#x2F;spiffe-helper:nightly
+          command: [&quot;.&#x2F;spiffe-helper&quot;]
+          args: [&quot;-config&quot;, &quot;&#x2F;config&#x2F;helper.conf&quot;]
+          resources:
+            requests:
+              memory: &quot;64Mi&quot;
+              cpu: &quot;250m&quot;
+            limits:
+              memory: &quot;128Mi&quot;
+              cpu: &quot;500m&quot;
+          volumeMounts:
+            - name: spire-agent-socket
+              mountPath: &#x2F;run&#x2F;spire&#x2F;sockets
+              readOnly: true
+            - name: credentials
+              mountPath: &#x2F;mnt&#x2F;credentials
+              readOnly: false
+            - name: spiffe-helper-config
+              mountPath: &#x2F;config
+              readOnly: true
+
+        # Step 2: Start AWS IAM Roles Anywhere service
+        - name: iamra
+          image: aws-signer
+          command: [&quot;sh&quot;, &quot;-c&quot;]
+          args:
+            - |
+              echo &quot;Waiting for SPIFFE certificates to be available...&quot;
+              timeout=300  # 5 minutes timeout
+              elapsed=0
+              while [ $elapsed -lt $timeout ]; do
+                if [ -s &#x2F;mnt&#x2F;credentials&#x2F;svid.0.pem ] &amp;&amp; \
+                  [ -s &#x2F;mnt&#x2F;credentials&#x2F;svid.0.key ] &amp;&amp; \
+                  [ -s &#x2F;mnt&#x2F;credentials&#x2F;bundle.0.pem ]; then
+                  echo &quot;Certificates found and non-empty, starting AWS signing helper...&quot;
+                  break
+                fi
+                echo &quot;Certificates not yet available or empty, waiting... (${elapsed}s elapsed)&quot;
+                sleep 5
+                elapsed=$((elapsed + 5))
+              done
+
+              if [ $elapsed -ge $timeout ]; then
+                echo &quot;Timeout waiting for certificates after ${timeout}s&quot;
+                exit 1
+              fi
+
+              exec aws_signing_helper serve \
+                --certificate &#x2F;mnt&#x2F;credentials&#x2F;svid.0.pem \
+                --private-key &#x2F;mnt&#x2F;credentials&#x2F;svid.0.key \
+                --intermediates &#x2F;mnt&#x2F;credentials&#x2F;bundle.0.pem \
+                --trust-anchor-arn $TRUST_ANCHOR_ARN \
+                --profile-arn $PROFILE_ARN \
+                --role-arn $ROLE_ARN
+          ports:
+            - containerPort: 9911
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - &quot;grep -q &#x27;:26B7 &#x27; &#x2F;proc&#x2F;net&#x2F;tcp&quot;
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          env:
+            - name: TRUST_ANCHOR_ARN
+              value: &quot;arn:aws:rolesanywhere:us-east-1:123456789012:trust-anchor&#x2F;12345678-1234-1234-1234-123456789012&quot;
+            - name: PROFILE_ARN
+              value: &quot;arn:aws:rolesanywhere:us-east-1:123456789012:profile&#x2F;87654321-4321-4321-4321-210987654321&quot;
+            - name: ROLE_ARN
+              value: &quot;arn:aws:iam::123456789012:role&#x2F;example-role&quot;
+          volumeMounts:
+            - mountPath: &#x2F;mnt&#x2F;credentials
+              name: credentials
+          resources:
+            requests:
+              memory: &quot;64Mi&quot;
+              cpu: &quot;250m&quot;
+            limits:
+              memory: &quot;128Mi&quot;
+              cpu: &quot;500m&quot;
+          imagePullPolicy: IfNotPresent
+        # Step 3: Test AWS credentials (waits for iamra to be ready)
+        - name: app-container
+          image: public.ecr.aws&#x2F;aws-cli&#x2F;aws-cli:2.15.6
+          command: [&quot;sh&quot;, &quot;-c&quot;]
+          args:
+            - |
+              echo &quot;Waiting for IAM Roles Anywhere service to be ready...&quot;
+              while ! curl -s http:&#x2F;&#x2F;127.0.0.1:9911&#x2F; &gt; &#x2F;dev&#x2F;null 2&gt;&amp;1; do
+                echo &quot;IAM Roles Anywhere service not ready, waiting...&quot;
+                sleep 5
+              done
+              echo &quot;Testing AWS credentials...&quot;
+              aws sts get-caller-identity &amp;&amp; echo &quot;The app is running with AWS credentials!&quot; &amp;&amp; sleep 3600
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: &quot;64Mi&quot;
+              cpu: &quot;250m&quot;
+            limits:
+              memory: &quot;128Mi&quot;
+              cpu: &quot;500m&quot;
+          env:
+            - name: AWS_EC2_METADATA_SERVICE_ENDPOINT
+              value: &quot;http:&#x2F;&#x2F;127.0.0.1:9911&#x2F;&quot;
+      volumes:
+        - name: spire-agent-socket
+          hostPath:
+            path: &#x2F;run&#x2F;spire&#x2F;sockets
+            type: Directory
+        - name: credentials
+          emptyDir: {}
+        - name: spiffe-helper-config
+          configMap:
+            name: spiffe-helper-config
+
+</code></pre>
+<p>For the spiffe-helper sidecar, we use the official nightly image for simplicity, but for production deployments, it's strongly recommended to pin to a specific stable version tag.</p>
+<p>If everything worked, your pod logs will look similar to:</p>
+<pre data-lang="bash" class="language-bash "><code class="language-bash" data-lang="bash">... app-container Waiting for IAM Roles Anywhere service to be ready...
+... app-container IAM Roles Anywhere service not ready, waiting...
+... app-container Testing AWS credentials...
+... iamra Waiting for SPIFFE certificates to be available...
+... iamra Certificates not yet available or empty, waiting... (0s elapsed)
+... iamra Certificates found and valid, starting AWS signing helper...
+... iamra 2025&#x2F;06&#x2F;01 21:27:22 Local server started on port: 9911
+... iamra 2025&#x2F;06&#x2F;01 21:27:22 Make it available to the sdk by running:
+... iamra 2025&#x2F;06&#x2F;01 21:27:22 export AWS_EC2_METADATA_SERVICE_ENDPOINT=http:&#x2F;&#x2F;127.0.0.1:9911&#x2F;
+... spiffe-helper time=&quot;2025-06-01T21:27:16Z&quot; level=info msg=&quot;Using configuration file: \&quot;&#x2F;config&#x2F;helper.conf\&quot;&quot; system=spiffe-helper
+... spiffe-helper time=&quot;2025-06-01T21:27:16Z&quot; level=info msg=&quot;Launching daemon&quot; system=spiffe-helper
+... spiffe-helper time=&quot;2025-06-01T21:27:16Z&quot; level=info msg=&quot;Watching for X509 Context&quot; system=spiffe-helper
+... spiffe-helper time=&quot;2025-06-01T21:27:18Z&quot; level=info msg=&quot;Received update&quot; spiffe_id=&quot;spiffe:&#x2F;&#x2F;spire.misaac.me&#x2F;ns&#x2F;default&#x2F;sa&#x2F;default&quot; system=spiffe-helper
+... spiffe-helper time=&quot;2025-06-01T21:27:18Z&quot; level=info msg=&quot;X.509 certificates updated&quot; system=spiffe-helper
+... app-container {
+... app-container     &quot;UserId&quot;: &quot;AROADBQP57FF2AEXAMPLE:30a7fe7d714958787f6075c9904ce642&quot;,
+... app-container     &quot;Account&quot;: &quot;123456789012&quot;,
+... app-container     &quot;Arn&quot;: &quot;arn:aws:sts::123456789012:assumed-role&#x2F;example-role&#x2F;30a7fe7d714958787f6075c9904ce642&quot;
+... app-container }
+... app-container The app is running with AWS credentials!
+</code></pre>
+<br>
+<h2 id="wrapping-up"><a class="header-anchor no-hover-padding" href="#wrapping-up" aria-label="Anchor link for: wrapping-up"><span class="link-icon" aria-hidden="true"></span></a>
+Wrapping Up</h2>
+<p>In this post, we've successfully extended our previous work to securely grant AWS access to applications running within a Kubernetes cluster. Although our example used the spiffe-helper in service of AWS credentials, the pattern is applicable to any scenario where workloads require certificates. The foundation we've built can also be <a href="https://github.com/spiffe/spire/wiki/SPIRE-Use-Cases">extended</a> in several directions based on your organization's needs.</p>
+<p>For microservice architectures, you could <a href="https://engineering.indeedblog.com/blog/2024/07/workload-identity-with-spire-oidc-for-k8s-istio/">integrate SPIRE with service meshes like Istio</a> to enable automatic mTLS communication between services. For applications requiring JWT-based authentication, the <a href="https://github.com/spiffe/spire/blob/main/support/oidc-discovery-provider/README.md">SPIRE OIDC Discovery Provider</a> and <a href="https://github.com/spiffe/spiffe/blob/main/standards/JWT-SVID.md">JWT-SVIDs</a> provide a path forward.</p>
+<p>As your infrastructure grows, SPIRE's flexible architecture supports multi-cluster and multi-cloud deployments through various <a href="https://spiffe.io/docs/latest/planning/scaling_spire/#choosing-a-spire-deployment-topology">deployment topologies</a>, allowing you to maintain a consistent identity fabric across diverse environments.</p>
+<p>By <a href="https://misaac.me/blog/spiffe-spire-secret-sprawl-fix/">treating identity as the fundamental primitive</a> we've architected ourselves a unified identity system spanning all our workloads, from developer machines to production services.</p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/grant-passwordless-access-aws-rds-via-iam/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</p></div>
+                <div><a href="https://misaac.me/blog/automated-aws-credential-renewal-spiffe-helper-roles-anywhere/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Automated AWS Credential Renewal Using SPIFFE Helper and IAM Roles Anywhere</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#preamble">Preamble</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#what-s-our-goal">What&#x27;s our goal?</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#prerequisites">Prerequisites</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#update-spire-server-config-to-talk-to-kubernetes">Update SPIRE server config to talk to Kubernetes</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#verify-kubernetes-cluster-reachability">Verify kubernetes cluster reachability</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#create-backing-kubernetes-resources-for-the-spire-server">Create backing Kubernetes resources for the SPIRE Server</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#prepare-the-kubeconfig-file">Prepare the kubeconfig file</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#configure-the-k8s-psat-server-plugin">Configure the k8s_psat server plugin</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#configure-k8sbundle-the-kubernetes-notifier-plugin">Configure &quot;k8sbundle&quot; - the Kubernetes Notifier plugin</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#deploy-spire-agent-on-kubernetes">Deploy SPIRE agent on Kubernetes</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#configure-the-k8s-psat-agent-plugin">Configure the k8s_psat agent plugin</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#configure-the-k8s-agent-plugin">Configure the k8s agent plugin</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#the-spire-agent-daemonset">The SPIRE Agent DaemonSet</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#creating-the-registration-entry">Creating the registration entry</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#profit">Profit</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere/#wrapping-up">Wrapping Up</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;issue-with-the-selected-model&#x2F;">Fixing &quot;There&#x27;s an issue with the selected model&quot; in Claude Code</a>
+                            <span class="sidebar-date">2026-09-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;secure-mcp-servers-okta-agentcore-gateway&#x2F;">Secure GitHub or any MCP Server with Okta via AgentCore Gateway</a>
+                            <span class="sidebar-date">2026-05-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (13)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (6)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentcore&#x2F;" class="sidebar-tag">
+                                agentcore (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (7)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;authentication&#x2F;" class="sidebar-tag">
+                                authentication (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-code&#x2F;" class="sidebar-tag">
+                                claude-code (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .editor {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        #resume {
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            width: 8.5in;
+            min-height: 11in;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .resume-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .resume-header h1 {
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .contact-info {
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .contact-info span {
+            margin: 10px;
+            font-size: 14px;
+            margin-bottom: 1px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .job {
+            margin-bottom: 15px;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .company-location {
+            display: flex;
+            justify-content: space-between;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+
+        .job-details ul {
+            margin-top: 5px;
+            padding-left: 20px;
+        }
+
+        .job-details li {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+
+        .tech-used {
+            font-style: italic;
+            margin-top: 5px;
+            word-wrap: break-word;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        textarea,
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-container {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            display: inline-block;
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-color: #ddd;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .job-list,
+        .certification-list {
+            margin-bottom: 20px;
+        }
+
+        .job-item,
+        .certification-item {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .bullet-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .bullet-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .bullet-controls {
+            display: flex;
+            margin-left: 10px;
+        }
+
+        .small-button {
+            padding: 2px 5px;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+
+        .add-bullet {
+            margin-top: 5px;
+        }
+
+        .font-controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .font-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .font-control {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .font-preview {
+            padding: 10px;
+            margin-top: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #resume,
+            #resume * {
+                visibility: visible;
+            }
+
+            #resume {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none;
+            }
+        }
+
+        /* Font scaling for PDF export */
+        @media (max-width: 8.5in) {
+            #resume {
+                font-size: 0.9em;
+            }
+
+            .resume-header h1 {
+                font-size: 22px;
+            }
+
+            .section-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Resume Builder</h1>
+
+    <div class="container">
+        <div class="editor">
+            <div class="tab-container">
+                <div class="tab active" onclick="openTab(event, 'personal')">Personal</div>
+                <div class="tab" onclick="openTab(event, 'appearance')">Appearance</div>
+                <div class="tab" onclick="openTab(event, 'experience')">Experience</div>
+                <div class="tab" onclick="openTab(event, 'education')">Education</div>
+                <div class="tab" onclick="openTab(event, 'certifications')">Certifications</div>
+            </div>
+
+            <div id="personal" class="tab-content active">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" value="ISAAC M">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" value="315 327-5398">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="text" id="email" value="mail@misaac.me">
+                </div>
+
+                <div class="form-group">
+                    <label for="website">Website</label>
+                    <input type="text" id="website" value="https://misaac.me">
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" value="Minneapolis, MN">
+                </div>
+            </div>
+
+            <div id="appearance" class="tab-content">
+                <div class="font-controls">
+                    <h3>Font Settings</h3>
+
+                    <div class="font-row">
+                        <div class="font-control">
+                            <label for="font-family">Font Family</label>
+                            <select id="font-family" onchange="updateFontPreview()">
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                <option value="'Courier New', monospace">Courier New</option>
+                                <option value="Georgia, serif">Georgia</option>
+                                <option value="Verdana, sans-serif">Verdana</option>
+                                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                                <option value="'Calibri', sans-serif">Calibri</option>
+                                <option value="'Helvetica', sans-serif">Helvetica</option>
+                            </select>
+                        </div>
+
+                        <div class="font-control">
+                            <label for="base-font-size">Base Font Size</label>
+                            <select id="base-font-size" onchange="updateFontPreview()">
+                                <option value="10px" selected>Very Small</option>
+                                <option value="11px">Small</option>
+                                <option value="12px">Medium</option>
+                                <option value="13px">Large</option>
+                                <option value="14px">Very Large</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="font-row">
+                        <div class="font-control">
+                            <label for="heading-size">Heading Size</label>
+                            <select id="heading-size" onchange="updateFontPreview()">
+                                <option value="18px" selected>Small</option>
+                                <option value="22px">Medium</option>
+                                <option value="24px">Large</option>
+                                <option value="28px">Very Large</option>
+                            </select>
+                        </div>
+
+                        <div class="font-control">
+                            <label for="section-title-size">Section Title Size</label>
+                            <select id="section-title-size" onchange="updateFontPreview()">
+                                <option value="16px" selected>Small</option>
+                                <option value="18px">Medium</option>
+                                <option value="20px">Large</option>
+                                <option value="22px">Very Large</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="font-row">
+                        <div class="font-control">
+                            <label for="line-spacing">Line Spacing</label>
+                            <select id="line-spacing" onchange="updateFontPreview()">
+                                <option value="1.0" selected>Compact</option>
+                                <option value="1.15">Narrow</option>
+                                <option value="1.3">Normal</option>
+                                <option value="1.5">Wide</option>
+                                <option value="1.7">Very Wide</option>
+                            </select>
+                        </div>
+
+                        <div class="font-control">
+                            <label for="margin-scaling">Margin Scaling</label>
+                            <select id="margin-scaling" onchange="updateFontPreview()">
+                                <option value="0.8">Narrow</option>
+                                <option value="1.0" selected>Normal</option>
+                                <option value="1.2">Wide</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="font-preview" id="font-preview">
+                        <div style="font-weight: bold; margin-bottom: 10px;">Sample Text Preview</div>
+                        <div class="preview-heading">This is a heading</div>
+                        <div class="preview-section">This is a section title</div>
+                        <div class="preview-body">This is regular text in the body of the resume. It shows the base font
+                            size and line spacing.</div>
+                        <div class="preview-body">• This is a bullet point example with some text to show wrapping.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="experience" class="tab-content">
+                <div class="job-list" id="job-list">
+                    <!-- Job entries will be generated here -->
+                </div>
+
+                <button onclick="addJob()">Add Job</button>
+            </div>
+
+            <div id="education" class="tab-content">
+                <div class="form-group">
+                    <label for="school">School Name</label>
+                    <input type="text" id="school" value="Minnesota State University, Mankato">
+                </div>
+
+                <div class="form-group">
+                    <label for="degree">Degree/Program</label>
+                    <input type="text" id="degree" value="Information Technology">
+                </div>
+
+                <div class="form-group">
+                    <label for="graduation-date">Graduation Date</label>
+                    <input type="text" id="graduation-date" value="05/2021">
+                </div>
+            </div>
+
+            <div id="certifications" class="tab-content">
+                <div class="certification-list" id="certification-list">
+                    <!-- Certification entries will be generated here -->
+                </div>
+
+                <button onclick="addCertification()">Add Certification</button>
+            </div>
+
+            <div class="action-buttons">
+                <button onclick="updateResume()">Update Preview</button>
+                <button onclick="printResume()">Print Resume</button>
+                <button onclick="checkHeight()">Check Content Fit</button>
+            </div>
+        </div>
+
+        <div class="preview">
+            <div id="resume">
+                <div class="resume-header">
+                    <h1 id="preview-name">ISAAC M</h1>
+                </div>
+
+                <div class="contact-info">
+                    <span id="preview-phone">315 327-5398</span>
+                    <span id="preview-email">mail@misaac.me</span>
+                    <span id="preview-website">https://misaac.me</span>
+                    <span id="preview-location">Minneapolis, MN</span>
+                    <span id="preview-certifications">AWS Certified Solutions Architect - Professional</span>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Experience</div>
+                    <div id="preview-experience">
+                        <!-- Experience entries will be generated here -->
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Education</div>
+                    <div id="preview-education">
+                        <div class="education">
+                            <div class="job-header">
+                                <strong id="preview-school">Minnesota State University, Mankato</strong>
+                                <span id="preview-graduation-date">05/2021</span>
+                            </div>
+                            <div id="preview-degree">Information Technology</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        const jobs = [
+            {
+                title: "DevOps Engineer II",
+                company: "Traive Inc",
+                location: "Minneapolis, MN",
+                startDate: "10/2022",
+                endDate: "Present",
+                companyDescription: "Traive Inc is a financial technology company that provides lending solutions for farmers",
+                bullets: [
+                    "Implemented a geographic redundant API Gateway to ensure uptime SLA compliance.",
+                    "Reduced microservices' deployment time from one week to under an hour through infrastructure as code.",
+                    "Improved end-user experience by implementing SSO, centralizing authentication and authorization at the API Gateway level.",
+                    "Streamlined client onboarding by implementing a Kafka-based CDC system, reducing it from weeks to a day.",
+                    "Redesigned the network architecture to enable developers provision networks without IP address collisions.",
+                    "Achieved a 70% reduction in logging costs by building a monitoring stack with OpenTelemetry and Signoz."
+                ],
+                techUsed: "AWS IPAM, EKS, ACM, PCA, and MSK. Strimzi, Terraform, CDK, Keycloak, NGINX, Kafka, Kafka Connect"
+            },
+            {
+                title: "DevOps Engineer",
+                company: "Traive Inc",
+                location: "Minneapolis, MN",
+                startDate: "04/2022",
+                endDate: "10/2022",
+                bullets: [
+                    "Responded quickly to incidents and resolved them as part of an on-call rotation.",
+                    "Developed reusable Infrastructure as Code modules, reducing infrastructure setup time from weeks to minutes.",
+                    "Implemented a best-practice multi-account AWS environment for SOC 2 qualification.",
+                    "Enhanced security by deploying a centralized secret management system that syncs secrets between local dev and cloud environments.",
+                    "Achieved a 53% cost savings on cloud compute by implementing autoscaling CI/CD runners.",
+                    "Performed zero-downtime EKS cluster upgrades and routine Kubernetes Operator updates."
+                ],
+                techUsed: "AWS Control Tower, SSO, Organizations, EC2, EKS, RDS, OpsGenie, Terraform, CDK"
+            },
+            {
+                title: "Software Engineer",
+                company: "Dow Jones",
+                location: "Minneapolis, MN",
+                startDate: "06/2021",
+                endDate: "04/2022",
+                companyDescription: "Dow Jones publishes the world's most trusted business news and financial information",
+                bullets: [
+                    "Developed a natural language search feature for querying stock information, resulting in a 2-minute increase in average session duration.",
+                    "Implemented automated personalized reports on stock performance, increasing time spent per active user from 7 to 10 minutes.",
+                    "Reduced deployment time by 40% through the implementation of parallelized CI/CD pipelines for microservices and ML models.",
+                    "Improved system reliability for downstream users by conducting focused unit and integration tests using Pytest."
+                ],
+                techUsed: "AWS, Python, C#, Node.js, Terraform, PyTorch, Sagemaker, HuggingFace, DynamoDB"
+            },
+            {
+                title: "Software Engineer Intern",
+                company: "Global Traffic Technologies",
+                location: "St Paul, MN",
+                startDate: "06/2020",
+                endDate: "11/2020",
+                companyDescription: "Global Traffic Technologies makes IoT devices for traffic control",
+                bullets: [
+                    "Wrote AWS Lambda's that leveraged the MQTT message protocol and AWS IoT Core to control traffic IoT devices",
+                    "Built components of the user interface for the traffic priority control system using HTML, CSS3, and NodeJS",
+                    "Wrote unit, API, integration, and end-to-end tests to ensure soundness of the system and catch errors early",
+                    "Improved engineering productivity and software quality by spearheading the deployment of GitHub Super Linter",
+                    "Built CI/CD pipelines for deployment of serverless applications and Step functions"
+                ],
+                techUsed: "AWS, Python, Node.js, HTML, CSS, Pytest"
+            },
+            {
+                title: "Software Engineer Intern",
+                company: "Hennepin County",
+                location: "Minneapolis, MN",
+                startDate: "05/2019",
+                endDate: "04/2020",
+                companyDescription: "Hennepin County provides services to residents in the most populous county in Minnesota",
+                bullets: [
+                    "Built chatbots to power county residents interactions with the county website",
+                    "Built CI/CD pipelines to deploy web applications to Microsoft Azure",
+                    "Reduced the time to create reports on software project status by designing and building a work item data warehouse",
+                    "Built a serverless application to perform the data ingestion for the data warehouse with Azure Data Factory and SQL Server"
+                ],
+                techUsed: "C#, Microsoft Azure, Microsoft Bot Framework, Azure Bot Service, .NET Core"
+            }
+        ];
+
+        const certifications = [
+            "AWS Certified Solutions Architect - Professional",
+            "AWS Certified DevOps Engineer - Professional",
+            "AWS Certified Security - Specialty",
+        ];
+
+        // Initialize the page
+        window.onload = function () {
+            renderJobList();
+            renderCertificationList();
+            updateResume();
+            updateFontPreview();
+        };
+
+        // Tab functionality
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Font preview and application
+        function updateFontPreview() {
+            const fontFamily = document.getElementById("font-family").value;
+            const baseFontSize = document.getElementById("base-font-size").value;
+            const headingSize = document.getElementById("heading-size").value;
+            const sectionTitleSize = document.getElementById("section-title-size").value;
+            const lineSpacing = document.getElementById("line-spacing").value;
+
+            // Update preview
+            const preview = document.getElementById("font-preview");
+            preview.style.fontFamily = fontFamily;
+            preview.style.fontSize = baseFontSize;
+            preview.style.lineHeight = lineSpacing;
+
+            const previewHeading = document.querySelector(".preview-heading");
+            previewHeading.style.fontSize = headingSize;
+            previewHeading.style.fontWeight = "bold";
+            previewHeading.style.textTransform = "uppercase";
+
+            const previewSection = document.querySelector(".preview-section");
+            previewSection.style.fontSize = sectionTitleSize;
+            previewSection.style.fontWeight = "bold";
+            previewSection.style.borderBottom = "1px solid #333";
+
+            // Apply to actual resume
+            applyFontSettings();
+        }
+
+        function applyFontSettings() {
+            const fontFamily = document.getElementById("font-family").value;
+            const baseFontSize = document.getElementById("base-font-size").value;
+            const headingSize = document.getElementById("heading-size").value;
+            const sectionTitleSize = document.getElementById("section-title-size").value;
+            const lineSpacing = document.getElementById("line-spacing").value;
+            const marginScaling = document.getElementById("margin-scaling").value;
+
+            const resume = document.getElementById("resume");
+
+            // Apply base font settings
+            resume.style.fontFamily = fontFamily;
+            resume.style.fontSize = baseFontSize;
+            resume.style.lineHeight = lineSpacing;
+
+            // Apply heading font size
+            const name = document.getElementById("preview-name");
+            name.style.fontSize = headingSize;
+
+            // Apply section title font size
+            const sectionTitles = resume.querySelectorAll(".section-title");
+            sectionTitles.forEach(title => {
+                title.style.fontSize = sectionTitleSize;
+            });
+
+            // Apply margin scaling
+            const basePadding = 30;
+            const scaledPadding = basePadding * parseFloat(marginScaling);
+            resume.style.padding = `${scaledPadding}px`;
+
+            // Update job details margin and padding
+            const jobDetails = resume.querySelectorAll(".job-details ul");
+            const baseLeftPadding = 20;
+            const scaledLeftPadding = baseLeftPadding * parseFloat(marginScaling);
+            jobDetails.forEach(ul => {
+                ul.style.paddingLeft = `${scaledLeftPadding}px`;
+            });
+        }
+
+        // Job list management
+        function renderJobList() {
+            const jobList = document.getElementById("job-list");
+            jobList.innerHTML = "";
+
+            jobs.forEach((job, index) => {
+                const jobItem = document.createElement("div");
+                jobItem.className = "job-item";
+
+                jobItem.innerHTML = `
+                    <div class="form-group">
+                        <label>Job Title</label>
+                        <input type="text" class="job-title" value="${job.title}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Company</label>
+                        <input type="text" class="job-company" value="${job.company}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" class="job-location" value="${job.location}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Company Description (optional)</label>
+                        <input type="text" class="job-company-description" value="${job.companyDescription || ''}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="text" class="job-start-date" value="${job.startDate}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="text" class="job-end-date" value="${job.endDate}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Technologies Used</label>
+                        <input type="text" class="job-tech-used" value="${job.techUsed}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Accomplishments</label>
+                        <ul class="bullet-list" id="bullet-list-${index}">
+                            ${job.bullets.map((bullet, bulletIndex) => `
+                                <li class="bullet-item">
+                                    <input type="text" class="bullet-text" value="${bullet}">
+                                    <div class="bullet-controls">
+                                        <button class="small-button" onclick="moveBullet(${index}, ${bulletIndex}, -1)">↑</button>
+                                        <button class="small-button" onclick="moveBullet(${index}, ${bulletIndex}, 1)">↓</button>
+                                        <button class="small-button" onclick="removeBullet(${index}, ${bulletIndex})">×</button>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <button class="add-bullet" onclick="addBullet(${index})">Add Bullet</button>
+                    </div>
+                    
+                    <div>
+                        <button onclick="moveJob(${index}, -1)">Move Up</button>
+                        <button onclick="moveJob(${index}, 1)">Move Down</button>
+                        <button onclick="removeJob(${index})">Remove Job</button>
+                    </div>
+                `;
+
+                jobList.appendChild(jobItem);
+            });
+        }
+
+        function addJob() {
+            jobs.push({
+                title: "New Position",
+                company: "Company Name",
+                location: "City, State",
+                startDate: "MM/YYYY",
+                endDate: "Present",
+                bullets: ["Accomplishment 1", "Accomplishment 2"],
+                techUsed: "Technologies used"
+            });
+
+            renderJobList();
+            updateResume();
+        }
+
+        function removeJob(index) {
+            jobs.splice(index, 1);
+            renderJobList();
+            updateResume();
+        }
+
+        function moveJob(index, direction) {
+            if ((direction === -1 && index > 0) || (direction === 1 && index < jobs.length - 1)) {
+                const temp = jobs[index];
+                jobs[index] = jobs[index + direction];
+                jobs[index + direction] = temp;
+                renderJobList();
+                updateResume();
+            }
+        }
+
+        function addBullet(jobIndex) {
+            jobs[jobIndex].bullets.push("New accomplishment");
+            renderJobList();
+            updateResume();
+        }
+
+        function removeBullet(jobIndex, bulletIndex) {
+            jobs[jobIndex].bullets.splice(bulletIndex, 1);
+            renderJobList();
+            updateResume();
+        }
+
+        function moveBullet(jobIndex, bulletIndex, direction) {
+            if ((direction === -1 && bulletIndex > 0) || (direction === 1 && bulletIndex < jobs[jobIndex].bullets.length - 1)) {
+                const temp = jobs[jobIndex].bullets[bulletIndex];
+                jobs[jobIndex].bullets[bulletIndex] = jobs[jobIndex].bullets[bulletIndex + direction];
+                jobs[jobIndex].bullets[bulletIndex + direction] = temp;
+                renderJobList();
+                updateResume();
+            }
+        }
+
+        // Certification management
+        function renderCertificationList() {
+            const certList = document.getElementById("certification-list");
+            certList.innerHTML = "";
+
+            certifications.forEach((cert, index) => {
+                const certItem = document.createElement("div");
+                certItem.className = "certification-item";
+
+                certItem.innerHTML = `
+                    <div class="form-group">
+                        <label>Certification</label>
+                        <input type="text" class="certification-text" value="${cert}">
+                    </div>
+                    
+                    <div>
+                        <button onclick="moveCertification(${index}, -1)">Move Up</button>
+                        <button onclick="moveCertification(${index}, 1)">Move Down</button>
+                        <button onclick="removeCertification(${index})">Remove</button>
+                    </div>
+                `;
+
+                certList.appendChild(certItem);
+            });
+        }
+
+        function addCertification() {
+            certifications.push("New Certification");
+            renderCertificationList();
+            updateResume();
+        }
+
+        function removeCertification(index) {
+            certifications.splice(index, 1);
+            renderCertificationList();
+            updateResume();
+        }
+
+        function moveCertification(index, direction) {
+            if ((direction === -1 && index > 0) || (direction === 1 && index < certifications.length - 1)) {
+                const temp = certifications[index];
+                certifications[index] = certifications[index + direction];
+                certifications[index + direction] = temp;
+                renderCertificationList();
+                updateResume();
+            }
+        }
+
+        // Resume preview update
+        function updateResume() {
+            // Update personal info
+            document.getElementById("preview-name").innerText = document.getElementById("name").value;
+            document.getElementById("preview-phone").innerText = document.getElementById("phone").value;
+            document.getElementById("preview-email").innerText = document.getElementById("email").value;
+            document.getElementById("preview-website").innerText = document.getElementById("website").value;
+            document.getElementById("preview-location").innerText = document.getElementById("location").value;
+
+            // Update certifications
+            const certTexts = document.querySelectorAll(".certification-text");
+            const certsArray = Array.from(certTexts).map(input => input.value);
+            document.getElementById("preview-certifications").innerText = certsArray.join(", ");
+
+            // Update job titles and company info from the form
+            const jobTitles = document.querySelectorAll(".job-title");
+            const jobCompanies = document.querySelectorAll(".job-company");
+            const jobLocations = document.querySelectorAll(".job-location");
+            const jobCompanyDescs = document.querySelectorAll(".job-company-description");
+            const jobStartDates = document.querySelectorAll(".job-start-date");
+            const jobEndDates = document.querySelectorAll(".job-end-date");
+            const jobTechUsed = document.querySelectorAll(".job-tech-used");
+
+            for (let i = 0; i < jobTitles.length; i++) {
+                jobs[i].title = jobTitles[i].value;
+                jobs[i].company = jobCompanies[i].value;
+                jobs[i].location = jobLocations[i].value;
+                jobs[i].companyDescription = jobCompanyDescs[i].value;
+                jobs[i].startDate = jobStartDates[i].value;
+                jobs[i].endDate = jobEndDates[i].value;
+                jobs[i].techUsed = jobTechUsed[i].value;
+
+                const bulletInputs = document.querySelectorAll(`#bullet-list-${i} .bullet-text`);
+                jobs[i].bullets = Array.from(bulletInputs).map(input => input.value);
+            }
+
+            // Update experience section
+            const experienceHtml = jobs.map(job => `
+                <div class="job">
+                    <div class="job-header">
+                        <strong>${job.title}</strong>
+                        <span>${job.startDate} - ${job.endDate}</span>
+                    </div>
+                    <div class="company-location">
+                        <span>${job.company}</span>
+                        <span>${job.location}</span>
+                    </div>
+                    ${job.companyDescription ? `<div><em>${job.companyDescription}</em></div>` : ''}
+                    <div class="job-details">
+                        <ul>
+                            ${job.bullets.map(bullet => `<li>${bullet}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="tech-used">Tech used: ${job.techUsed}</div>
+                </div>
+            `).join('');
+
+            document.getElementById("preview-experience").innerHTML = experienceHtml;
+
+            // Update education
+            document.getElementById("preview-school").innerText = document.getElementById("school").value;
+            document.getElementById("preview-degree").innerText = document.getElementById("degree").value;
+            document.getElementById("preview-graduation-date").innerText = document.getElementById("graduation-date").value;
+
+            // Apply font settings
+            applyFontSettings();
+        }
+
+        // PDF generation with improved configuration
+        function generatePDF() {
+            const resumeElement = document.getElementById('resume');
+
+            // Check if content might be too large
+            checkHeight(true);
+
+            // Set the proper dimensions and background color
+            const opt = {
+                margin: [0, 0, 0, 0], // Reduce margins to 0
+                filename: 'resume.pdf',
+                image: { type: 'jpeg', quality: 10 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#FFFFFF'
+                },
+                jsPDF: {
+                    unit: 'in',
+                    format: 'letter',
+                    orientation: 'portrait'
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            // Temporarily modify the element for better PDF generation
+            const originalStyle = resumeElement.style.cssText;
+            const originalHeight = resumeElement.style.height;
+            const originalPadding = resumeElement.style.padding;
+
+            // Get the font settings from UI
+            const marginScaling = document.getElementById("margin-scaling").value;
+
+            // For PDF, use a specific padding that works well
+            // We'll control the actual margins via CSS padding instead of PDF margins
+            const pdfPadding = Math.max(20, 30 * parseFloat(marginScaling));
+
+            // Set PDF-optimized styling
+            resumeElement.style.width = '8.5in';
+            resumeElement.style.height = 'auto';
+            resumeElement.style.backgroundColor = '#FFFFFF';
+            resumeElement.style.boxShadow = 'none';
+            resumeElement.style.padding = `${pdfPadding}px`;
+            resumeElement.style.boxSizing = 'border-box';
+
+            // Generate PDF
+            html2pdf()
+                .set(opt)
+                .from(resumeElement)
+                .save()
+                .then(() => {
+                    // Restore original style
+                    resumeElement.style.cssText = originalStyle;
+                    if (originalHeight) {
+                        resumeElement.style.height = originalHeight;
+                    }
+                    if (originalPadding) {
+                        resumeElement.style.padding = originalPadding;
+                    }
+                });
+        }
+
+        // Check if content might be too large for a single page
+        function checkHeight(silent = false) {
+            const resumeElement = document.getElementById('resume');
+
+            // Standard letter size in pixels (assuming 96 DPI)
+            // 8.5" x 11" = 816px x 1056px
+
+            // Get the margin scaling factor
+            const marginScaling = document.getElementById("margin-scaling").value;
+            const scaledPadding = 30 * parseFloat(marginScaling);
+
+            // Calculate available height - full page height minus padding
+            const availableHeight = 11 * 96 - (2 * scaledPadding);
+
+            // Get current content height - actual content without padding
+            const contentHeight = resumeElement.scrollHeight - (2 * parseFloat(getComputedStyle(resumeElement).padding));
+
+            if (contentHeight > availableHeight) {
+                if (!silent) {
+                    const overflowAmount = Math.ceil((contentHeight - availableHeight) / 96 * 10) / 10;
+                    alert(`Warning: Your resume content is approximately ${overflowAmount} inches too tall for a standard letter page. Consider:\n\n1. Reducing font sizes\n2. Using more compact line spacing\n3. Shortening some content\n4. Reducing margins\n5. Exporting as a 2-page resume`);
+                }
+                return false;
+            } else {
+                if (!silent) {
+                    const remainingSpace = Math.floor((availableHeight - contentHeight) / 96 * 10) / 10;
+                    alert(`Your resume fits within a single page with approximately ${remainingSpace} inches to spare.`);
+                }
+                return true;
+            }
+        }
+
+        // Print resume
+        function printResume() {
+            // Check if content might be too large
+            checkHeight(true);
+
+            // Temporary apply print-specific styling
+            const resumeElement = document.getElementById('resume');
+            const originalStyle = resumeElement.style.cssText;
+
+            // Apply print-optimized styling
+            resumeElement.style.width = '8.5in';
+            resumeElement.style.boxShadow = 'none';
+
+            window.print();
+
+            // Restore original styling after print dialog
+            setTimeout(() => {
+                resumeElement.style.cssText = originalStyle;
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>

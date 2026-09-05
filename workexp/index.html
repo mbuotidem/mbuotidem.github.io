@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Jobs Work Experience Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .calculator {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 20px;
+        }
+
+        .job-entry {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 3px solid #3498db;
+            position: relative;
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .date-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .month-year-input {
+            display: flex;
+            gap: 5px;
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+
+        .remove-job {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .calc-btn {
+            background-color: #3498db;
+            color: white;
+            flex-grow: 1;
+        }
+
+        .add-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .calc-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f0f7ff;
+            border-left: 4px solid #3498db;
+        }
+
+        .total-exp {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .details {
+            margin-top: 10px;
+            color: #7f8c8d;
+        }
+
+        .job-duration {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .no-jobs {
+            text-align: center;
+            color: #95a5a6;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calculator">
+        <h1>Work Experience Calculator</h1>
+
+        <div id="jobs-container">
+            <div class="no-jobs" id="no-jobs-message">Add your work experience periods below</div>
+        </div>
+
+        <div class="actions">
+            <button class="add-btn" onclick="addNewJob()">+ Add Job Period</button>
+            <button class="calc-btn" onclick="calculateTotalExperience()">Calculate Total Experience</button>
+        </div>
+
+        <div id="result" class="result" style="display: none;">
+            <div class="total-exp" id="total-experience"></div>
+            <div class="details" id="experience-details"></div>
+        </div>
+    </div>
+
+    <script>
+        let jobCounter = 0;
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // Add a job entry when the page loads
+        window.onload = function () {
+            addNewJob();
+        };
+
+        function createYearOptions(select, selectedYear) {
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear; year >= currentYear - 50; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === selectedYear) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+        }
+
+        function createMonthOptions(select, selectedMonth) {
+            for (let i = 0; i < months.length; i++) {
+                const option = document.createElement('option');
+                option.value = i + 1; // 1-based month index
+                option.textContent = months[i];
+                if (i + 1 === selectedMonth) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+        }
+
+        function addNewJob() {
+            const jobsContainer = document.getElementById('jobs-container');
+            const noJobsMessage = document.getElementById('no-jobs-message');
+
+            if (noJobsMessage) {
+                noJobsMessage.style.display = 'none';
+            }
+
+            jobCounter++;
+            const jobId = 'job-' + jobCounter;
+
+            const jobEntry = document.createElement('div');
+            jobEntry.className = 'job-entry';
+            jobEntry.id = jobId;
+
+            // Get current month and year
+            const today = new Date();
+            const currentMonth = today.getMonth() + 1; // 1-based
+            const currentYear = today.getFullYear();
+
+            jobEntry.innerHTML = `
+                <button class="remove-job" onclick="removeJob('${jobId}')">×</button>
+                <div class="date-inputs">
+                    <div class="date-group">
+                        <label for="${jobId}-start-month">Start Date:</label>
+                        <div class="month-year-input">
+                            <select id="${jobId}-start-month" class="month-select"></select>
+                            <select id="${jobId}-start-year" class="year-select"></select>
+                        </div>
+                    </div>
+                    <div class="date-group">
+                        <label for="${jobId}-end-month">End Date:</label>
+                        <div class="month-year-input">
+                            <select id="${jobId}-end-month" class="month-select"></select>
+                            <select id="${jobId}-end-year" class="year-select"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="job-duration" id="${jobId}-duration"></div>
+            `;
+
+            jobsContainer.appendChild(jobEntry);
+
+            // Create month and year dropdowns
+            const startMonthSelect = document.getElementById(`${jobId}-start-month`);
+            const startYearSelect = document.getElementById(`${jobId}-start-year`);
+            const endMonthSelect = document.getElementById(`${jobId}-end-month`);
+            const endYearSelect = document.getElementById(`${jobId}-end-year`);
+
+            createMonthOptions(startMonthSelect, 1); // Default to January
+            createYearOptions(startYearSelect, currentYear - 1); // Default to previous year
+
+            createMonthOptions(endMonthSelect, currentMonth); // Default to current month
+            createYearOptions(endYearSelect, currentYear); // Default to current year
+
+            calculateJobDuration(jobId);
+
+            // Add event listeners for automatic duration calculation
+            startMonthSelect.addEventListener('change', () => calculateJobDuration(jobId));
+            startYearSelect.addEventListener('change', () => calculateJobDuration(jobId));
+            endMonthSelect.addEventListener('change', () => calculateJobDuration(jobId));
+            endYearSelect.addEventListener('change', () => calculateJobDuration(jobId));
+        }
+
+        function removeJob(jobId) {
+            const jobEntry = document.getElementById(jobId);
+            jobEntry.remove();
+
+            // Show "no jobs" message if all jobs removed
+            const jobsContainer = document.getElementById('jobs-container');
+            if (jobsContainer.children.length === 0) {
+                const noJobsMessage = document.createElement('div');
+                noJobsMessage.className = 'no-jobs';
+                noJobsMessage.id = 'no-jobs-message';
+                noJobsMessage.textContent = 'Add your work experience periods below';
+                jobsContainer.appendChild(noJobsMessage);
+            }
+        }
+
+        function calculateJobDuration(jobId) {
+            const startMonth = parseInt(document.getElementById(`${jobId}-start-month`).value);
+            const startYear = parseInt(document.getElementById(`${jobId}-start-year`).value);
+            const endMonth = parseInt(document.getElementById(`${jobId}-end-month`).value);
+            const endYear = parseInt(document.getElementById(`${jobId}-end-year`).value);
+
+            const durationElement = document.getElementById(`${jobId}-duration`);
+
+            // Create Date objects (first day of month)
+            const startDate = new Date(startYear, startMonth - 1, 1);
+            const endDate = new Date(endYear, endMonth - 1, 1);
+
+            // Add 1 month to end date to include the full end month
+            const calcEndDate = new Date(endYear, endMonth, 0);
+
+            if (startDate > calcEndDate) {
+                durationElement.textContent = 'Invalid date range';
+                return;
+            }
+
+            const { years, months, totalMonths } = calculatePeriod(startDate, new Date(endYear, endMonth, 0));
+
+            let durationText = 'Duration: ';
+            if (years > 0) {
+                durationText += `${years} year${years !== 1 ? 's' : ''}`;
+                if (months > 0) durationText += ', ';
+            }
+            if (months > 0 || (years === 0)) {
+                durationText += `${months} month${months !== 1 ? 's' : ''}`;
+            }
+
+            durationElement.textContent = durationText;
+        }
+
+        function calculatePeriod(startDate, endDate) {
+            // Calculate total months
+            const yearDiff = endDate.getFullYear() - startDate.getFullYear();
+            const monthDiff = endDate.getMonth() - startDate.getMonth();
+            const totalMonths = yearDiff * 12 + monthDiff + 1; // +1 to include both start and end months
+
+            // Convert to years and months
+            const years = Math.floor(totalMonths / 12);
+            const months = totalMonths % 12;
+
+            return { years, months, totalMonths };
+        }
+
+        function calculateTotalExperience() {
+            const jobEntries = document.querySelectorAll('.job-entry');
+            let validJobs = [];
+
+            // Collect all valid job periods
+            jobEntries.forEach(jobEntry => {
+                const jobId = jobEntry.id;
+
+                const startMonth = parseInt(document.getElementById(`${jobId}-start-month`).value);
+                const startYear = parseInt(document.getElementById(`${jobId}-start-year`).value);
+                const endMonth = parseInt(document.getElementById(`${jobId}-end-month`).value);
+                const endYear = parseInt(document.getElementById(`${jobId}-end-year`).value);
+
+                // Create Date objects (first day of month)
+                const startDate = new Date(startYear, startMonth - 1, 1);
+                const endDate = new Date(endYear, endMonth - 1, 1);
+
+                // Last day of end month for calculation
+                const adjEndDate = new Date(endYear, endMonth, 0);
+
+                if (startDate > adjEndDate) {
+                    return;
+                }
+
+                validJobs.push({
+                    start: startDate,
+                    end: adjEndDate,
+                    display: `${monthsShort[startMonth - 1]}/${startYear} - ${monthsShort[endMonth - 1]}/${endYear}`
+                });
+            });
+
+            if (validJobs.length === 0) {
+                alert('Please add at least one valid job period.');
+                return;
+            }
+
+            // Sort jobs by start date
+            validJobs.sort((a, b) => a.start - b.start);
+
+            // Merge overlapping periods
+            const mergedPeriods = [];
+            let currentPeriod = { ...validJobs[0] };
+
+            for (let i = 1; i < validJobs.length; i++) {
+                const job = validJobs[i];
+
+                // If current job starts after the end of current period
+                if (job.start > new Date(currentPeriod.end.getTime() + 24 * 60 * 60 * 1000)) {
+                    mergedPeriods.push(currentPeriod);
+                    currentPeriod = { ...job };
+                } else {
+                    // If there's an overlap, extend the current period if needed
+                    if (job.end > currentPeriod.end) {
+                        currentPeriod.end = job.end;
+                    }
+                }
+            }
+
+            mergedPeriods.push(currentPeriod);
+
+            // Calculate total months from all merged periods
+            let sumTotalMonths = 0;
+            mergedPeriods.forEach(period => {
+                const { totalMonths } = calculatePeriod(period.start, period.end);
+                sumTotalMonths += totalMonths;
+            });
+
+            // Convert to years and months
+            const years = Math.floor(sumTotalMonths / 12);
+            const months = sumTotalMonths % 12;
+
+            // Display the result
+            const resultElement = document.getElementById('result');
+            const totalExperienceElement = document.getElementById('total-experience');
+            const experienceDetailsElement = document.getElementById('experience-details');
+
+            let totalExperienceText = 'Total Work Experience: ';
+            if (years > 0) {
+                totalExperienceText += `${years} year${years !== 1 ? 's' : ''}`;
+                if (months > 0) totalExperienceText += ', ';
+            }
+            if (months > 0 || (years === 0)) {
+                totalExperienceText += `${months} month${months !== 1 ? 's' : ''}`;
+            }
+
+            // Show merged periods information
+            let mergedPeriodsText = '';
+            if (mergedPeriods.length < validJobs.length) {
+                mergedPeriodsText = `<br><br>Note: Some job periods were overlapping and have been merged for accurate calculation.`;
+            }
+
+            let jobsText = 'Job periods: ';
+            validJobs.forEach((job, index) => {
+                const startMonth = job.start.getMonth() + 1;
+                const startYear = job.start.getFullYear();
+                const endMonth = job.end.getMonth() + 1;
+                const endYear = job.end.getFullYear();
+
+                jobsText += `${monthsShort[startMonth - 1]}/${startYear} - ${monthsShort[endMonth - 1]}/${endYear}`;
+                if (index < validJobs.length - 1) {
+                    jobsText += ', ';
+                }
+            });
+
+            totalExperienceElement.textContent = totalExperienceText;
+            experienceDetailsElement.innerHTML = `${jobsText}${mergedPeriodsText}`;
+
+            resultElement.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Secure GitHub or any MCP Server with Okta via AgentCore Gateway</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=6dc2751e6027f4c372a9" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Use Okta, OAuth, and Amazon Bedrock AgentCore Gateway to centralize MCP access, authenticate users, and connect to downstream services like GitHub without relying on shared service-account access." />
+        <meta property="og:description" content="Use Okta, OAuth, and Amazon Bedrock AgentCore Gateway to centralize MCP access, authenticate users, and connect to downstream services like GitHub without relying on shared service-account access." />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Secure GitHub or any MCP Server with Okta via AgentCore Gateway" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;secure-mcp-servers-okta-agentcore-gateway&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;secure-mcp-servers-okta-agentcore-gateway&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data: 'self';img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27; 'unsafe-inline';frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/about/">
+                                
+                                about
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+<div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Secure GitHub or any MCP Server with Okta via AgentCore Gateway
+        </h1>
+
+        <ul class="meta">
+                <li>31st May 2026</li>
+                <li title="3526 words"><span class='separator' aria-hidden='true'>•</span>18 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/okta/">okta</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/identity/">identity</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/authentication/">authentication</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/oauth/">oauth</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/oidc/">oidc</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/agentcore/">agentcore</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iam/">iam</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/zero-trust/">zero-trust</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/mcp/">mcp</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/ai/">ai</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/security/">security</a></li>
+        </ul>
+
+        <section class="body"><p>I've spent much of this year thinking about how to help teams adopt AI. MCPs have become a big part of that journey because all of a sudden, it seems like every company, even those who previously refused to expose an API, now has an MCP.</p>
+<p>While this is great for end users, you need a strategy for protecting the various MCPs in use. One way to achieve this is to deploy a <a href="https://builder.aws.com/content/3CSDSWZNYyNtDxLbaV5YUgMnXb0/long-live-mcp-the-dev-summit-recap#:~:text=Gateways%20and%20registries%20became%20the%20architectural%20consensus">centralized gateway</a> where you can apply governance controls.  As a bonus, your developers get to add just one MCP server config, and all tools from target MCPs, GitHub, Jira, Linear, Notion, you name it, will be accessible via the unified MCP.</p>
+<p><a href="https://aws.amazon.com/blogs/machine-learning/transform-your-mcp-architecture-unite-mcp-servers-through-agentcore-gateway/">Amazon Bedrock AgentCore Gateway</a> can help you do this. It sits in front of your MCP servers and presents MCP clients with a single endpoint where security teams can enforce <a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#where-to-go-from-here">organizational policy</a>. Here's what that might look like:</p>
+<div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="https://www.youtube-nocookie.com/embed/pCuqpFUS1sw"
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; max-width: none; margin: 0; border: 0; aspect-ratio: auto;"
+    allowfullscreen
+    loading="lazy"
+    title="YouTube video">
+  </iframe>
+</div>
+<p>If that looks like your end goal, lets start with some theory first!</p>
+<h2 id="client-id-metadata-documents-cimd"><a class="header-anchor no-hover-padding" href="#client-id-metadata-documents-cimd" aria-label="Anchor link for: client-id-metadata-documents-cimd"><span class="link-icon" aria-hidden="true"></span></a>
+Client ID Metadata Documents - CIMD</h2>
+<p>Before <a href="https://client.dev/">CIMD</a>, the original auth story for MCP revolved around Dynamic Client Registration. The idea was that you could let MCP clients like Claude Code or VS Code automatically register themselves with the authorization server that protects an MCP server. This was always a non-starter for most enterprises because it flew in the face of security to just let random clients register themselves with your authorization server.</p>
+<p>Enter CIMD. CIMD's core innovation is to let OAuth clients identify themselves using a URL. A client like VS Code or Claude Code hosts a JSON metadata document at a well-known URL and that URL <strong>doubles as</strong> the client ID. Here's VS Code's:</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json">{
+  &quot;client_name&quot;: &quot;Visual Studio Code&quot;,
+  &quot;logo_uri&quot;: &quot;https:&#x2F;&#x2F;code.visualstudio.com&#x2F;assets&#x2F;branding&#x2F;code-stable.png&quot;,
+  &quot;grant_types&quot;: [
+    &quot;authorization_code&quot;,
+    &quot;refresh_token&quot;,
+    &quot;urn:ietf:params:oauth:grant-type:device_code&quot;
+  ],
+  &quot;response_types&quot;: [
+    &quot;code&quot;
+  ],
+  &quot;token_endpoint_auth_method&quot;: &quot;none&quot;,
+  &quot;application_type&quot;: &quot;native&quot;,
+  &quot;client_id&quot;: &quot;https:&#x2F;&#x2F;vscode.dev&#x2F;oauth&#x2F;client-metadata.json&quot;,
+  &quot;client_uri&quot;: &quot;https:&#x2F;&#x2F;vscode.dev&#x2F;product&quot;,
+  &quot;redirect_uris&quot;: [
+    &quot;http:&#x2F;&#x2F;127.0.0.1:33418&#x2F;&quot;,
+    &quot;https:&#x2F;&#x2F;vscode.dev&#x2F;redirect&quot;
+  ]
+}
+</code></pre>
+<p><a id="mcp-server-setup"></a>In your IDE or coding agent, you'd set up the MCP server as below. Note that setting <code>MCP-Protocol-Version</code> to <code>2025-11-25</code> is required, as that's the MCP spec version that introduced CIMD.</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json">{
+&quot;servers&quot;: {
+  &quot;example&quot;: {
+    &quot;url&quot;: &quot;https:&#x2F;&#x2F;example-mcp-server.com&#x2F;mcp&quot;,
+    &quot;type&quot;: &quot;http&quot;,
+    &quot;oauth&quot;: {
+      &quot;clientId&quot;: &quot;https:&#x2F;&#x2F;vscode.dev&#x2F;oauth&#x2F;client-metadata.json&quot;
+    },
+    &quot;headers&quot;: {
+      &quot;MCP-Protocol-Version&quot;: &quot;2025-11-25&quot;
+    }
+  }
+},
+&quot;inputs&quot;: []
+}
+</code></pre>
+<p>When your IDE or coding agent attempts to authenticate with the MCP, the MCP's  authorization server fetches the client's metadata document using the url-shaped client id, and validates that the <code>client_id</code> in the metadata document matches the presented URL. There are a bunch of other <a href="https://client.dev/servers">recommended validation steps</a>, but once completed, the authorization server can then use the values in the metadata document in its authorization decisions.</p>
+<p>Unfortunately, as of May 2026, Okta authorization servers do not support CIMD.</p>
+<h2 id="the-oauth-proxy"><a class="header-anchor no-hover-padding" href="#the-oauth-proxy" aria-label="Anchor link for: the-oauth-proxy"><span class="link-icon" aria-hidden="true"></span></a>
+The OAuth proxy</h2>
+<p>To workaround this, we'll need a proxy. Instead of registering the CIMD clients in Okta, we create an Okta <a href="https://developer.okta.com/docs/guides/configure-native-sso/main/">native</a> client. Our proxy maps any allowlisted CIMD MCP clients onto this client and performs the Okta authorization flow. For this to work with the gateway, we'll register the Okta native app client ID — not the CIMD URL — in AgentCore Gateway's <code>allowedClients</code> field.</p>
+<p>Our proxy does more than just substitute the Okta client. It performs the recommended CIMD validation steps hinted at earlier. For instance, it verifies that the requested <code>redirect_uri</code> is well-formed and matches an entry in the metadata document's <code>redirect_uris</code> list.</p>
+<h3 id="session-binding"><a class="header-anchor no-hover-padding" href="#session-binding" aria-label="Anchor link for: session-binding"><span class="link-icon" aria-hidden="true"></span></a>
+Session binding</h3>
+<p>When a user calls a GitHub tool, the call flows through our proxy to AgentCore Gateway. If a valid token already exists for this user, the gateway uses it immediately. If not, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity.html">AgentCore Identity</a> returns an authorization URL and a session URI, and AgentCore Gateway surfaces them as a <code>-32042</code> URL <a href="https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation">elicitation</a>. The proxy intercepts it, extracting the session URI and storing it in DynamoDB alongside the initiating user’s Okta subject. Then it forwards the elicitation to the MCP client. It does all this to support <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/oauth2-authorization-url-session-binding.html">session binding</a>.</p>
+<p>Session binding ensures that the user who initiated the tool call that needs authorization is the same user who granted consent. Without it, if the initiating user forwards the authorization URL and someone else completes the GitHub consent flow, their GitHub access token would get stored in the <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/key-features-and-benefits.html#secure-credential-storage">token vault</a> under the initiating user’s identity.</p>
+<p>To prevent this, AWS provides us with a regular OAuth callback URL which we register with GitHub so GitHub can deliver the authorization code to AgentCore Identity. After AgentCore Identity receives that code, it doesn't immediately use it to obtain an access token. Instead, it redirects the user’s browser to a callback URL, <code>/sessionbinding/callback</code>, served by our proxy.</p>
+<p>Here the proxy looks up the stored session binding and immediately redirects to Okta with <code>prompt=none</code>. Okta uses the existing browser session to issue an authorization code without showing a login prompt, then redirects to <code>/sessionbinding/okta-callback</code> on our proxy.</p>
+<p>At <code>/sessionbinding/okta-callback</code>, the proxy exchanges that code for an ID token, extracts the <code>sub</code> claim, and compares it against the stored initiating user’s subject. Only if they match does it call <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_CompleteResourceTokenAuth.html"><code>CompleteResourceTokenAuth</code></a> which signals to AgentCore that its safe to get an access token for the user, i.e <em><strong>bind the session</strong></em> . Once the binding succeeds, AgentCore Identity caches the GitHub access token for that user in the token vault, and subsequent tool calls complete normally.</p>
+
+
+<div class="mermaid-zoomable-wrapper" style="position: relative;">
+  <button data-mermaid-open style="
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      z-index: 10;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      opacity: 0.6;
+      border: 1px solid currentColor;
+      border-radius: 4px;
+      background: transparent;
+      line-height: 1.4;
+    " title="Open diagram in new tab">open full size ↗</button>
+  <noscript>
+    <strong>⚠️ JavaScript is required to render the diagram.</strong>
+  </noscript>
+  <pre class="mermaid invertible-image">
+    sequenceDiagram
+    actor U as MCP Client
+    participant P as Proxy
+    participant O as Okta
+    participant G as AgentCore Gateway
+    participant I as AgentCore Identity
+    participant GH as GitHub
+
+    Note over U,GH: 1. Inbound auth — MCP client authenticates via proxy
+    U->>P: /authorize (CIMD client_id, redirect_uri, PKCE)
+    P->>P: Check CIMD URL against allowlist, fetch metadata doc, validate redirect_uri
+    Note right of P: Swap CIMD URL to OKTA_CLIENT_ID<br/>Sign state blob with HMAC-SHA256
+    P-->>U: 302 to Okta /v1/authorize
+    U->>O: Authenticate
+    O-->>U: 302 to /callback?code=...
+    U->>P: GET /callback — verify HMAC, re-validate CIMD
+    P-->>U: 302 to original redirect_uri?code=...
+    U->>P: POST /token (CIMD client_id + PKCE verifier)
+    P->>O: POST /v1/token (OKTA_CLIENT_ID substituted)
+    O-->>P: Okta access token
+    P-->>U: Okta access token
+
+    Note over U,GH: 2. First tool call — triggers GitHub OAuth flow
+    U->>P: tools/call with Bearer Okta JWT
+    P->>G: Forward request
+    G->>I: GetWorkloadAccessTokenForJWT (workload identity + JWT)
+    I-->>G: Workload access token
+    G->>I: GetResourceOauth2Token
+    I-->>G: No cached token — GitHub auth URL + session URI
+    G-->>P: -32042 elicitation
+    Note right of P: Extract session_uri from request_uri param<br/>Store session_uri, uid claim, user_token in DynamoDB
+    P-->>U: -32042 with GitHub consent URL + session URI
+    U->>GH: Open consent URL, authorize GitHub access
+    GH-->>I: Auth code to AgentCore Identity callback URL
+    I-->>U: 302 to /sessionbinding/callback?session_id=SESSION_URI
+
+    Note over U,GH: 3. Session binding — confirm initiating user == consenting user
+    U->>P: GET /sessionbinding/callback
+    P->>P: Look up session_uri in DynamoDB
+    Note right of P: Build Okta auth URL with prompt=none + PKCE<br/>Store PKCE state in DynamoDB
+    P-->>U: 302 to Okta /v1/authorize with prompt=none
+    U->>O: Silent auth (reuse existing browser session)
+    O-->>U: 302 to /sessionbinding/okta-callback?code=...
+    U->>P: GET /sessionbinding/okta-callback
+    P->>P: Atomic DDB delete of PKCE state
+    P->>O: POST /v1/token
+    O-->>P: ID token
+    P->>P: Verify ID token sub matches stored initiating user sub
+    P->>I: CompleteResourceTokenAuth (userToken + sessionUri)
+    I->>I: Cache GitHub token in Token Vault (workload/user pair)
+    P-->>U: Authorization complete
+
+    Note over U,GH: 4. Subsequent tool calls — cached token path
+    U->>P: tools/call with Bearer Okta JWT
+    P->>G: Forward request
+    G->>I: GetWorkloadAccessTokenForJWT
+    I-->>G: Workload access token
+    G->>I: GetResourceOauth2Token — cached GitHub token
+    I-->>G: GitHub OAuth token
+    G->>GH: Invoke tool
+    GH-->>G: Tool result
+    G-->>P: Tool result
+    P-->>U: Tool result
+  </pre>
+</div>
+<script src="/js/mermaid-zoomable.js"></script><h3 id="the-proxy-contract"><a class="header-anchor no-hover-padding" href="#the-proxy-contract" aria-label="Anchor link for: the-proxy-contract"><span class="link-icon" aria-hidden="true"></span></a>
+The proxy contract</h3>
+<p>Since the proxy handles <a href="https://developer.okta.com/blog/2019/08/22/okta-authjs-pkce#use-pkce-to-make-your-apps-more-secure">PKCE</a>, <a href="https://www.okta.com/identity-101/csrf-attack/">CSRF defense</a>, <a href="https://developer.okta.com/docs/concepts/token-lifecycles/">token exchange</a>, and <a href="https://developer.okta.com/docs/guides/validate-id-tokens/main/">identity verification</a>, it is critical that you understand what each line of code does and why. So instead of providing a full copy-paste proxy implementation, the sequence diagram above coupled with the table below outlines what each endpoint must do. I've included links to documentation and reference implementations for specific parts to help you build your own.</p>
+<table><thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>/.well-known/oauth-protected-resource</code></td><td><a href="https://datatracker.ietf.org/doc/html/rfc9728">Tells</a> MCP clients that the proxy <a href="https://github.com/modelcontextprotocol/python-sdk/blob/v1.27.2/src/mcp/server/auth/routes.py#L209-L253">is the authorization server</a> for our gateway.</td></tr>
+<tr><td><code>/.well-known/oauth-authorization-server</code></td><td><a href="https://datatracker.ietf.org/doc/html/rfc8414">Publishes</a> the proxy's authorization server capabilities, <a href="https://github.com/modelcontextprotocol/python-sdk/blob/v1.27.2/src/mcp/server/auth/routes.py#L69-L149">the authorize and token endpoints</a>, so MCP clients know how to authenticate.</td></tr>
+<tr><td><code>/authorize</code></td><td><a href="https://github.com/PrefectHQ/fastmcp/blob/1a06130fcfaece1d494bf444c1561e752d94c61a/fastmcp_slim/fastmcp/server/auth/cimd.py#L1">Validates</a> the presented <code>client_id</code> and <code>redirect_uri</code> against the metadata document, then <a href="https://github.com/awslabs/agentcore-samples/blob/main/06-workshops/02-AgentCore-gateway/04-integration/03-ide-gateway-tool/lambda/mcp_proxy_lambda.py#L88-L120">redirects to Okta substituting</a> the Okta client ID.</td></tr>
+<tr><td><code>/callback</code></td><td><a href="https://github.com/awslabs/agentcore-samples/blob/main/06-workshops/02-AgentCore-gateway/04-integration/03-ide-gateway-tool/lambda/mcp_proxy_lambda.py#L123-L160">Receives</a> Okta's authorization code, verifies the state HMAC and re-validates the CIMD <code>redirect_uri</code>, then forwards the code to the MCP client's original redirect URI.</td></tr>
+<tr><td><code>/token</code></td><td><a href="https://github.com/awslabs/agentcore-samples/blob/main/06-workshops/02-AgentCore-gateway/04-integration/03-ide-gateway-tool/lambda/mcp_proxy_lambda.py#L163-L194">Proxies</a> token requests to Okta after validating CIMD client identity, substituting the Okta client ID, and rewriting <code>redirect_uri</code> to match what <code>/authorize</code> used.</td></tr>
+<tr><td><code>/sessionbinding/callback</code></td><td><a href="https://github.com/awslabs/agentcore-samples/blob/main/06-workshops/02-AgentCore-gateway/04-integration/03-ide-gateway-tool/lambda/callback_lambda.py">Receives</a> AgentCore Identity's 3LO return redirect, looks up the session binding, then redirects to Okta with <code>prompt=none</code> to silently identify the current browser user.</td></tr>
+<tr><td><code>/sessionbinding/okta-callback</code></td><td><a href="https://developer.okta.com/docs/guides/implement-grant-type/authcodepkce/main/#exchange-the-code-for-tokens">Exchanges</a> the code for an ID token, compares the current user against the stored initiating user, and calls <a href="https://github.com/awslabs/agentcore-samples/blob/main/06-workshops/02-AgentCore-gateway/04-integration/03-ide-gateway-tool/lambda/callback_lambda.py#L56"><code>CompleteResourceTokenAuth</code></a> if they match.</td></tr>
+<tr><td><code>/{full_path:path}</code></td><td><a href="https://github.com/awslabs/agentcore-samples/blob/main/06-workshops/02-AgentCore-gateway/04-integration/03-ide-gateway-tool/lambda/mcp_proxy_lambda.py#L211-L284">Proxies</a> MCP traffic to AgentCore Gateway. On a <code>-32042</code> response, extracts the <code>session_uri</code> from the elicitation URL and stores the initiating user's identity in DynamoDB so <code>/sessionbinding/okta-callback</code> can complete the binding.</td></tr>
+<tr><td><code>/register</code></td><td>Rejects <a href="https://datatracker.ietf.org/doc/html/rfc7591">Dynamic Client Registration</a> requests with a 400 since only CIMD clients are trusted.</td></tr>
+</tbody></table>
+<p>Once you've coded your proxy and have it deployed, hooked up to DynamoDB, and ready to receive requests, we can proceed with setting up Okta.</p>
+<h2 id="setting-up-okta"><a class="header-anchor no-hover-padding" href="#setting-up-okta" aria-label="Anchor link for: setting-up-okta"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up Okta</h2>
+<p>Every Okta org comes with a built-in org <a href="https://developer.okta.com/docs/concepts/auth-servers/">authorization server</a>. <strong>Do not</strong> use this for your AgentCore Gateway as you cannot customize its audience, claims, policies, or scopes. Instead, set up a custom authorization server.</p>
+<p>If you don't have an Okta org to play with, or are nervous about experimenting in your prod org, you can set one up using their <a href="https://developer.okta.com/docs/reference/org-defaults/">Integrator Free Plan</a> orgs option. It is limited to 10 users but that should be more than enough for you and a few beta-testers.</p>
+<h3 id="set-up-an-authorization-server"><a class="header-anchor no-hover-padding" href="#set-up-an-authorization-server" aria-label="Anchor link for: set-up-an-authorization-server"><span class="link-icon" aria-hidden="true"></span></a>
+Set up an Authorization Server</h3>
+<ol>
+<li>Go to <strong>Security</strong> &gt; <strong>API</strong> &gt; <strong>Add Authorization Server</strong>. Enter a name, desired audience, and a description</li>
+<li>Open the authorization server you just created, click the <strong>Claims</strong> tab, and choose <strong>Add Claim</strong></li>
+<li>Name the new claim <code>client_id</code> and set its value to <code>app.clientId</code></li>
+<li>Set <strong>Include in token type</strong> to <strong>Access Token</strong> and choose <strong>Save</strong></li>
+<li>Follow the same steps to add a <code>scopes</code> claim and set its value to <code>app.scopes</code></li>
+<li>Click the <strong>Scopes</strong> tab and add any custom scopes you need</li>
+<li>Open the <strong>Access Policies</strong> tab and create an <a href="https://developer.okta.com/docs/guides/configure-access-policy/main/">access policy</a></li>
+<li>Choose <strong>All clients</strong> in the <strong>Assign to</strong> field. You can always modify it to specific clients later</li>
+<li>Click <strong>Add Rule</strong> on the policy you just created. Without a rule, Okta will reject all authorization requests against this server.</li>
+<li>Enable <strong>Authorization Code</strong> as a grant type, leave user and scope conditions as <strong>Any</strong>, and <strong>Save</strong></li>
+</ol>
+<p>If everything went well, you should see a JSON object that describes your authorization server's capabilities at <a href="https://your-tenant.okta.com/oauth2/your-authorization-server-name/.well-known/openid-configuration">https://your-tenant.okta.com/oauth2/your-authorization-server-name/.well-known/openid-configuration</a>. We'll use this URL later when setting up the gateway.</p>
+<h3 id="set-up-an-okta-client"><a class="header-anchor no-hover-padding" href="#set-up-an-okta-client" aria-label="Anchor link for: set-up-an-okta-client"><span class="link-icon" aria-hidden="true"></span></a>
+Set up an Okta client</h3>
+<ol>
+<li>From the Okta developer console left navigation pane, click <strong>Applications</strong></li>
+<li>Select <strong>Create App Integration</strong></li>
+<li>Select <strong>OIDC - OpenID Connect</strong> and then <strong>Native Application</strong> as your application type</li>
+<li>Under <strong>Sign-in redirect URIs</strong>, click <strong>Add URI</strong> twice and add:
+<ul>
+<li><code>https://&lt;your-proxy-domain&gt;/callback</code></li>
+<li><code>https://&lt;your-proxy-domain&gt;/sessionbinding/okta-callback</code></li>
+</ul>
+</li>
+<li>Under <strong>Assignments</strong> select <strong>Allow everyone in your organization to access</strong>.</li>
+<li>Leave <strong>Enable immediate access with Federation Broker Mode</strong> checked. You can always return and modify these later</li>
+<li>Hit <strong>Save</strong> and copy the generated client ID and use it as the proxy's static okta client id</li>
+</ol>
+<h2 id="setting-up-agentcore-gateway"><a class="header-anchor no-hover-padding" href="#setting-up-agentcore-gateway" aria-label="Anchor link for: setting-up-agentcore-gateway"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up AgentCore Gateway</h2>
+<p>Before we can fully setup AgentCore Gateway, we need a <a href="https://docs.github.com/en/apps/oauth-apps/using-oauth-apps">GitHub OAuth</a> app which will provide us with a client ID and secret for use in setting up AgentCore Gateway's <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-outbound-auth.html">Outbound auth</a>.</p>
+<h3 id="setting-up-github"><a class="header-anchor no-hover-padding" href="#setting-up-github" aria-label="Anchor link for: setting-up-github"><span class="link-icon" aria-hidden="true"></span></a>
+Setting up GitHub</h3>
+<ol>
+<li>Go to <a href="https://github.com/settings/apps">https://github.com/settings/apps</a> and select <strong>New GitHub App</strong></li>
+<li>Fill in details, note that the GitHub App name must be unique</li>
+<li>Under <strong>Authorization callback URL</strong>, enter a temporary value like <code>https://bedrock-agentcore.us-east-1.amazonaws.com/oauth/callback</code>. We will replace it with the generated AgentCore callback URL after creating the outbound identity.</li>
+<li>Uncheck all the checkboxes</li>
+<li>Leave user permissions as default but feel free to return and add more as your use-case requires</li>
+<li>Choose <strong>Any account</strong> under <strong>Where can this GitHub App be installed?</strong></li>
+<li>Click <strong>Create GitHub App</strong></li>
+<li>You should see a "Registration successful. You must generate a private key in order to install your GitHub App." message. Follow the link to do so</li>
+<li>Go to the Client Secrets section and click <strong>Generate a new client secret</strong>. Save the value as you won't see it again</li>
+</ol>
+<h3 id="set-up-agentcore-github-outbound-identity"><a class="header-anchor no-hover-padding" href="#set-up-agentcore-github-outbound-identity" aria-label="Anchor link for: set-up-agentcore-github-outbound-identity"><span class="link-icon" aria-hidden="true"></span></a>
+Set up AgentCore GitHub outbound identity</h3>
+<ol>
+<li>Sign in to your AWS account and go to the Amazon Bedrock AgentCore page</li>
+<li>From the console left navigation pane, click <strong>Identity</strong></li>
+<li>Select <strong>Add Outbound Auth</strong> &gt; <strong>Add OAuth client</strong></li>
+<li>Change the name to something you'll remember or make a note of the autogenerated one</li>
+<li>Choose <strong>Included provider</strong> and then select <strong>GitHub</strong> from the drop-down</li>
+<li>Enter the client ID of the GitHub App we created <a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#setting-up-github">above</a></li>
+<li>Similarly, enter the client secret you saved in <a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#setting-up-github">step 9</a> above</li>
+<li>Click <strong>Save</strong></li>
+<li>Copy the outbound identity's callback URL and return to the GitHub OAuth app</li>
+<li>Click <strong>Add Callback URL</strong> and add the copied value. Hit <strong>Save</strong></li>
+</ol>
+<h3 id="create-the-agentcore-gateway"><a class="header-anchor no-hover-padding" href="#create-the-agentcore-gateway" aria-label="Anchor link for: create-the-agentcore-gateway"><span class="link-icon" aria-hidden="true"></span></a>
+Create the AgentCore Gateway</h3>
+<p>Certain features of AgentCore Gateway can only be enabled during creation. These include the MCP protocol version, encryption settings, debug mode, amongst others. Perhaps the most important is  <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway.html#:~:text=Semantic%20Tool%20Selection">semantic search</a>, which routes tool calls to the right target when similar tool names exist across multiple MCP servers.</p>
+<ol>
+<li>Go to the Amazon Bedrock AgentCore page</li>
+<li>From the console left navigation pane, click <strong>Gateways</strong></li>
+<li>Select <strong>Create Gateway</strong> and name your gateway</li>
+<li>Open the <strong>Additional configurations - optional</strong> drop down</li>
+<li>Select <strong>Enable Semantic Search</strong></li>
+<li>Select <strong>Enable response streaming</strong></li>
+<li>Choose <code>2025-11-25</code> under supported versions and click <strong>Next</strong></li>
+</ol>
+<blockquote>
+<p><strong>Note:</strong> <code>exception level</code> is enabled by default but not recommended for production, so be sure to disable it if you're creating your production gateway.</p>
+</blockquote>
+<h3 id="set-up-the-gateway-idp-configs"><a class="header-anchor no-hover-padding" href="#set-up-the-gateway-idp-configs" aria-label="Anchor link for: set-up-the-gateway-idp-configs"><span class="link-icon" aria-hidden="true"></span></a>
+Set up the Gateway IdP configs</h3>
+<ol>
+<li>Select <strong>Use existing identity provider configurations</strong></li>
+<li>Enter the <code>.well-known/openid-configuration</code> URL from the <a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#set-up-an-authorization-server">authorization server</a> section above in the <strong>Discovery URL</strong> field</li>
+<li>Under <strong>JWT Authorization Configuration</strong> enter the client ID from the <a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#set-up-an-okta-client">Okta client</a> section above</li>
+<li>Leave the rest of the settings as default and hit <strong>Next</strong></li>
+</ol>
+<h3 id="add-the-github-mcp-server-as-an-agentcore-gateway-target"><a class="header-anchor no-hover-padding" href="#add-the-github-mcp-server-as-an-agentcore-gateway-target" aria-label="Anchor link for: add-the-github-mcp-server-as-an-agentcore-gateway-target"><span class="link-icon" aria-hidden="true"></span></a>
+Add the GitHub MCP Server as an AgentCore Gateway Target</h3>
+<p>When using the UI to create the gateway, AWS requires you to set up at least one MCP target. In our case, this will be the GitHub MCP.</p>
+<ol>
+<li>Add 'github' to the autogenerated target name for easier identification</li>
+<li>Under MCP endpoint, enter <a href="https://api.githubcopilot.com/mcp/">https://api.githubcopilot.com/mcp/</a></li>
+<li>Select <strong>OAuth client</strong> under <strong>Outbound Auth configurations</strong> and choose the outbound identity created in the <a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#set-up-agentcore-github-outbound-identity">outbound identity</a> section above</li>
+<li>Open the <strong>Additional configurations - optional</strong> drop down and select <strong>Authorization code grant (3LO)</strong></li>
+<li>Under <strong>Return URL</strong>, enter the proxy session binding URL, <code>https://&lt;your-proxy-domain&gt;/sessionbinding/callback</code></li>
+<li>Under <strong>scopes</strong>, add 3 scopes for <code>user</code>, <code>repo</code>, and <code>workflow</code></li>
+<li>Click <strong>Next</strong>, then <strong>Create Gateway</strong>. After the gateway is created, you'll be taken to its details page</li>
+<li>You should also see a yellow banner that prompts you to authorize the GitHub MCP target. Click <strong>Authorize</strong> to do so.</li>
+<li>Wait for the authorization flow to complete. It can take anywhere from seconds to a few minutes</li>
+<li>On completion, when you scroll down to the target list, the GitHub MCP target status should show  <strong>Ready</strong> and the <strong>Authorization status</strong> pane should say <strong>No authorization required</strong></li>
+</ol>
+<p>Authorizing here is an admin-level step that verifies your GitHub OAuth app is correctly configured. Each end user will still complete their own GitHub authorization the first time they invoke a tool.</p>
+<h2 id="connect-your-mcp-client"><a class="header-anchor no-hover-padding" href="#connect-your-mcp-client" aria-label="Anchor link for: connect-your-mcp-client"><span class="link-icon" aria-hidden="true"></span></a>
+Connect your MCP client</h2>
+<p>To test the Gateway, you'll need to use a client that supports CIMD. That <a href="https://github.com/modelcontextprotocol/inspector/issues/1150">rules out</a> the MCP Inspector. Fortunately, both VS Code and Claude Code do, hosting their CIMDs <a href="https://vscode.dev/oauth/client-metadata.json">here</a> and <a href="https://claude.ai/oauth/claude-code-client-metadata">here</a> respectively. Let's use VS Code.</p>
+<p>You might want to use a different GitHub account from the one with which you completed the admin authorization. The reason is, as we alluded to earlier, if we make a tool call and the Gateway already has a saved token for the gateway/user pair, we might not see the full initial setup, including the elicitation. So use a different GitHub profile and accompanying Okta account to complete the steps below:</p>
+<ol>
+<li>Create an <code>mcp.json</code> at <code>.vscode/mcp.json</code> in an active VS Code workspace</li>
+<li>Set it up as in the <a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#mcp-server-setup">example</a> shown earlier, replacing the url with your proxy's url</li>
+<li>Click <strong>Start</strong> and complete the OAuth flow</li>
+<li>Once VS Code completes initialization and caches the tools advertised by AgentCore Gateway, make a tool call. A good candidate would be <code>get_my_user_profile</code></li>
+<li>You should see the elicitation response pop up. Follow the prompts to grant consent</li>
+<li>Once consent is completed, make the tool call again</li>
+<li>Profit</li>
+</ol>
+<h2 id="where-to-go-from-here"><a class="header-anchor no-hover-padding" href="#where-to-go-from-here" aria-label="Anchor link for: where-to-go-from-here"><span class="link-icon" aria-hidden="true"></span></a>
+Where to go from here</h2>
+<p>You now have a single MCP gateway endpoint protected by Okta and your users can use it to call downstream MCP servers like GitHub's. From here, adding other MCP server targets would be a natural next step. As you do this, consider whether your organization might benefit from coupling AgentCore Gateway with <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry.html">AgentCore Agent Registry</a> to provide your end users with a one stop discovery shop for all things AI - MCPs, skills, and even Agents.</p>
+<p>Or you might want to stay on the security train and invest in some <a href="https://builder.aws.com/content/3AEiRsxX7l9ZLq0FeC0TZwR82LR/zero-trust-ai-tool-access-how-claude-code-authenticates-to-agentcore-mcp-servers-with-okta#:~:text=Recommended%20policy%20rules">hardening</a> with Okta Authentication Policies or <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy.html#:~:text=With%20Policy%20in%20AgentCore%2C%20developers,engine%20before%20allowing%20tool%20access.">AgentCore Policies</a>. Whatever you do, remember the field moves fast so make sure you're keeping up with new releases. Who knows, maybe sometime soon, we won't need a proxy anymore and AgentCore Gateway will ship with a full-on CIMD compatible authorization server.</p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                        
+                        
+                        
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/issue-with-the-selected-model/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Fixing &quot;There&#x27;s an issue with the selected model&quot; in Claude Code</p></div>
+                <div><a href="https://misaac.me/blog/solve-mcp-dcr-issues-with-mcp-remote/" aria-label="Prev" aria-describedby="right_title">Prev&nbsp;<span class="arrow">→</span></a>
+                <p aria-hidden="true" id="right_title">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</p></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#client-id-metadata-documents-cimd">Client ID Metadata Documents - CIMD</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#the-oauth-proxy">The OAuth proxy</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#session-binding">Session binding</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#the-proxy-contract">The proxy contract</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#setting-up-okta">Setting up Okta</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#set-up-an-authorization-server">Set up an Authorization Server</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#set-up-an-okta-client">Set up an Okta client</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#setting-up-agentcore-gateway">Setting up AgentCore Gateway</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#setting-up-github">Setting up GitHub</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#set-up-agentcore-github-outbound-identity">Set up AgentCore GitHub outbound identity</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#create-the-agentcore-gateway">Create the AgentCore Gateway</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#set-up-the-gateway-idp-configs">Set up the Gateway IdP configs</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#add-the-github-mcp-server-as-an-agentcore-gateway-target">Add the GitHub MCP Server as an AgentCore Gateway Target</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#connect-your-mcp-client">Connect your MCP client</a>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/secure-mcp-servers-okta-agentcore-gateway/#where-to-go-from-here">Where to go from here</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<script defer src="https://misaac.me/js/mermaid.min.js"></script><span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;issue-with-the-selected-model&#x2F;">Fixing &quot;There&#x27;s an issue with the selected model&quot; in Claude Code</a>
+                            <span class="sidebar-date">2026-09-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;secure-mcp-servers-okta-agentcore-gateway&#x2F;">Secure GitHub or any MCP Server with Okta via AgentCore Gateway</a>
+                            <span class="sidebar-date">2026-05-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (13)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (6)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentcore&#x2F;" class="sidebar-tag">
+                                agentcore (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (7)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;authentication&#x2F;" class="sidebar-tag">
+                                authentication (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-code&#x2F;" class="sidebar-tag">
+                                claude-code (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base" content="https://misaac.me">
+
+    
+    <title>Isaac on DevSecOps • Tutorial: Create a FastHTML app that runs on AWS Lambda</title>
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+        <link rel="stylesheet" href="https://misaac.me/inter_subset_en.css?h=d8cf4ad058d6c3a4015b">
+    
+
+    
+        <link rel="stylesheet" href="https://misaac.me/main.css?h=f8b119c70beffb77ac87" />
+        <link rel="stylesheet" href="https://misaac.me/custom-sidebar.css?h=6dc2751e6027f4c372a9" />
+
+    <meta name="color-scheme" content="light dark" />
+        <meta name="description" content="Learn how to run a FastHTML app on AWS Lambda." />
+        <meta property="og:description" content="Learn how to run a FastHTML app on AWS Lambda." />
+
+    
+        <meta name="robots" content="index, nofollow" />
+    
+
+    <meta property="og:title" content="Tutorial: Create a FastHTML app that runs on AWS Lambda" />
+    <meta property="og:type" content="article" />
+
+    
+<meta property="og:locale" content="en_GB" />
+
+    <link rel="canonical" href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;fasthtml-aws-lambda-tutorial&#x2F;" />
+        <meta property="og:url" content="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;fasthtml-aws-lambda-tutorial&#x2F;" /><meta property="og:site_name" content="Isaac on DevSecOps"><meta http-equiv="Content-Security-Policy"
+content="default-src 'self';font-src &#x27;self&#x27; data:;img-src &#x27;self&#x27; https:&#x2F;&#x2F;* data:;media-src &#x27;self&#x27;;style-src &#x27;self&#x27; https:&#x2F;&#x2F;emgithub.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;emgithub.misaac.me &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;gist.github.com &#x27;unsafe-inline&#x27; https:&#x2F;&#x2F;github.githubassets.com &#x27;unsafe-inline&#x27;;frame-src player.vimeo.com https:&#x2F;&#x2F;www.youtube-nocookie.com https:&#x2F;&#x2F;emgithub.com https:&#x2F;&#x2F;emgithub.misaac.me;connect-src 'self';script-src 'self' 'self' https://gist.github.com">
+
+        <noscript><link rel="stylesheet" href="https://misaac.me/no_js.css"/></noscript>
+        <script type="text/javascript" src="https://misaac.me/js/initializeTheme.min.js"></script>
+        <script defer src="https://misaac.me/js/themeSwitcher.min.js"></script></head>
+
+
+<body class="use-sans-serif">
+    <header>
+    <nav class="navbar">
+        <div class="nav-title">
+            <a class="home-title" href="https://misaac.me">Isaac on DevSecOps</a>
+        </div>
+            <div class="nav-navs">
+                <ul>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/blog/">
+                                
+                                blog
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/archive/">
+                                
+                                archive
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/about/">
+                                
+                                about
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;miisaac&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                linkedin
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https:&#x2F;&#x2F;github.com&#x2F;mbuotidem&#x2F;" target="_blank" rel="noopener noreferrer">
+                                
+                                github
+                                </a>
+                            </li>
+                        
+                            <li>
+                                
+                                
+                                    <a class="nav-links no-hover-padding" href="https://misaac.me/tags/">
+                                
+                                tags
+                                </a>
+                            </li>
+                        <div class="nav-navs" id="menu-icons-group">
+                        
+
+                        
+                        
+
+                        <li class="theme-switcher-wrapper js"><div
+        title="Toggle dark&#x2F;light mode"
+        class="theme-switcher"
+        tabindex="0"
+        role="button"
+        aria-label="Toggle dark mode"
+        aria-pressed="false">
+    </div><div
+        title="Reset mode to default"
+        class="theme-resetter arrow"
+        tabindex="0"
+        role="button"
+        aria-hidden="true"
+        aria-label="Reset mode to default">
+    </div>
+
+</li>
+</div>
+                </ul>
+            </div>
+        
+    </nav>
+</header>
+<div class="layout-container">
+        
+        <div class="mobile-browse">
+            <button class="mobile-browse-toggle" id="mobileBrowseToggle" aria-expanded="false" aria-controls="mobileBrowseContent">
+                <span class="mobile-browse-toggle-text">Browse</span>
+                <svg class="mobile-browse-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button><div class="mobile-browse-content" id="mobileBrowseContent">
+                <div class="mobile-browse-grid">
+                
+                <div class="mobile-browse-section">
+                    <h4>Archives</h4>
+                    <ul class="mobile-browse-list"><li><a href="/archive/#2026">2026</a></li><li><a href="/archive/#2025">2025</a></li><li><a href="/archive/#2024">2024</a></li></ul>
+                </div>
+
+                <div class="mobile-browse-section">
+                        <h4>Popular Tags</h4>
+                        <div class="mobile-browse-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;">AWS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;">Ansible</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;">Claude</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;">IAM</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;">IaC</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;">OKE</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;">Okta</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;">Presentations</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;">RDS</a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;">SVG</a></div>
+                    </div></div>
+            </div>
+        </div>
+
+        <div class="content main-content">
+            
+            
+
+
+
+
+<main>
+    <article>
+        <h1 class="article-title">
+            Tutorial: Create a FastHTML app that runs on AWS Lambda
+        </h1>
+
+        <ul class="meta">
+                <li>6th Oct 2024</li>
+                <li title="1048 words"><span class='separator' aria-hidden='true'>•</span>6 min read</li><li class="tag"><span class='separator' aria-hidden='true'>•</span>Tags:&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/python/">python</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws/">aws</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/lambda/">lambda</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/aws-lambda-web-adapter/">aws-lambda-web-adapter</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/terraform/">terraform</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/fasthtml/">fasthtml</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/htmx/">htmx</a>,&nbsp;</li><li class="tag"><a href="https://misaac.me/tags/iac/">iac</a></li>
+        </ul>
+
+        <section class="body"><p><strong>If you know Python, and don't want to learn JavaScript, FastHTML might be for you.</strong></p>
+<p>FastHTML is a lightweight Python web framework that is designed to help you create web applications
+in pure Python. It builds upon the principles of <a href="https://htmx.org/">htmx</a>, bridging the gap between
+backend simplicity and frontend interactivity.</p>
+<p><img src="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/./fasthtml.png" alt="Sample Code showing how to create a Table in FastHTML" /></p>
+<p>This example cribbed from the FastHTML homepage shows a table implemented fully in Python.</p>
+<p>FastHTML maps various HTML elements to their equivalent component forms in Python, allowing you describe your application in Python. And then using the magic of htmx, it converts these into HTML and CSS that gets sent to the browser.
+For the pedants in the room, yes, at the end of the day, there's Javascript involved, but that comes from the htmx library, and you don't have to worry about or interact with it. And fear not, if you want to bring in JavaScript at some point, you can.</p>
+<p>So what does a minimal FastHTML app look like? After running <code>pip install python-fasthtml</code>, all you need is:</p>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python"># src&#x2F;main.py
+
+from fasthtml.common import *
+
+app, rt = fast_app()
+
+@rt(&quot;&#x2F;&quot;)
+def get():
+    return Titled(&quot;FastHTML&quot;, P(&quot;Let&#x27;s do this!&quot;))
+
+serve()
+</code></pre>
+<h3 id="let-s-put-this-on-aws-lambda"><a class="header-anchor no-hover-padding" href="#let-s-put-this-on-aws-lambda" aria-label="Anchor link for: let-s-put-this-on-aws-lambda"><span class="link-icon" aria-hidden="true"></span></a>
+Let's put this on AWS Lambda</h3>
+<p>We'll use a slightly modified version to account for some lambda idiosyncracies, namely,
+that you can't write to any other location than <code>/tmp</code> and FastHTML will try to create a
+<code>.sesskey</code> file where its launched if we don't pass it a secret key.</p>
+<pre data-lang="python" class="language-python "><code class="language-python" data-lang="python">from fasthtml import common as fh
+import os
+import secrets
+
+secret = os.getenv(&#x27;SESSION_SECRET&#x27;) or secrets.token_bytes(20)
+
+app,rt = fh.fast_app(
+    live=os.getenv(&#x27;LIVE&#x27;, False),
+    secret_key = secret)
+
+@rt(&#x27;&#x2F;&#x27;)
+def get(): 
+    return fh.Div(fh.P(&#x27;Hello from FastHTML on AWS Lambda!&#x27;))
+
+
+fh.serve()
+</code></pre>
+<p>We'll build the infrastructure for this using Terraform, specifically the <a href="https://github.com/terraform-aws-modules/terraform-aws-lambda">AWS Lambda module</a> from <a href="https://serverless.tf/">serverless.tf</a>. We'll also leverage <a href="https://github.com/awslabs/aws-lambda-web-adapter">AWS Lambda Web Adapter</a> to make our local development story smooth and purely Docker based.
+This lets us migrate to ECS, EKS or even off AWS if we need to play the startup cloud credit arbitrage game.</p>
+<h4 id="the-dockerfile"><a class="header-anchor no-hover-padding" href="#the-dockerfile" aria-label="Anchor link for: the-dockerfile"><span class="link-icon" aria-hidden="true"></span></a>
+The Dockerfile</h4>
+<pre data-lang="dockerfile" class="language-dockerfile "><code class="language-dockerfile" data-lang="dockerfile">#.&#x2F;Dockerfile
+
+FROM public.ecr.aws&#x2F;docker&#x2F;library&#x2F;python:3.10-bookworm
+COPY --from=public.ecr.aws&#x2F;awsguru&#x2F;aws-lambda-adapter:0.8.4 &#x2F;lambda-adapter &#x2F;opt&#x2F;extensions&#x2F;lambda-adapter
+ENV PORT=8000
+WORKDIR &#x2F;var&#x2F;task
+COPY requirements.txt .&#x2F;
+COPY favicon.ico .&#x2F;
+RUN apt-get update &amp;&amp; \
+    apt-get install -y build-essential gcc &amp;&amp; \
+    python -m pip install --upgrade pip setuptools &amp;&amp; \
+    python -m pip install -r requirements.txt
+
+COPY src&#x2F; .&#x2F;src
+EXPOSE 8000
+CMD [&quot;python&quot;, &quot;src&#x2F;main.py&quot;]
+
+</code></pre>
+<p>We use the AWS Lambda Web Adapter to run the FastHTML app on Lambda without modifying the code for
+Lambda. Normally, a Python Lambda function requires a <a href="https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html">Lambda function handler</a>
+as an entry point, but with the Web Adapter, you can build your project as usual.</p>
+<p>When you add the Lambda Web Adapter extension to your Dockerfile, it listens for incoming events, translates them, and routes them to your FastHTML HTTP server. This lets you code normally while gaining
+<a href="https://kane.mx/posts/2023/build-serverless-web-application-with-aws-lambda-web-adapter/">flexibility</a>. For example, you could choose to dynamically switch between AWS Lambda and Fargate using tools like <a href="https://github.com/okigan/lambdaflex">Lambda Flex</a>. Or you could migrate to any service that can run containers when its right for your workload.</p>
+<h4 id="setup-ecr-repository-where-the-lambda-docker-image-will-live"><a class="header-anchor no-hover-padding" href="#setup-ecr-repository-where-the-lambda-docker-image-will-live" aria-label="Anchor link for: setup-ecr-repository-where-the-lambda-docker-image-will-live"><span class="link-icon" aria-hidden="true"></span></a>
+Setup ECR repository where the lambda docker image will live</h4>
+<pre data-lang="terraform" class="language-terraform "><code class="language-terraform" data-lang="terraform"># .&#x2F;infra&#x2F;main.tf
+resource &quot;random_pet&quot; &quot;this&quot; {
+  length = 2
+}
+
+module &quot;ecr&quot; {
+  source = &quot;terraform-aws-modules&#x2F;ecr&#x2F;aws&quot;
+
+  repository_name         = &quot;${random_pet.this.id}-ecr&quot;
+  repository_force_delete = true
+
+  create_lifecycle_policy = false
+
+  repository_lambda_read_access_arns = [module.lambda_function_with_docker_build_from_ecr.lambda_function_arn]
+}
+
+</code></pre>
+<p>We used random here because I didn't particularly care about naming this, but you don't have to. You can name it something that makes sense for the project you're working on. Notice how we use <code>repository_lambda_read_access_arns</code> to ensure the lambda can pull the image during setup.</p>
+<h4 id="the-local-docker-build-using-terraform"><a class="header-anchor no-hover-padding" href="#the-local-docker-build-using-terraform" aria-label="Anchor link for: the-local-docker-build-using-terraform"><span class="link-icon" aria-hidden="true"></span></a>
+The local docker build using Terraform</h4>
+<pre data-lang="terraform" class="language-terraform "><code class="language-terraform" data-lang="terraform"># .&#x2F;infra&#x2F;main.tf
+locals {
+  source_path   = &quot;..&#x2F;&quot;
+  path_include  = [&quot;**&quot;]
+  path_exclude  = [&quot;**&#x2F;__pycache__&#x2F;**&quot;]
+  files_include = setunion([for f in local.path_include : fileset(local.source_path, f)]...)
+  files_exclude = setunion([for f in local.path_exclude : fileset(local.source_path, f)]...)
+  files         = sort(setsubtract(local.files_include, local.files_exclude))
+
+  dir_sha = sha1(join(&quot;&quot;, [for f in local.files : filesha1(&quot;${local.source_path}&#x2F;${f}&quot;)]))
+}
+
+module &quot;docker_build_from_ecr&quot; {
+  source = &quot;terraform-aws-modules&#x2F;lambda&#x2F;aws&#x2F;&#x2F;modules&#x2F;docker-build&quot;
+
+  ecr_repo = module.ecr.repository_name
+
+  
+  use_image_tag = true
+  image_tag   = local.dir_sha
+
+  source_path = local.source_path # &quot;..&#x2F;&quot;
+  platform    = &quot;linux&#x2F;amd64&quot;
+  build_args = {
+    FOO = &quot;bar&quot;
+  }
+
+  triggers = {
+    dir_sha = local.dir_sha
+  }
+  
+}
+
+</code></pre>
+<p>The key thing here is to enable <code>use_image_tag</code> and set the <code>image_tag</code> to the sha of the changed files.</p>
+<h4 id="the-lambda-function-infra-definition"><a class="header-anchor no-hover-padding" href="#the-lambda-function-infra-definition" aria-label="Anchor link for: the-lambda-function-infra-definition"><span class="link-icon" aria-hidden="true"></span></a>
+The lambda function infra definition</h4>
+<pre data-lang="terraform" class="language-terraform "><code class="language-terraform" data-lang="terraform"># .&#x2F;infra&#x2F;main.tf
+resource &quot;random_password&quot; &quot;session_secret&quot; {
+  length  = 20
+  special = false 
+}
+module &quot;lambda_function_with_docker_build_from_ecr&quot; {
+  source = &quot;terraform-aws-modules&#x2F;lambda&#x2F;aws&quot;
+
+  function_name = &quot;${random_pet.this.id}-lambda-with-docker-build-from-ecr&quot;
+  description   = &quot;My FastHTML lambda function&quot;
+
+  create_package = false # This would be true if you wanted to use Zip Package
+  package_type  = &quot;Image&quot;
+  architectures = [&quot;x86_64&quot;]
+
+  image_uri = module.docker_build_from_ecr.image_uri
+  create_lambda_function_url = true # Use with caution. See note below. 
+  environment_variables = {
+    &quot;LIVE&quot; = &quot;False&quot;
+    &quot;SESSION_SECRET&quot; = random_password.session_secret.result
+  }
+  reserved_concurrent_executions = 1 # Prevent denial of wallet attack
+}
+
+output &quot;url&quot; {
+  value = module.lambda_function_with_docker_build_from_ecr.lambda_function_url
+  
+}
+</code></pre>
+<p>We build our lambda with a lambda function url which exposes your AWS Lambda function via a simple dedicated endpoint, no API Gateway or Load Balancer required.
+While super convenient, please understand that they are <a href="https://www.wiz.io/blog/securing-aws-lambda-function-urls">security implications</a> when using these and so
+they may not be appropriate for your use case. If nothing else, set a <a href="https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html">reserved concurrency</a> you are comfortable with to account for
+<a href="https://www.sciencedirect.com/science/article/pii/S221421262100079X">denial of wallet attacks</a>.</p>
+<p>In the environment variables, we set <code>LIVE=false</code> so that we don't serve the application in hot reload mode. And we also set a <code>SESSION_SECRET</code> which will be used for cookie encryption.</p>
+<h4 id="the-local-development-story"><a class="header-anchor no-hover-padding" href="#the-local-development-story" aria-label="Anchor link for: the-local-development-story"><span class="link-icon" aria-hidden="true"></span></a>
+The local development story</h4>
+<p>As mentioned earlier, we will be packaging this up as a Docker image so we have two options for our local
+development experience. We can run the application as a Dockerfile if we want to get as close as possible
+to how it will be running on Lambda. Or we can just run it locally as a python script. The vscode
+debugging definitions below allow you to use either approach.</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json"># .vscode&#x2F;launch.json - json doesn&#x27;t support comments so you&#x27;ll need to delete this line
+{
+    &quot;configurations&quot;: [
+        {
+            &quot;type&quot;: &quot;debugpy&quot;,
+            &quot;request&quot;: &quot;launch&quot;,
+            &quot;name&quot;: &quot;Debug FastHTML on Port 5001&quot;,
+            &quot;program&quot;: &quot;${workspaceFolder}&#x2F;src&#x2F;main.py&quot;,
+            &quot;args&quot;: [
+                &quot;--port&quot;,
+                &quot;5001&quot;
+            ],
+            &quot;env&quot;: {
+                &quot;LIVE&quot;: &quot;True&quot;            
+            },
+            &quot;console&quot;: &quot;integratedTerminal&quot;,
+            &quot;serverReadyAction&quot;:{
+                &quot;action&quot;: &quot;openExternally&quot;,
+                &quot;killOnServerStop&quot;: false,
+                &quot;pattern&quot;: &quot;Application startup complete.&quot;,
+                &quot;uriFormat&quot;: &quot;http:&#x2F;&#x2F;localhost:5001&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Docker: Python - FastHTML&quot;,
+            &quot;type&quot;: &quot;docker&quot;,
+            &quot;request&quot;: &quot;launch&quot;,
+            &quot;preLaunchTask&quot;: &quot;docker-run: debug&quot;,
+            &quot;python&quot;: {
+                &quot;pathMappings&quot;: [
+                    {
+                        &quot;localRoot&quot;: &quot;${workspaceFolder}&#x2F;src&quot;,
+                        &quot;remoteRoot&quot;: &quot;.&#x2F;&quot;
+                    }
+                ],
+                &quot;projectType&quot;: &quot;fastapi&quot;,
+            },
+            &quot;dockerServerReadyAction&quot;: {
+                &quot;action&quot;: &quot;openExternally&quot;,
+                &quot;pattern&quot;: &quot;Application startup complete.&quot;,
+                &quot;uriFormat&quot;: &quot;http:&#x2F;&#x2F;localhost:5001&quot;
+            }
+        }
+    ],
+    &quot;inputs&quot;: [
+        {
+            &quot;type&quot;: &quot;promptString&quot;,
+            &quot;id&quot;: &quot;programPath&quot;,
+            &quot;description&quot;: &quot;Path to the FastHTML application&quot;
+        }
+    ]
+}
+</code></pre>
+<p>And the supporting vscode task for the docker debug option ("Docker: Python - FastHTML") is :</p>
+<pre data-lang="json" class="language-json "><code class="language-json" data-lang="json"># .vscode&#x2F;tasks.json - json doesn&#x27;t support comments so you&#x27;ll need to delete this line
+{
+	&quot;version&quot;: &quot;2.0.0&quot;,
+	&quot;tasks&quot;: [
+		{
+			&quot;type&quot;: &quot;docker-build&quot;,
+			&quot;label&quot;: &quot;docker-build&quot;,
+			&quot;platform&quot;: &quot;python&quot;,
+			&quot;dockerBuild&quot;: {
+				&quot;tag&quot;: &quot;cle:latest&quot;,
+				&quot;dockerfile&quot;: &quot;${workspaceFolder}&#x2F;Dockerfile&quot;,
+				&quot;context&quot;: &quot;${workspaceFolder}&quot;,
+				&quot;pull&quot;: true
+			}
+		},
+		{
+			&quot;type&quot;: &quot;docker-run&quot;,
+			&quot;label&quot;: &quot;docker-run: debug&quot;,
+			&quot;dependsOn&quot;: [
+				&quot;docker-build&quot;
+			],
+			&quot;dockerRun&quot;: {
+				&quot;env&quot;: {
+					&quot;LIVE&quot;: &quot;True&quot;
+				},
+				&quot;volumes&quot;: [
+					{
+						&quot;containerPath&quot;: &quot;&#x2F;src&quot;,
+						&quot;localPath&quot;: &quot;${workspaceFolder}&#x2F;src&quot;,
+					}
+				],
+				&quot;ports&quot;: [
+					{
+						&quot;containerPort&quot;: 5001,
+						&quot;hostPort&quot;: 5001
+					}
+				]
+			},
+			&quot;python&quot;: {
+				&quot;args&quot;: [
+					&quot;src.main:app&quot;,
+					&quot;--host&quot;,
+					&quot;0.0.0.0&quot;,
+					&quot;--port&quot;,
+					&quot;5001&quot;
+				],
+			&quot;file&quot;: &quot;main.py&quot;
+			}
+		}
+	]
+}
+</code></pre>
+<p>The most important part of this <code>task.json</code> is where we define the volumes and map our local source
+code path to the path in the container, which, combined with our <code>LIVE=True</code> env var enables hot
+reloading.</p>
+<p>To run locally, hit F5 and it will run the application without Docker. If you'd like to run it under
+Docker, change the target on the debug extension to Docker: Python - FastHTML and hit F5. Make any changes
+you like in <code>main.py</code> and see them reflected instantly.</p>
+<p><img src="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/./fasthtmldocker.png" alt="Image of Visual Studio Code IDE showing how to switch the debugging target in the debug extension" /></p>
+<p>So back to our original goal, after testing locally, once you're ready to deploy, run <code>terraform plan</code>, review your plan, and then <code>terraform apply</code>.
+You should get back your newly deployed lambda function's url. Enjoy your new FastHTML app!</p>
+<p><img src="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/./fasthtmllambda.png" alt="Image of the FastHTML app running in Firefox browser" /></p>
+<h4 id="does-serving-a-fasthtml-app-on-aws-lambda-work-beyond-a-helloworld-app"><a class="header-anchor no-hover-padding" href="#does-serving-a-fasthtml-app-on-aws-lambda-work-beyond-a-helloworld-app" aria-label="Anchor link for: does-serving-a-fasthtml-app-on-aws-lambda-work-beyond-a-helloworld-app"><span class="link-icon" aria-hidden="true"></span></a>
+Does serving a FastHTML app on AWS Lambda work beyond a HelloWorld app?</h4>
+<p>I don't know, I haven't got that far. I do plan to build something more interesting on FastHTML to see
+how it feels and form an actual opinion. If I do get around to doing so, I'll post a follow up.</p>
+<p>Oh, one more thing, here's an <a href="https://github.com/awslabs/aws-lambda-web-adapter/tree/main/examples/fasthtml-response-streaming">example</a> that shows FastHTML running on AWS Lambda with Bedrock and <a href="https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/">response streaming</a>!</p>
+<h3 id="if-you-like-the-ideas-of-fasthtml-you-might-also-like"><a class="header-anchor no-hover-padding" href="#if-you-like-the-ideas-of-fasthtml-you-might-also-like" aria-label="Anchor link for: if-you-like-the-ideas-of-fasthtml-you-might-also-like"><span class="link-icon" aria-hidden="true"></span></a>
+If you like the ideas of FastHTML, you might also like :</h3>
+<p><a href="https://htpy.dev/">htpy</a>
+<a href="https://pyscript.net/">pyscript</a>
+<a href="https://puepy.dev/">puepy</a>
+<a href="https://pyodide.org/en/stable/">pyodide</a>
+<a href="https://skulpt.org/">skulpt</a>
+<a href="https://flet.dev/">flet</a>
+<a href="https://nicegui.io/">nicegui</a>
+<a href="https://www.django-unicorn.com/">django-unicorn</a></p>
+<p>And if you want options with paid tiers,
+<a href="https://anvil.works/">anvil</a>, <a href="https://reflex.dev/">reflex</a> and <a href="https://solara.dev/">solara</a> might interest you</p>
+
+        </section>
+
+        
+                
+                
+                    
+                        
+                        
+                        
+                    
+                    
+                
+                
+            <nav class="full-width article-navigation">
+                <div><a href="https://misaac.me/blog/free-svgs-for-presentations/" aria-label="Next" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Next</a>
+                <p aria-hidden="true" id="left_title">Where to get free svgs for presentations</p></div>
+                <div></div>
+            </nav>
+        
+        
+
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+            
+            
+            
+
+            
+        
+        
+
+    </article>
+</main>
+
+    <div id="button-container">
+        
+        
+            <div id="toc-floating-container">
+                <input type="checkbox" id="toc-toggle" class="toggle"/>
+                <label for="toc-toggle" class="overlay"></label>
+                <label for="toc-toggle" id="toc-button" class="button" title="Toggle Table of Contents">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M414.82-193.094q-18.044 0-30.497-12.32-12.453-12.319-12.453-30.036t12.453-30.086q12.453-12.37 30.497-12.37h392.767q17.237 0 29.927 12.487 12.69 12.486 12.69 30.203 0 17.716-12.69 29.919t-29.927 12.203H414.82Zm0-244.833q-18.044 0-30.497-12.487Q371.87-462.9 371.87-480.45t12.453-29.92q12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.511 12.69 12.512 12.69 29.845 0 17.716-12.69 30.086-12.69 12.37-29.927 12.37H414.82Zm0-245.167q-18.044 0-30.497-12.32t-12.453-30.037q0-17.716 12.453-30.086 12.453-12.369 30.497-12.369h392.767q17.237 0 29.927 12.486 12.69 12.487 12.69 30.203 0 17.717-12.69 29.92-12.69 12.203-29.927 12.203H414.82ZM189.379-156.681q-32.652 0-55.878-22.829t-23.226-55.731q0-32.549 23.15-55.647 23.151-23.097 55.95-23.097 32.799 0 55.313 23.484 22.515 23.484 22.515 56.246 0 32.212-22.861 54.893-22.861 22.681-54.963 22.681Zm0-245.167q-32.652 0-55.878-23.134-23.226-23.135-23.226-55.623 0-32.487 23.467-55.517t56.12-23.03q32.102 0 54.721 23.288 22.62 23.288 22.62 55.775 0 32.488-22.861 55.364-22.861 22.877-54.963 22.877Zm-.82-244.833q-32.224 0-55.254-23.288-23.03-23.289-23.03-55.623 0-32.333 23.271-55.364 23.272-23.03 55.495-23.03 32.224 0 55.193 23.288 22.969 23.289 22.969 55.622 0 32.334-23.21 55.364-23.21 23.031-55.434 23.031Z"/></svg>
+                </label>
+                <div class="toc-content">
+                    
+
+<div class="toc-container">
+    
+
+    <ul>
+        
+            
+            
+                <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#let-s-put-this-on-aws-lambda">Let&#x27;s put this on AWS Lambda</a>
+                    
+                        <ul>
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#the-dockerfile">The Dockerfile</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#setup-ecr-repository-where-the-lambda-docker-image-will-live">Setup ECR repository where the lambda docker image will live</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#the-local-docker-build-using-terraform">The local docker build using Terraform</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#the-lambda-function-infra-definition">The lambda function infra definition</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#the-local-development-story">The local development story</a>
+                                        
+                                    </li>
+                                
+                            
+                                
+                                    <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#does-serving-a-fasthtml-app-on-aws-lambda-work-beyond-a-helloworld-app">Does serving a FastHTML app on AWS Lambda work beyond a HelloWorld app?</a>
+                                        
+                                    </li>
+                                
+                            
+                        </ul>
+                    
+                </li>
+            
+        
+            
+            
+                <li><a href="https://misaac.me/blog/fasthtml-aws-lambda-tutorial/#if-you-like-the-ideas-of-fasthtml-you-might-also-like">If you like the ideas of FastHTML, you might also like :</a>
+                    
+                </li>
+            
+        
+    </ul>
+</div>
+
+
+                </div>
+            </div>
+        
+
+        
+        
+
+        
+        <a href="#" id="top-button" class="no-hover-padding" title="Go to the top of the page">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"/></svg>
+        </a>
+    </div>
+
+
+<span id="copy-success" class="hidden">
+        Copied!
+    </span>
+    <span id="copy-init" class="hidden">
+        Copy code to clipboard
+    </span>
+    <script defer src="https://misaac.me/js/copyCodeToClipboard.min.js"></script>
+        </div>
+
+        <aside class="sidebar">
+            
+                
+                <div class="sidebar-section">
+                    <h3>Recent Posts</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;issue-with-the-selected-model&#x2F;">Fixing &quot;There&#x27;s an issue with the selected model&quot; in Claude Code</a>
+                            <span class="sidebar-date">2026-09-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;secure-mcp-servers-okta-agentcore-gateway&#x2F;">Secure GitHub or any MCP Server with Okta via AgentCore Gateway</a>
+                            <span class="sidebar-date">2026-05-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;solve-mcp-dcr-issues-with-mcp-remote&#x2F;">Solve Claude Code MCP Dynamic Client Registration (DCR) issues with mcp-remote</a>
+                            <span class="sidebar-date">2026-02-08</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;vscode-now-has-a-browser&#x2F;">First look at Visual Studio Code&#x27;s Integrated Browser</a>
+                            <span class="sidebar-date">2026-02-07</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;how-to-find-lambda-at-edge-logs&#x2F;">How to find Lambda@Edge Logs</a>
+                            <span class="sidebar-date">2026-01-23</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;aws-bedrock-access-denied-marketplace-actions&#x2F;">Fix model access is denied not authorized to perform the required AWS Marketplace actions</a>
+                            <span class="sidebar-date">2025-11-22</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;make-your-slack-ai-apps-faster&#x2F;">Make your Slack AI app faster</a>
+                            <span class="sidebar-date">2025-09-30</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;ai-apps-in-slack-bedrock&#x2F;">Build a Slack AI app powered by Amazon Bedrock</a>
+                            <span class="sidebar-date">2025-08-31</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-passwordless-access-aws-rds-via-iam&#x2F;">Grant Passwordless Access to Amazon RDS with Okta, IAM, and Terraform</a>
+                            <span class="sidebar-date">2025-07-05</span>
+                        </li><li>
+                            <a href="https:&#x2F;&#x2F;misaac.me&#x2F;blog&#x2F;grant-aws-access-to-kubernetes-workloads-via-spiffe-spire-and-iam-roles-anywhere&#x2F;">Grant AWS Access to Kubernetes Workloads via SPIFFE&#x2F;SPIRE &amp; IAM Roles Anywhere</a>
+                            <span class="sidebar-date">2025-06-01</span>
+                        </li></ul>
+                </div>
+
+                
+                <div class="sidebar-section">
+                    <h3>Archives</h3>
+                    <ul class="sidebar-list"><li>
+                            <a href="/archive/#2026">2026</a>
+                        </li><li>
+                            <a href="/archive/#2025">2025</a>
+                        </li><li>
+                            <a href="/archive/#2024">2024</a>
+                        </li></ul>
+                </div>
+
+                <div class="sidebar-section">
+                        <h3>Tags</h3>
+                        <div class="sidebar-tags"><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws&#x2F;" class="sidebar-tag">
+                                AWS (13)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ansible&#x2F;" class="sidebar-tag">
+                                Ansible (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude&#x2F;" class="sidebar-tag">
+                                Claude (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iam&#x2F;" class="sidebar-tag">
+                                IAM (6)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;iac&#x2F;" class="sidebar-tag">
+                                IaC (10)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;oke&#x2F;" class="sidebar-tag">
+                                OKE (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;okta&#x2F;" class="sidebar-tag">
+                                Okta (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;presentations&#x2F;" class="sidebar-tag">
+                                Presentations (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;rds&#x2F;" class="sidebar-tag">
+                                RDS (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;svg&#x2F;" class="sidebar-tag">
+                                SVG (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;terraform&#x2F;" class="sidebar-tag">
+                                Terraform (9)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentcore&#x2F;" class="sidebar-tag">
+                                agentcore (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;agentic-ai&#x2F;" class="sidebar-tag">
+                                agentic-ai (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;ai&#x2F;" class="sidebar-tag">
+                                ai (7)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;authentication&#x2F;" class="sidebar-tag">
+                                authentication (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;aws-lambda-web-adapter&#x2F;" class="sidebar-tag">
+                                aws-lambda-web-adapter (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;bedrock&#x2F;" class="sidebar-tag">
+                                bedrock (3)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;chatops&#x2F;" class="sidebar-tag">
+                                chatops (2)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-code&#x2F;" class="sidebar-tag">
+                                claude-code (1)
+                            </a><a href="https:&#x2F;&#x2F;misaac.me&#x2F;tags&#x2F;claude-haiku-4-5&#x2F;" class="sidebar-tag">
+                                claude-haiku-4-5 (1)
+                            </a></div>
+                    </div>
+        </aside>
+    </div>
+
+    <footer>
+    <section>
+        <nav class="socials nav-navs">
+        </nav>
+
+        
+        <nav class="nav-navs">
+        </nav>
+
+        <div class="credits">
+            <small>
+                
+    
+    
+    
+    
+        
+    
+        
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <p><p>© 2026 Isaac M • Except where otherwise noted , content on this site is licensed under a <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> license.</p>
+</p>
+
+                </small>
+        </div>
+    </section>
+
+    </footer>
+
+
+    <script defer src="https://misaac.me/js/mobileBrowseToggle.js?h=d21b70458730ee025802"></script>
+</body>
+
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Textarea online</title>
+    <meta name="description" content="textarea a simple online text editor">
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono" rel="stylesheet">
+    <link rel="canonical" href="https://textarea.online">
+    <meta name="google" content="notranslate">
+    <style type="text/css">
+        body {
+            margin: 0px;
+            font-family: 'PT Mono', monospace;
+        }
+
+        textarea {
+            resize: none;
+            width: 98%;
+            height: 98%;
+            position: absolute;
+            top: 0px;
+            border: none;
+            margin: 1%;
+            font-family: 'PT Mono', monospace;
+            font-size: 1em;
+            overflow: hidden;
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+    <textarea id="textarea"></textarea>
+    <script>
+        const savedText = localStorage.getItem('saved-text-data');
+        if (savedText) {
+            document.getElementById('textarea').value = savedText;
+        }
+        setInterval(() => {
+            localStorage.setItem('saved-text-data', document.getElementById('textarea').value);
+        }, 2000);
+    </script>
+</body>
+
+</html>
