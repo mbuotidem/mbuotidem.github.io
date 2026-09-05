@@ -20,7 +20,8 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
       - name: build_and_deploy
-        uses: shalzz/zola-deploy-action@master
+        # Pinned: the tabi theme does not yet build on Zola 0.23.x (welpo/tabi#692).
+        uses: shalzz/zola-deploy-action@v0.19.2
         env:
           # Target branch
           PAGES_BRANCH: gh-pages
